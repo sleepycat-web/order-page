@@ -38,10 +38,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           location.coordinates.longitude
         );
         return distance < nearest.distance
-          ? { name: location.name, distance }
+          ? { name: location.name, distance, radius: location.radius }
           : nearest;
       },
-      { name: "", distance: Infinity }
+      { name: "", distance: Infinity, radius: Infinity }
     );
 
     if (nearestLocation.distance <= nearestLocation.radius) {
