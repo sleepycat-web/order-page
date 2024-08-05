@@ -28,11 +28,14 @@ export default function Home() {
   const [orderStatus, setOrderStatus] = useState("");
   const [locationDetected, setLocationDetected] = useState<boolean | null>(null);
   const [showManualInputMessage, setShowManualInputMessage] = useState(false);
+  const [isLocationPromptVisible, setIsLocationPromptVisible] = useState(false);
 
   const detectLocation = () => {
     if ("geolocation" in navigator) {
+      setIsLocationPromptVisible(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          setIsLocationPromptVisible(false);
           const userLat = position.coords.latitude;
           const userLon = position.coords.longitude;
           
@@ -54,6 +57,7 @@ export default function Home() {
           }
         },
         (error) => {
+          setIsLocationPromptVisible(false);
           console.error("Error detecting location:", error);
           setLocationDetected(false);
         }
@@ -99,6 +103,29 @@ export default function Home() {
 
   return (
     <main className="p-4">
+      {isLocationPromptVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Enable Location Services</h2>
+            <p className="mb-4">Please enable location services to automatically detect your location.</p>
+            <button 
+              className="btn btn-primary mr-2" 
+              onClick={() => {
+                setIsLocationPromptVisible(false);
+                detectLocation();
+              }}
+            >
+              Enable Location
+            </button>
+            <button 
+              className="btn" 
+              onClick={() => setIsLocationPromptVisible(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       {locationDetected === true && (
         <p className="text-green-500 mb-4">Location detected successfully</p>
       )}
