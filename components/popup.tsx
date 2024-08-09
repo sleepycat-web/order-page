@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MenuItem, CustomizationOption } from "../app/page"; // Adjust the import path as needed
+import { MenuItem, CustomizationOption } from "./menu"; // Adjust the import path as needed
 
 interface PopupProps {
   item: MenuItem;
@@ -20,32 +20,56 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
   const [quantity, setQuantity] = useState(1);
   const [specialRequests, setSpecialRequests] = useState("");
   const popupRef = useRef<HTMLDivElement>(null); 
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [totalPrice, setTotalPrice] = useState<number>(parseFloat(item.price));
 
-  const handleOptionChange = (
-    optionName: string,
-    value: string,
-    type: "radio" | "checkbox"
-  ) => {
-    setSelectedOptions((prev: Record<string, string[]>) => {
-      const newOptions = { ...prev };
-      if (type === "radio") {
-        newOptions[optionName] = [value];
-      } else if (type === "checkbox") {
-        if (!newOptions[optionName]) {
-          newOptions[optionName] = [];
-        }
-        const index = newOptions[optionName].indexOf(value);
-        if (index > -1) {
-          newOptions[optionName] = newOptions[optionName].filter(
-            (item) => item !== value
-          );
-        } else {
-          newOptions[optionName] = [...newOptions[optionName], value];
-        }
+  const calculateTotalPrice = (): number => {
+    let total = parseFloat(item.price);
+
+    Object.entries(selectedOptions).forEach(([optionName, selectedValues]) => {
+      const option = item.customizationOptions?.find(
+        (opt) => opt.name === optionName
+      );
+      if (option) {
+        selectedValues.forEach((value) => {
+          const selectedOpt = option.options.find((opt) => opt.label === value);
+          if (selectedOpt && selectedOpt.price) {
+            total += parseFloat(selectedOpt.price);
+          }
+        });
       }
-      return newOptions;
     });
+
+    return total * quantity;
   };
+
+
+
+const handleOptionChange = (
+  optionName: string,
+  value: string,
+  type: "radio" | "checkbox"
+) => {
+  setSelectedOptions((prev: Record<string, string[]>) => {
+    const newOptions = { ...prev };
+    if (type === "radio") {
+      newOptions[optionName] = [value];
+    } else if (type === "checkbox") {
+      if (!newOptions[optionName]) {
+        newOptions[optionName] = [];
+      }
+      const index = newOptions[optionName].indexOf(value);
+      if (index > -1) {
+        newOptions[optionName] = newOptions[optionName].filter(
+          (item) => item !== value
+        );
+      } else {
+        newOptions[optionName] = [...newOptions[optionName], value];
+      }
+    }
+    return newOptions;
+  });
+};
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -61,6 +85,11 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
       document.removeEventListener("click", handleClickOutside, true);
     };
   }, [onClose]);
+
+  
+  useEffect(() => {
+    setTotalPrice(calculateTotalPrice());
+  }, [selectedOptions, quantity]);
 
   const handleAddToOrder = () => {
     onAddToOrder(item, selectedOptions, quantity, specialRequests);
@@ -100,7 +129,11 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
               {option.options.map((opt, optIndex) => (
                 <div
                   key={optIndex}
-                  className="flex items-center mb-4 p-4 bg-neutral-900 rounded-lg cursor-pointer"
+                  className={`flex items-center mb-4 p-4 bg-neutral-900 rounded-lg on-click cursor-pointer ${
+                    selectedOptions[option.name]?.includes(opt.label)
+                      ? "border border-white"
+                      : ""
+                  }`}
                   onClick={() =>
                     handleOptionChange(option.name, opt.label, option.type)
                   }
@@ -165,12 +198,16 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           </div>
         </div>
         <button
-          className="btn btn-primary w-full"
+          className="btn mt-2 btn-primary w-full"
           onClick={handleAddToOrder}
           disabled={quantity <= 0}
         >
-          Add to my order ₹{item.price}
+          Add to my order
+          {Object.keys(selectedOptions).length > 0 &&
+            ` ₹${totalPrice.toFixed(2)}`}
         </button>
+
+        
         <button className="btn btn-ghost w-full mt-2" onClick={onClose}>
           Cancel
         </button>

@@ -1,4 +1,4 @@
-import { MenuItem } from "../app/page";
+import { MenuItem } from "../components/menu";
 
 export const menuItems: MenuItem[] = [
   {
@@ -9,6 +9,8 @@ export const menuItems: MenuItem[] = [
         name: "Select Beverage",
         type: "radio",
         options: [
+          { label: "Water"},
+
           { label: "Coca Cola", price: "50.00" },
           { label: "Pepsi", price: "50.00" },
           { label: "Fanta", price: "50.00" },

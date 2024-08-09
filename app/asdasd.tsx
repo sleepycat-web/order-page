@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+"use client";
+import { menuItems } from "../scripts/items"; // Adjust the import path as needed
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Popup from "@/components/popup";
 
 interface Location {
   name: string;
@@ -7,10 +10,21 @@ interface Location {
   radius: number;
 }
 
-interface LocationSelectorProps {
-  onLocationSelect: (location: string, cabin: string) => void;
-  selectedLocation: string;
-  selectedCabin: string;
+export interface MenuItem {
+  name: string;
+  price: string;
+  description?: string;
+  soldOut?: boolean;
+  customizationOptions?: CustomizationOption[];
+}
+
+export interface CustomizationOption {
+  name: string;
+  type: "radio" | "checkbox";
+  options: {
+    label: string;
+    price?: string;
+  }[];
 }
 
 const locations: Location[] = [
@@ -26,13 +40,65 @@ const locations: Location[] = [
   },
 ];
 
-const LocationSelector: React.FC<LocationSelectorProps> = ({
-  onLocationSelect,
-  selectedLocation,
-  selectedCabin,
-}) => {
+const MenuItem: React.FC<MenuItem> = ({
+  name,
+  price,
+  description,
+  soldOut,
+}) => (
+  <div className="p-4 bg-neutral-950 rounded-lg shadow-sm">
+    <h3 className="text-lg font-semibold">{name}</h3>
+    <p className={`text-xl ${soldOut ? "text-red-500" : "text-green-600"}`}>
+      ₹{price} {soldOut && "Sold Out"}
+    </p>
+    {description && <p className="text-sm text-gray-600"> {description}</p>}
+  </div>
+);
+
+const Menu: React.FC<{ items: MenuItem[] }> = ({ items }) => {
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+
+  const handleItemClick = (item: MenuItem) => {
+    setSelectedItem(item);
+  };
+
+  const handleClosePopup = () => {
+    setSelectedItem(null);
+  };
+
+  const handleAddToOrder = (
+    item: MenuItem,
+    selectedOptions: Record<string, string[]>,
+    quantity: number
+  ) => {
+    // Implement your logic to add the item to the order
+    console.log("Added to order:", item, selectedOptions, quantity);
+  };
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-8">
+      {items.map((item, index) => (
+        <div key={index} onClick={() => handleItemClick(item)}>
+          <MenuItem {...item} />
+        </div>
+      ))}
+      {selectedItem && (
+        <Popup
+          item={selectedItem}
+          onClose={handleClosePopup}
+          onAddToOrder={handleAddToOrder}
+        />
+      )}
+    </div>
+  );
+};
+
+export default function Home() {
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedCabin, setSelectedCabin] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCabinDropdownOpen, setIsCabinDropdownOpen] = useState(false);
+  const [orderStatus, setOrderStatus] = useState("");
   const [locationDetected, setLocationDetected] = useState<boolean | null>(
     null
   );
@@ -59,7 +125,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           });
 
           if (nearbyLocation) {
-            onLocationSelect(nearbyLocation.name, "");
+            setSelectedLocation(nearbyLocation.name);
             setLocationDetected(true);
           } else {
             setLocationDetected(false);
@@ -92,6 +158,29 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
     }
   }, [locationDetected]);
 
+  const handleSubmit = async () => {
+    if (!selectedLocation || !selectedCabin) return;
+
+    const response = await fetch("/api/submitOrder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        location: selectedLocation,
+        cabin: selectedCabin,
+      }),
+    });
+
+    if (response.ok) {
+      setOrderStatus("Order placed successfully!");
+      setSelectedLocation("");
+      setSelectedCabin("");
+      setIsDropdownOpen(false);
+      setIsCabinDropdownOpen(false);
+    } else {
+      setOrderStatus("Failed to submit order.");
+    }
+  };
+
   const getCabinOptions = () => {
     if (selectedLocation === "Dagapur") {
       return ["Cabin 1", "Cabin 2", "Cabin 3", "High Chair"];
@@ -111,7 +200,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   };
 
   return (
-    <>
+    <main className="p-4">
       {isLocationPromptVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-black p-6 rounded-lg shadow-lg">
@@ -121,7 +210,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
               location.
             </p>
             <button
-              className="btn btn-primary mr-2 "
+              className="btn btn-primary mr-2"
               onClick={() => {
                 setIsLocationPromptVisible(false);
                 detectLocation();
@@ -165,16 +254,15 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           <ul className="menu bg-base-100 rounded-box shadow-lg absolute z-10 mt-1 p-2 w-52">
             {locations.map((location) => (
               <li key={location.name}>
-                <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onLocationSelect(location.name, "");
+                <a
+                  onClick={() => {
+                    setSelectedLocation(location.name);
+                    setSelectedCabin("");
                     setIsDropdownOpen(false);
                   }}
                 >
                   {location.name}
-                </Link>
+                </a>
               </li>
             ))}
           </ul>
@@ -183,9 +271,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
       <div className="relative mb-4">
         <button
-          className={`btn text-left disabled:text-neutral-200/40  ${
-            !selectedLocation ? "btn-disabled" : ""
-          }`}
+          className={`btn text-left ${!selectedLocation ? "btn-disabled" : ""}`}
           onClick={() => setIsCabinDropdownOpen(!isCabinDropdownOpen)}
           disabled={!selectedLocation}
         >
@@ -203,24 +289,43 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           <ul className="menu bg-base-100 rounded-box shadow-lg absolute z-10 mt-1 p-2 w-52">
             {getCabinOptions().map((cabin) => (
               <li key={cabin}>
-                <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onLocationSelect(selectedLocation, cabin);
+                <a
+                  onClick={() => {
+                    setSelectedCabin(cabin);
                     setIsCabinDropdownOpen(false);
                   }}
                 >
                   {cabin}
-                </Link>
+                </a>
               </li>
             ))}
           </ul>
         )}
       </div>
-    </>
+
+      {orderStatus && (
+        <p
+          className={`mt-4 ${
+            orderStatus.includes("successfully")
+              ? "text-green-500"
+              : "text-red-500"
+          }`}
+        >
+          {orderStatus}
+        </p>
+      )}
+
+      <Menu items={menuItems} />
+      <button
+        className="btn my-8"
+        onClick={handleSubmit}
+        disabled={!selectedLocation || !selectedCabin}
+      >
+        Submit
+      </button>
+    </main>
   );
-};
+}
 
 function calculateDistance(
   lat1: number,
@@ -241,5 +346,3 @@ function calculateDistance(
 
   return R * c;
 }
-
-export default LocationSelector;
