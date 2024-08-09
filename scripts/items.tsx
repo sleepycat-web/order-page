@@ -1,6 +1,7 @@
 import { MenuItem } from "../components/menu";
 
 export const menuItems: MenuItem[] = [
+  //Beverages Done
   {
     name: "Beverages",
     price: "20.00",
@@ -9,7 +10,7 @@ export const menuItems: MenuItem[] = [
         name: "Select Beverage",
         type: "radio",
         options: [
-          { label: "Water"},
+          { label: "Water", price: "20.00" },
 
           { label: "Coca Cola", price: "50.00" },
           { label: "Pepsi", price: "50.00" },
@@ -54,6 +55,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  // Bread Done
   {
     name: "Bread/Bun",
     price: "30.00",
@@ -100,6 +102,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  //Tea Done
   {
     name: "Tea",
     price: "30.00",
@@ -112,7 +115,10 @@ export const menuItems: MenuItem[] = [
       {
         name: "Appetite:",
         type: "radio",
-        options: [{ label: "With Milk ", price: "20.00" }, { label: "Black" }],
+        options: [
+          { label: "With Milk ", price: "50.00" },
+          { label: "Black", price: "30.00" },
+        ],
       },
       {
         name: "Herbs/Flavours",
@@ -143,6 +149,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  //Coffee Done
   {
     name: "Coffee",
     price: "50.00",
@@ -150,7 +157,15 @@ export const menuItems: MenuItem[] = [
       {
         name: "Coffee Type",
         type: "radio",
-        options: [{ label: "Hot" }, { label: "Cold", price: "110.00" }],
+        options: [
+          { label: "Hot", price: "50.00" },
+          { label: "Cold", price: "110.00" },
+        ],
+      },
+      {
+        name: "Appetite",
+        type: "radio",
+        options: [{ label: "With Milk", price: "20.00" }, { label: "Black" }],
       },
       {
         name: "Flavour",
@@ -173,11 +188,7 @@ export const menuItems: MenuItem[] = [
           { label: "Cappuccino", price: "30.00" },
         ],
       },
-      {
-        name: "Appetite",
-        type: "radio",
-        options: [{ label: "With Milk", price: "20.00" }, { label: "Black" }],
-      },
+
       {
         name: "Taste",
         type: "radio",
@@ -202,10 +213,18 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  // Maggi Done
   {
     name: "Maggi",
     price: "50.00",
     customizationOptions: [
+      {
+        name: "Preference",
+        type: "radio",
+        options: [
+          { label: "Veg", price: "50.00" },
+        ],
+      },
       {
         name: "Flavour",
         type: "radio",
@@ -261,6 +280,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+
   {
     name: "Wai Wai",
     price: "50.00",
@@ -268,7 +288,10 @@ export const menuItems: MenuItem[] = [
       {
         name: "Preference",
         type: "radio",
-        options: [{ label: "Veg" }, { label: "Chicken" }],
+        options: [
+          { label: "Veg", price: "50.00" },
+          { label: "Chicken", price: "50.00" },
+        ],
       },
       {
         name: "Flavour",
@@ -324,6 +347,8 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+
+  //Ramen Done
   {
     name: "Ramen",
     price: "250.00",
@@ -332,15 +357,15 @@ export const menuItems: MenuItem[] = [
         name: "Flavour",
         type: "radio",
         options: [
-          { label: "2X Spicy(NonVeg)" },
-          { label: "Yellow Cheese(NonVeg)" },
-          { label: "Pink Cheese(NonVeg)" },
-          { label: "Quattro Cheese(NonVeg)" },
-          { label: "Black(NonVeg)" },
-          { label: "ShinRamen SuperSpicy(Veg)" },
-          { label: "Veg Kimchi Spicy" },
-          { label: "Authentic Kimchi NonSpicy(Veg)" },
-          { label: "Beans Sprouts Kimchi(Veg)" },
+          { label: "2X Spicy(NonVeg)", price: "250.00" },
+          { label: "Yellow Cheese(NonVeg)", price: "250.00" },
+          { label: "Pink Cheese(NonVeg)", price: "250.00" },
+          { label: "Quattro Cheese(NonVeg)", price: "250.00" },
+          { label: "Black(NonVeg)", price: "250.00" },
+          { label: "ShinRamen SuperSpicy(Veg)", price: "250.00" },
+          { label: "Veg Kimchi Spicy", price: "250.00" },
+          { label: "Authentic Kimchi NonSpicy(Veg)", price: "250.00" },
+          { label: "Beans Sprouts Kimchi(Veg)", price: "250.00" },
         ],
       },
       {
@@ -385,6 +410,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  //Soup DOne
   {
     name: "Soup",
     price: "70.00",
@@ -392,7 +418,10 @@ export const menuItems: MenuItem[] = [
       {
         name: "Select Broth",
         type: "radio",
-        options: [{ label: "Sweetcorn Soup" }, { label: "Hot & Sour Soup" }],
+        options: [
+          { label: "Sweetcorn Soup", price: "70.00" },
+          { label: "Hot & Sour Soup", price: "70.00" },
+        ],
       },
       {
         name: "Extras",
@@ -417,7 +446,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
-
+  //Momo Done
   {
     name: "Momo",
 
@@ -430,9 +459,9 @@ export const menuItems: MenuItem[] = [
         type: "radio",
 
         options: [
-          { label: "Veg Momo" },
+          { label: "Veg Momo", price: "70.00" },
 
-          { label: "Chicken Momo", price: "30.00" },
+          { label: "Chicken Momo", price: "100.00" },
         ],
       },
 
@@ -493,6 +522,8 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+
+  //Snackd DOne
   {
     name: "Snacks",
 
@@ -575,6 +606,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  //Rice Done
   {
     name: "Rice Bowl",
 
@@ -657,6 +689,7 @@ export const menuItems: MenuItem[] = [
     ],
   },
 
+  //Indian Gracy DOne
   {
     name: "Indian Gravy",
     soldOut: true,
@@ -682,6 +715,8 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+
+  //Pasta Done
   {
     name: "Pasta",
     price: "200.00",
@@ -690,10 +725,10 @@ export const menuItems: MenuItem[] = [
         name: "Flavour",
         type: "radio",
         options: [
-          { label: "White Sauce" },
-          { label: "Red Sauce" },
-          { label: "Masala Penne" },
-          { label: "Mushroom Penne" },
+          { label: "White Sauce", price: "200.00" },
+          { label: "Red Sauce", price: "200.00" },
+          { label: "Masala Penne", price: "200.00" },
+          { label: "Mushroom Penne", price: "200.00" },
         ],
       },
       {
@@ -710,51 +745,13 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  //Sandwich Done
   {
     name: "Sandwich",
     price: "250.00",
     customizationOptions: [
       {
         name: "Flavour of Bread",
-        type: "radio",
-        options: [
-          { label: "Plain" },
-          { label: "GingerGarlic", price: "20.00" },
-          { label: "PeriPeri", price: "30.00" },
-          { label: "Schezwan", price: "50.00" },
-        ],
-      },
-      {
-        name: "Extras",
-        type: "checkbox",
-        options: [
-          { label: "Mushrooms", price: "50.00" },
-          { label: "Paneer", price: "50.00" },
-          { label: "Poached Egg", price: "50.00" },
-          { label: "Boiled Chicken", price: "50.00" },
-          { label: "Sliced Chicken Sausage", price: "50.00" },
-          { label: "Chicken Salami", price: "50.00" },
-          { label: "Chicken Pepperoni", price: "100.00" },
-          { label: "Bacon Strips", price: "130.00" },
-          { label: "Chicken Tikka", price: "150.00" },
-        ],
-      },
-    ],
-  },
-  {
-    name: "Burger",
-    price: "250.00",
-    customizationOptions: [
-      {
-        name: "Select Burger",
-        type: "radio",
-        options: [
-          { label: "Veg Cheese Burger", price: "250.00" },
-          { label: "Chicken Cheese Burger", price: "300.00" },
-        ],
-      },
-      {
-        name: "Flavour Of Bun",
         type: "radio",
         options: [
           { label: "Plain", price: "250.00" },
@@ -780,6 +777,48 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  //Burger
+  {
+    name: "Burger",
+    price: "250.00",
+    customizationOptions: [
+      {
+        name: "Select Burger",
+        type: "radio",
+        options: [
+          { label: "Veg Cheese Burger", price: "250.00" },
+          { label: "Chicken Cheese Burger", price: "300.00" },
+        ],
+      },
+      {
+        name: "Flavour Of Bun",
+        type: "radio",
+        options: [
+          { label: "Plain", price: "" },
+          { label: "GingerGarlic", price: "20.00" },
+          { label: "PeriPeri", price: "30.00" },
+          { label: "Schezwan", price: "50.00" },
+        ],
+      },
+      {
+        name: "Extras",
+        type: "checkbox",
+        options: [
+          { label: "Mushrooms", price: "50.00" },
+          { label: "Paneer", price: "50.00" },
+          { label: "Poached Egg", price: "50.00" },
+          { label: "Boiled Chicken", price: "50.00" },
+          { label: "Sliced Chicken Sausage", price: "50.00" },
+          { label: "Chicken Salami", price: "50.00" },
+          { label: "Chicken Pepperoni", price: "100.00" },
+          { label: "Bacon Strips", price: "130.00" },
+          { label: "Chicken Tikka", price: "150.00" },
+        ],
+      },
+    ],
+    //Pizza
+  },
+  //Pizza Done
   {
     name: "Pan Pizza",
     price: "350.00",
@@ -788,10 +827,10 @@ export const menuItems: MenuItem[] = [
         name: "Flavour",
         type: "radio",
         options: [
-          { label: "Margherita" },
-          { label: "Paneer & Mushroom", price: "50.00" },
-          { label: "Chicken & Sausage", price: "100.00" },
-          { label: "Chicken Pepperoni", price: "150.00" },
+          { label: "Margherita", price: "350.00" },
+          { label: "Paneer & Mushroom", price: "400.00" },
+          { label: "Chicken & Sausage", price: "450.00" },
+          { label: "Chicken Pepperoni", price: "500.00" },
         ],
       },
       {
@@ -808,6 +847,7 @@ export const menuItems: MenuItem[] = [
       },
     ],
   },
+  //Misc
   {
     name: "Miscellaneous",
     price: "0",
@@ -872,35 +912,3 @@ export const menuItems: MenuItem[] = [
     ],
   },
 ];
-
-// {
-//   name: "",
-//     price: "",
-//       customizationOptions: [
-//         {
-//           name: "",
-//           type: "radio",
-//           options: [
-//             { label: "", price: "" },
-
-//           ],
-//         },
-//         {
-//           name: "Extras",
-//           type: "checkbox",
-//           options: [
-//             { label: "", price: "" },
-
-//           ],
-//         },
-//         {
-//           name: "",
-//           type: "radio",
-//           options: [
-//             { label: "" },
-//             { label: "" },
-
-//           ],
-//         },
-//       ],
-//   },

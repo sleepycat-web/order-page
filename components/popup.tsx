@@ -12,77 +12,142 @@ interface PopupProps {
   ) => void;
 }
 
-
 const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
-const [selectedOptions, setSelectedOptions] = useState<
-  Record<string, string[]>
->({});
-
-  const [quantity, setQuantity] = useState(1);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [specialRequests, setSpecialRequests] = useState("");
-  const popupRef = useRef<HTMLDivElement>(null); 
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const [totalPrice, setTotalPrice] = useState<number>(parseFloat(item.price));
 
-  const calculateTotalPrice = (): number => {
-    let total = parseFloat(item.price);
+  const shouldShowQuantitySelector = (itemName: string, optionName: string) => {
+    const cases = [
+      { item: "Beverages", option: "Select Beverage" },
+      { item: "Bread/Bun", option: "Texture" },
+      { item: "Bread/Bun", option: "Extras" },
 
-    Object.entries(selectedOptions).forEach(([optionName, selectedValues]) => {
-      const option = item.customizationOptions?.find(
-        (opt) => opt.name === optionName
-      );
-      if (option) {
-        selectedValues.forEach((value) => {
-          const selectedOpt = option.options.find((opt) => opt.label === value);
-          if (selectedOpt && selectedOpt.price) {
-            total += parseFloat(selectedOpt.price);
-          }
-        });
-      }
-    });
-
-    return total * quantity;
+      { item: "Tea", option: "Choice of Tea" },
+      { item: "Coffee", option: "Coffee Type" },
+      // { item: "Maggi", option: "Flavour" },
+      { item: "Wai Wai", option: "Flavour" },
+      { item: "Ramen", option: "Flavour" },
+      { item: "Soup", option: "Select Broth" },
+      { item: "Momo", option: "Preference" },
+      { item: "Snacks", option: "Select Snack" },
+      { item: "Rice Bowl", option: "Select Rice" },
+      { item: "Indian Gravy", option: "Select Your Meal" },
+      { item: "Pasta", option: "Flavour" },
+      { item: "Sandwich", option: "Flavour of Bread" },
+      { item: "Burger", option: "Select Burger" },
+      { item: "Pan Pizza", option: "Flavour" },
+      { item: "Miscellaneous", option: "" },
+    ];
+    return cases.some(c => c.item === itemName && (c.option === optionName || c.item === "Miscellaneous"));
   };
 
+const calculateTotalPrice = (): number => {
+  let total = 0;
 
+  Object.entries(selectedOptions).forEach(([optionName, selectedValues]) => {
+    const option = item.customizationOptions?.find(
+      (opt) => opt.name === optionName
+    );
 
-const handleOptionChange = (
-  optionName: string,
-  value: string,
-  type: "radio" | "checkbox"
-) => {
-  setSelectedOptions((prev: Record<string, string[]>) => {
-    const newOptions = { ...prev };
-    if (type === "radio") {
-      if (newOptions[optionName]?.[0] === value) {
-        // If the same radio option is clicked again, deselect it
-        delete newOptions[optionName];
-      } else {
-        newOptions[optionName] = [value];
-      }
-    } else if (type === "checkbox") {
-      if (!newOptions[optionName]) {
-        newOptions[optionName] = [];
-      }
-      const index = newOptions[optionName].indexOf(value);
-      if (index > -1) {
-        newOptions[optionName] = newOptions[optionName].filter(
-          (item) => item !== value
-        );
-      } else {
-        newOptions[optionName] = [...newOptions[optionName], value];
-      }
+    if (option) {
+      selectedValues.forEach((value) => {
+        const selectedOpt = option.options.find((opt) => opt.label === value);
+        if (selectedOpt) {
+          const quantity = quantities[`${optionName}-${value}`] || 1;
+          if (selectedOpt.price) {
+            total += parseFloat(selectedOpt.price) * quantity;
+          } else {
+            // Include items with only a label and no price
+            if (
+              [
+                "Extras",
+                "Temperature",
+                "Texture",
+                "Appetite",
+                "Taste",
+                "Type",
+                "Choose Bite",
+                "Choice of Tea",
+                "Appetite",
+                "Flavour",
+                "Extra",
+                // "Flavour of Bun",
+              ].includes(optionName)
+            ) {
+              // Include these options without adding to the total price
+              // You might want to handle these differently based on your requirements
+            } else {
+              // For other options with no price, add the item's base price
+              // total += parseFloat(item.price) * quantity;
+            }
+          }
+        }
+      });
     }
-    return newOptions;
   });
+
+  return total;
 };
- 
+
+  const handleOptionChange = (
+    optionName: string,
+    value: string,
+    type: "radio" | "checkbox"
+  ) => {
+    setSelectedOptions((prev: Record<string, string[]>) => {
+      const newOptions = { ...prev };
+      if (type === "radio") {
+        if (newOptions[optionName]?.[0] === value) {
+          delete newOptions[optionName];
+          setQuantities((prevQuantities) => {
+            const newQuantities = { ...prevQuantities };
+            delete newQuantities[`${optionName}-${value}`];
+            return newQuantities;
+          });
+        } else {
+          if (newOptions[optionName]) {
+            setQuantities((prevQuantities) => {
+              const newQuantities = { ...prevQuantities };
+              delete newQuantities[`${optionName}-${newOptions[optionName][0]}`];
+              return newQuantities;
+            });
+          }
+          newOptions[optionName] = [value];
+          setQuantities((prevQuantities) => ({
+            ...prevQuantities,
+            [`${optionName}-${value}`]: 1,
+          }));
+        }
+      } else if (type === "checkbox") {
+        if (!newOptions[optionName]) {
+          newOptions[optionName] = [];
+        }
+        const index = newOptions[optionName].indexOf(value);
+        if (index > -1) {
+          newOptions[optionName] = newOptions[optionName].filter(item => item !== value);
+          setQuantities((prevQuantities) => {
+            const newQuantities = { ...prevQuantities };
+            delete newQuantities[`${optionName}-${value}`];
+            return newQuantities;
+          });
+        } else {
+          newOptions[optionName] = [...newOptions[optionName], value];
+          setQuantities((prevQuantities) => ({
+            ...prevQuantities,
+            [`${optionName}-${value}`]: 1,
+          }));
+        }
+      }
+      return newOptions;
+    });
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node)
-      ) {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -93,14 +158,46 @@ const handleOptionChange = (
     };
   }, [onClose]);
 
-  
   useEffect(() => {
     setTotalPrice(calculateTotalPrice());
-  }, [selectedOptions, quantity]);
+  }, [selectedOptions, quantities]);
 
   const handleAddToOrder = () => {
-    onAddToOrder(item, selectedOptions, quantity, specialRequests);
+    const totalQuantity = Object.values(quantities).reduce((a, b) => a + b, 0);
+    onAddToOrder(item, selectedOptions, totalQuantity, specialRequests);
     onClose();
+  };
+
+  const QuantitySelector: React.FC<{ optionName: string; value: string }> = ({
+    optionName,
+    value,
+  }) => {
+    const quantity = quantities[`${optionName}-${value}`] || 1;
+
+    const setQuantity = (newQuantity: number) => {
+      setQuantities((prev) => ({
+        ...prev,
+        [`${optionName}-${value}`]: newQuantity,
+      }));
+    };
+
+    return (
+      <div className="flex items-center mb-4 ml-6">
+        <button
+          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+          className="btn btn-sm"
+        >
+          -
+        </button>
+        <span className="mx-2">{quantity}</span>
+        <button
+          onClick={() => setQuantity(quantity + 1)}
+          className="btn btn-sm"
+        >
+          +
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -134,49 +231,56 @@ const handleOptionChange = (
             <div key={index} className="mb-4">
               <h3 className="font-semibold mb-2">{option.name}</h3>
               {option.options.map((opt, optIndex) => (
-                <div
-                  key={optIndex}
-                  className={`flex items-center mb-4 p-4 bg-neutral-900 rounded-lg on-click cursor-pointer ${
-                    selectedOptions[option.name]?.includes(opt.label)
-                      ? "border border-white"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    handleOptionChange(option.name, opt.label, option.type)
-                  }
-                >
-                  <input
-                    type={option.type}
-                    id={`${item.name}-${option.name}-${opt.label}`}
-                    name={option.name}
-                    value={opt.label}
-                    checked={
-                      option.type === "radio"
-                        ? selectedOptions[option.name]?.[0] === opt.label
-                        : selectedOptions[option.name]?.includes(opt.label)
-                    }
-                    className="mr-2 cursor-pointer"
-                    readOnly
-                  />
+                <div key={optIndex}>
                   <div
-                    className="cursor-pointer"
+                    className={`flex items-center mb-4 p-4 bg-neutral-900 rounded-lg cursor-pointer ${
+                      selectedOptions[option.name]?.includes(opt.label)
+                        ? "border border-white"
+                        : ""
+                    }`}
                     onClick={() =>
                       handleOptionChange(option.name, opt.label, option.type)
                     }
                   >
+                    <input
+                      type={option.type}
+                      id={`${item.name}-${option.name}-${opt.label}`}
+                      name={option.name}
+                      value={opt.label}
+                      checked={
+                        option.type === "radio"
+                          ? selectedOptions[option.name]?.[0] === opt.label
+                          : selectedOptions[option.name]?.includes(opt.label)
+                      }
+                      className="mr-2 cursor-pointer"
+                      readOnly
+                      onClick={(e) => e.stopPropagation()}
+                    />
                     <label
-                      className="cursor-pointer"
+                      className="cursor-pointer flex-grow"
                       htmlFor={`${item.name}-${option.name}-${opt.label}`}
                     >
-                      {opt.label} {opt.price && `(+₹${opt.price})`}
+                      {opt.label}
+                      {opt.price &&
+                        option.type === "checkbox" &&
+                        ` (+₹${opt.price})`}
+                      {opt.price &&
+                        option.type !== "checkbox" &&
+                        ` (₹${opt.price})`}
                     </label>
                   </div>
+                  {selectedOptions[option.name]?.includes(opt.label) &&
+                    shouldShowQuantitySelector(item.name, option.name) && (
+                      <QuantitySelector
+                        optionName={option.name}
+                        value={opt.label}
+                      />
+                    )}
                 </div>
               ))}
             </div>
           ))}
 
-          {/* Special Requests Textarea */}
           <div className="mb-4">
             <h3 className="font-semibold mb-2">Special Requests</h3>
             <textarea
@@ -187,27 +291,12 @@ const handleOptionChange = (
               onChange={(e) => setSpecialRequests(e.target.value)}
             ></textarea>
           </div>
-
-          <div className="flex items-center mb-4">
-            <button
-              onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-              className="btn btn-sm"
-            >
-              -
-            </button>
-            <span className="mx-2">{quantity}</span>
-            <button
-              onClick={() => setQuantity((prev) => prev + 1)}
-              className="btn btn-sm"
-            >
-              +
-            </button>
-          </div>
         </div>
+        
         <button
           className="btn mt-2 btn-primary w-full"
           onClick={handleAddToOrder}
-          disabled={quantity <= 0}
+          disabled={Object.keys(selectedOptions).length === 0}
         >
           Add to my order
           {Object.keys(selectedOptions).length > 0 &&
