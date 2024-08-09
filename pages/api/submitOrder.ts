@@ -6,10 +6,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "POST") {
-    const { location } = req.body;
+    const { location, cabin, timestamp } = req.body;
 
-    if (!location) {
-      return res.status(400).json({ error: "Location is required" });
+    if (!location || !cabin) {
+      return res.status(400).json({ error: "Location and cabin are required" });
     }
 
     try {
@@ -26,9 +26,12 @@ export default async function handler(
 
       const collection = db.collection(collectionName);
 
+      // Generate IST timestamp if not provided
+
       const result = await collection.insertOne({
         location,
-        timestamp: new Date(),
+        cabin,
+        timestamp
       });
 
       res.status(200).json({
@@ -44,3 +47,5 @@ export default async function handler(
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+
