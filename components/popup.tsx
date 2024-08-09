@@ -14,9 +14,10 @@ interface PopupProps {
 
 
 const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
-  const [selectedOptions, setSelectedOptions] = useState<
-    Record<string, string[]>
-  >({});
+const [selectedOptions, setSelectedOptions] = useState<
+  Record<string, string[]>
+>({});
+
   const [quantity, setQuantity] = useState(1);
   const [specialRequests, setSpecialRequests] = useState("");
   const popupRef = useRef<HTMLDivElement>(null); 
@@ -53,7 +54,12 @@ const handleOptionChange = (
   setSelectedOptions((prev: Record<string, string[]>) => {
     const newOptions = { ...prev };
     if (type === "radio") {
-      newOptions[optionName] = [value];
+      if (newOptions[optionName]?.[0] === value) {
+        // If the same radio option is clicked again, deselect it
+        delete newOptions[optionName];
+      } else {
+        newOptions[optionName] = [value];
+      }
     } else if (type === "checkbox") {
       if (!newOptions[optionName]) {
         newOptions[optionName] = [];
@@ -70,6 +76,7 @@ const handleOptionChange = (
     return newOptions;
   });
 };
+ 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -207,7 +214,6 @@ const handleOptionChange = (
             ` ₹${totalPrice.toFixed(2)}`}
         </button>
 
-        
         <button className="btn btn-ghost w-full mt-2" onClick={onClose}>
           Cancel
         </button>
