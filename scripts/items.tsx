@@ -695,7 +695,7 @@ export const menuItems: MenuItem[] = [
   //Indian Gracy DOne
   {
     name: "Indian Gravy",
-    soldOut: true,
+    soldOut: false,
     price: "70.00",
 
     customizationOptions: [
