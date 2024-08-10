@@ -7,6 +7,11 @@ export const menuItems: MenuItem[] = [
     price: "20.00",
     customizationOptions: [
       {
+        name: "Temperature",
+        type: "radio",
+        options: [{ label: "Room Temperature" }, { label: "Chilled" }],
+      },
+      {
         name: "Select Beverage",
         type: "radio",
         options: [
@@ -48,11 +53,6 @@ export const menuItems: MenuItem[] = [
           { label: "DryFruit Mix", price: "50.00" },
         ],
       },
-      {
-        name: "Temperature",
-        type: "radio",
-        options: [{ label: "Room Temperature" }, { label: "Chilled" }],
-      },
     ],
   },
   // Bread Done
@@ -70,9 +70,14 @@ export const menuItems: MenuItem[] = [
         type: "radio",
         options: [
           { label: "Plain", price: "30.00" },
-          { label: "Butter Toast", price: "30.00" },
-          { label: "GingerGarlic Toast", price: "50.00" },
-          { label: "Cheese Chilli Toast", price: "120.00" },
+          { label: "Butter Toast", price: "60.00" },
+          { label: "GingerGarlic Toast", price: "80.00" },
+          { label: "Milk Toast", price: "100.00" },
+          { label: "Caramel Toast", price: "130.00" },
+          { label: "Strawberry Toast", price: "130.00" },
+          { label: "Chocolate Toast", price: "130.00" },
+          { label: "French Toast", price: "150.00" },
+          { label: "Cheese Chilli Toast", price: "150.00" },
         ],
       },
       {
@@ -221,9 +226,7 @@ export const menuItems: MenuItem[] = [
       {
         name: "Preference",
         type: "radio",
-        options: [
-          { label: "Veg", price: "50.00" },
-        ],
+        options: [{ label: "Veg", price: "50.00" }],
       },
       {
         name: "Flavour",
