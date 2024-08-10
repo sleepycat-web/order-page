@@ -11,7 +11,6 @@ interface PopupProps {
     specialRequests: string
   ) => void;
 }
-
 const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string[]>
@@ -42,7 +41,18 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
 
     return total * quantity;
   };
-
+  const hasSelectedOptionsWithPrice = (): boolean => {
+    return Object.entries(selectedOptions).some(
+      ([optionName, selectedValues]) => {
+        const option = item.customizationOptions?.find(
+          (opt) => opt.name === optionName
+        );
+        return option?.options.some(
+          (opt) => selectedValues.includes(opt.label) && opt.price
+        );
+      }
+    );
+  };
   const handleOptionChange = (
     optionName: string,
     value: string,
@@ -241,8 +251,9 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
             className="btn mt-2 btn-primary w-2/3"
             onClick={handleAddToOrder}
           >
-            Add to my order
-            {hasSelectedOptions && ` ₹${totalPrice.toFixed(2)}`}
+            {hasSelectedOptionsWithPrice()
+              ? `Add to my order ₹${totalPrice.toFixed(2)}`
+              : "Add to my order"}
           </button>
 
           <button
