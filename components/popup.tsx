@@ -117,9 +117,13 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
 
   const validateSelection = (): boolean => {
     if (!item.customizationOptions) return true;
-    
+
     for (const option of item.customizationOptions) {
-      if (option.type === 'radio' && (!selectedOptions[option.name] || selectedOptions[option.name].length === 0)) {
+      if (
+        option.type === "radio" &&
+        (!selectedOptions[option.name] ||
+        selectedOptions[option.name].length === 0)
+      ) {
         return false;
       }
     }
@@ -143,7 +147,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
   const hasSelectedOptions = Object.keys(selectedOptions).length > 0;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-0 flex items-center justify-center z-50 overflow-y-auto p-4">
       <div
         ref={popupRef}
         className="bg-neutral-950 p-6 rounded-lg shadow-lg w-full max-w-md relative flex flex-col h-[90vh]"

@@ -19,6 +19,11 @@ export interface CustomizationOption {
   }[];
 }
 
+interface MenuProps {
+  items: MenuItem[];
+  onSelectItem: (item: MenuItem) => void; // Add this line to define the onSelectItem prop
+}
+
 export const MenuItemComponent: React.FC<MenuItem> = ({
   name,
   price,
@@ -34,11 +39,15 @@ export const MenuItemComponent: React.FC<MenuItem> = ({
   </div>
 );
 
-export const Menu: React.FC<{ items: MenuItem[] }> = ({ items }) => {
+export const Menu: React.FC<MenuProps> = ({ items, onSelectItem }) => {
+  // Updated to use MenuProps
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
   const handleItemClick = (item: MenuItem) => {
-    setSelectedItem(item);
+    if (!item.soldOut) {
+      setSelectedItem(item);
+      onSelectItem(item); // Invoke onSelectItem when an item is clicked
+    }
   };
 
   const handleClosePopup = () => {
@@ -50,7 +59,6 @@ export const Menu: React.FC<{ items: MenuItem[] }> = ({ items }) => {
     selectedOptions: Record<string, string[]>,
     quantity: number
   ) => {
-    // Implement your logic to add the item to the order
     console.log("Added to order:", item, selectedOptions, quantity);
   };
 
