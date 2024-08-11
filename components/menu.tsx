@@ -31,8 +31,8 @@ export const MenuItemComponent: React.FC<MenuItem> = ({
   soldOut,
 }) => (
   <div className="p-4 bg-neutral-950 rounded-lg shadow-sm hover:cursor-pointer ">
-    <h3 className="text-lg font-semibold">{name}</h3>
-    <p className={`text-lg ${soldOut ? "text-red-500" : "text-green-600"}`}>
+    <h3 className="text-base font-semibold">{name}</h3>
+    <p className={`text-base ${soldOut ? "text-red-500" : "text-green-600"}`}>
       ₹{price} {soldOut && "Sold Out"}
     </p>
     {description && <p className="text-sm text-gray-600">{description}</p>}
@@ -66,7 +66,7 @@ const handleAddToOrder = (
 };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+    <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
       {items.map((item, index) => (
         <div key={index} onClick={() => handleItemClick(item)}>
           <MenuItemComponent {...item} />
