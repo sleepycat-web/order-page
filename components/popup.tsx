@@ -9,9 +9,10 @@ interface PopupProps {
     selectedOptions: Record<string, string[]>,
     quantity: number,
     specialRequests: string,
-     totalPrice: number 
+    totalPrice: number
   ) => void;
 }
+
 const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string[]>
@@ -42,6 +43,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
 
     return total * quantity;
   };
+
   const hasSelectedOptionsWithPrice = (): boolean => {
     return Object.entries(selectedOptions).some(
       ([optionName, selectedValues]) => {
@@ -54,37 +56,34 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
       }
     );
   };
-  const handleOptionChange = (
-    optionName: string,
-    value: string,
-    type: "radio" | "checkbox"
-  ) => {
-    setSelectedOptions((prev: Record<string, string[]>) => {
-      const newOptions = { ...prev };
-      if (type === "radio") {
-        // If the option is already selected, unselect it
-        if (newOptions[optionName]?.[0] === value) {
-          delete newOptions[optionName];
-        } else {
-          newOptions[optionName] = [value];
-        }
-      } else if (type === "checkbox") {
-        if (!newOptions[optionName]) {
-          newOptions[optionName] = [];
-        }
-        const index = newOptions[optionName].indexOf(value);
-        if (index > -1) {
-          newOptions[optionName] = newOptions[optionName].filter(
-            (item) => item !== value
-          );
-        } else {
-          newOptions[optionName] = [...newOptions[optionName], value];
-        }
-      }
-      return newOptions;
-    });
-    setError(null);
-  };
+
+   const handleOptionChange = (
+     optionName: string,
+     value: string,
+     type: "radio" | "checkbox"
+   ) => {
+     setSelectedOptions((prev: Record<string, string[]>) => {
+       const newOptions = { ...prev };
+       if (type === "radio") {
+         newOptions[optionName] = [value];
+       } else if (type === "checkbox") {
+         if (!newOptions[optionName]) {
+           newOptions[optionName] = [];
+         }
+         const index = newOptions[optionName].indexOf(value);
+         if (index > -1) {
+           newOptions[optionName] = newOptions[optionName].filter(
+             (item) => item !== value
+           );
+         } else {
+           newOptions[optionName] = [...newOptions[optionName], value];
+         }
+       }
+       return newOptions;
+     });
+     setError(null);
+   };
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -123,7 +122,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
       if (
         option.type === "radio" &&
         (!selectedOptions[option.name] ||
-        selectedOptions[option.name].length === 0)
+          selectedOptions[option.name].length === 0)
       ) {
         return false;
       }
@@ -133,7 +132,13 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
 
   const handleAddToOrder = () => {
     if (validateSelection()) {
-      onAddToOrder(item, selectedOptions, quantity, specialRequests,totalPrice);
+      onAddToOrder(
+        item,
+        selectedOptions,
+        quantity,
+        specialRequests,
+        totalPrice
+      );
       onClose();
     } else {
       setError("Please select required options");
@@ -178,47 +183,40 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           {item.customizationOptions?.map((option, index) => (
             <div key={index} className="mb-4">
               <h3 className="font-semibold mb-2">{option.name}</h3>
-             {option.options.map((opt, optIndex) => (
-  <div key={optIndex}>
-    <div
-      className={`flex items-center mb-4 p-4 bg-neutral-900 rounded-lg cursor-pointer ${
-        selectedOptions[option.name]?.includes(opt.label)
-          ? "border border-white"
-          : ""
-      }`}
-      onClick={() =>
-        handleOptionChange(option.name, opt.label, option.type)
-      }
-    >
-      <input
-        type={option.type}
-        id={`${item.name}-${option.name}-${opt.label}`}
-        name={option.name}
-        value={opt.label}
-        checked={
-          option.type === "radio"
-            ? selectedOptions[option.name]?.[0] === opt.label
-            : selectedOptions[option.name]?.includes(opt.label)
-        }
-        className="mr-2 cursor-pointer"
-        onChange={() => handleOptionChange(option.name, opt.label, option.type)}
-        onClick={(e) => e.stopPropagation()}
-      />
-      <label
-        className="cursor-pointer flex-grow"
-        htmlFor={`${item.name}-${option.name}-${opt.label}`}
-      >
-        {opt.label}
-        {opt.price &&
-          option.type === "checkbox" &&
-          ` (+₹${opt.price})`}
-        {opt.price &&
-          option.type !== "checkbox" &&
-          ` (₹${opt.price})`}
-      </label>
-    </div>
-  </div>
-))}
+              {option.options.map((opt, optIndex) => (
+                <div key={optIndex}>
+                  <label
+                    className={`flex items-center mb-4 p-4 bg-neutral-900 rounded-lg cursor-pointer ${
+                      selectedOptions[option.name]?.includes(opt.label)
+                        ? "border border-white"
+                        : ""
+                    }`}
+                  >
+                    <input
+                      type={option.type}
+                      id={`${item.name}-${option.name}-${opt.label}`}
+                      name={option.name}
+                      value={opt.label}
+                      checked={selectedOptions[option.name]?.includes(
+                        opt.label
+                      )}
+                      className="mr-2 cursor-pointer"
+                      onChange={() =>
+                        handleOptionChange(option.name, opt.label, option.type)
+                      }
+                    />
+                    <span className="flex-grow">
+                      {opt.label}
+                      {opt.price &&
+                        option.type === "checkbox" &&
+                        ` (+₹${opt.price})`}
+                      {opt.price &&
+                        option.type !== "checkbox" &&
+                        ` (₹${opt.price})`}
+                    </span>
+                  </label>
+                </div>
+              ))}
             </div>
           ))}
 
