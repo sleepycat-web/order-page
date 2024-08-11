@@ -64,26 +64,26 @@ export default function Home() {
       setOrderStatus("Failed to submit order.");
     }
   };
-const handleUpdateQuantity = (index: number, newQuantity: number) => {
-  setCartItems((prevItems) =>
-    prevItems.map((item, i) =>
-      i === index ? { ...item, quantity: newQuantity } : item
-    )
-  );
-};
- const handleAddToCart = (
-   item: MenuItem,
-   selectedOptions: Record<string, string[]>,
-   quantity: number,
-   specialRequests: string,
-   totalPrice: number // Add this parameter
- ) => {
-   setCartItems((prevItems) => [
-     ...prevItems,
-     { item, selectedOptions, quantity, specialRequests, totalPrice }, // Include totalPrice
-   ]);
-   setSelectedItem(null);
- };
+  const handleUpdateQuantity = (index: number, newQuantity: number) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item, i) =>
+        i === index ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  };
+  const handleAddToCart = (
+    item: MenuItem,
+    selectedOptions: Record<string, string[]>,
+    quantity: number,
+    specialRequests: string,
+    totalPrice: number // Add this parameter
+  ) => {
+    setCartItems((prevItems) => [
+      ...prevItems,
+      { item, selectedOptions, quantity, specialRequests, totalPrice }, // Include totalPrice
+    ]);
+    setSelectedItem(null);
+  };
 
   const handleRemoveFromCart = (index: number) => {
     setCartItems((prevItems) => prevItems.filter((_, i) => i !== index));

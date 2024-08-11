@@ -118,7 +118,7 @@ export const menuItems: MenuItem[] = [
         options: [{ label: "Assam" }, { label: "Darjeeling" }],
       },
       {
-        name: "Appetite:",
+        name: "Appetite",
         type: "radio",
         options: [
           { label: "With Milk ", price: "50.00" },
