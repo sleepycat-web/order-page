@@ -177,47 +177,47 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           {item.customizationOptions?.map((option, index) => (
             <div key={index} className="mb-4">
               <h3 className="font-semibold mb-2">{option.name}</h3>
-              {option.options.map((opt, optIndex) => (
-                <div key={optIndex}>
-                  <div
-                    className={`flex items-center mb-4 p-4 bg-neutral-900 rounded-lg cursor-pointer ${
-                      selectedOptions[option.name]?.includes(opt.label)
-                        ? "border border-white"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      handleOptionChange(option.name, opt.label, option.type)
-                    }
-                  >
-                    <input
-                      type={option.type}
-                      id={`${item.name}-${option.name}-${opt.label}`}
-                      name={option.name}
-                      value={opt.label}
-                      checked={
-                        option.type === "radio"
-                          ? selectedOptions[option.name]?.[0] === opt.label
-                          : selectedOptions[option.name]?.includes(opt.label)
-                      }
-                      className="mr-2 cursor-pointer"
-                      readOnly
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <label
-                      className="cursor-pointer flex-grow"
-                      htmlFor={`${item.name}-${option.name}-${opt.label}`}
-                    >
-                      {opt.label}
-                      {opt.price &&
-                        option.type === "checkbox" &&
-                        ` (+₹${opt.price})`}
-                      {opt.price &&
-                        option.type !== "checkbox" &&
-                        ` (₹${opt.price})`}
-                    </label>
-                  </div>
-                </div>
-              ))}
+             {option.options.map((opt, optIndex) => (
+  <div key={optIndex}>
+    <div
+      className={`flex items-center mb-4 p-4 bg-neutral-900 rounded-lg cursor-pointer ${
+        selectedOptions[option.name]?.includes(opt.label)
+          ? "border border-white"
+          : ""
+      }`}
+      onClick={() =>
+        handleOptionChange(option.name, opt.label, option.type)
+      }
+    >
+      <input
+        type={option.type}
+        id={`${item.name}-${option.name}-${opt.label}`}
+        name={option.name}
+        value={opt.label}
+        checked={
+          option.type === "radio"
+            ? selectedOptions[option.name]?.[0] === opt.label
+            : selectedOptions[option.name]?.includes(opt.label)
+        }
+        className="mr-2 cursor-pointer"
+        onChange={() => handleOptionChange(option.name, opt.label, option.type)}
+        onClick={(e) => e.stopPropagation()}
+      />
+      <label
+        className="cursor-pointer flex-grow"
+        htmlFor={`${item.name}-${option.name}-${opt.label}`}
+      >
+        {opt.label}
+        {opt.price &&
+          option.type === "checkbox" &&
+          ` (+₹${opt.price})`}
+        {opt.price &&
+          option.type !== "checkbox" &&
+          ` (₹${opt.price})`}
+      </label>
+    </div>
+  </div>
+))}
             </div>
           ))}
 

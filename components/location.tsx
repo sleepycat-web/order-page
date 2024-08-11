@@ -146,77 +146,79 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           Failed to detect location. Please input manually.
         </p>
       )}
-      <div className="relative mb-4">
-        <button
-          className="btn text-left"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        >
-          {selectedLocation || "Select Location"}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 448 512"
-            className="ml-2 h-4 w-4 inline"
-            fill="currentColor"
+      <div className="flex flex-row space-x-4 mt-8 sm:mt-0">
+        <div className="relative">
+          <button
+            className="btn text-left"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <path d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
-          </svg>
-        </button>
-        {isDropdownOpen && (
-          <ul className="menu bg-base-100 rounded-box shadow-lg absolute z-10 mt-1 p-2 w-52">
-            {locations.map((location) => (
-              <li key={location.name}>
-                <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onLocationSelect(location.name, "");
-                    setIsDropdownOpen(false);
-                  }}
-                >
-                  {location.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+            {selectedLocation || "Select Location"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 448 512"
+              className="ml-2 h-4 w-4 inline"
+              fill="currentColor"
+            >
+              <path d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
+            </svg>
+          </button>
+          {isDropdownOpen && (
+            <ul className="menu bg-base-100 rounded-box shadow-lg absolute z-10 mt-1 p-2 w-52">
+              {locations.map((location) => (
+                <li key={location.name}>
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onLocationSelect(location.name, "");
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    {location.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      <div className="relative mb-4">
-        <button
-          className={`btn text-left disabled:text-neutral-200/40  ${
-            !selectedLocation ? "btn-disabled" : ""
-          }`}
-          onClick={() => setIsCabinDropdownOpen(!isCabinDropdownOpen)}
-          disabled={!selectedLocation}
-        >
-          {selectedCabin || "Select Cabin"}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 448 512"
-            className="ml-2 h-4 w-4 inline"
-            fill="currentColor"
+        <div className="relative">
+          <button
+            className={`btn text-left disabled:text-neutral-200/40 ${
+              !selectedLocation ? "btn-disabled" : ""
+            }`}
+            onClick={() => setIsCabinDropdownOpen(!isCabinDropdownOpen)}
+            disabled={!selectedLocation}
           >
-            <path d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
-          </svg>
-        </button>
-        {isCabinDropdownOpen && selectedLocation && (
-          <ul className="menu bg-base-100 rounded-box shadow-lg absolute z-10 mt-1 p-2 w-52">
-            {getCabinOptions().map((cabin) => (
-              <li key={cabin}>
-                <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onLocationSelect(selectedLocation, cabin);
-                    setIsCabinDropdownOpen(false);
-                  }}
-                >
-                  {cabin}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+            {selectedCabin || "Select Cabin"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 448 512"
+              className="ml-2 h-4 w-4 inline"
+              fill="currentColor"
+            >
+              <path d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
+            </svg>
+          </button>
+          {isCabinDropdownOpen && selectedLocation && (
+            <ul className="menu bg-base-100 rounded-box shadow-lg absolute z-10 mt-1 p-2 w-52">
+              {getCabinOptions().map((cabin) => (
+                <li key={cabin}>
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onLocationSelect(selectedLocation, cabin);
+                      setIsCabinDropdownOpen(false);
+                    }}
+                  >
+                    {cabin}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </>
   );

@@ -87,20 +87,20 @@ export default function Home() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative ">
       {/* Overlay div for background opacity */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black opacity-50 z-40"></div>
+        <div className="fixed inset-0 bg-black opacity-50 z-40 "></div>
       )}
 
-      <main className="p-4 relative z-30">
+      <main className="p-4 relative z-30 ">
         <LocationSelector
           onLocationSelect={handleLocationSelect}
           selectedLocation={selectedLocation}
           selectedCabin={selectedCabin}
         />
 
-        <div className="fixed top-4 right-4 z-50">
+        <div className="fixed top-4 right-4 z-50 w-1/2">
           <Cart
             items={cartItems}
             onRemoveItem={handleRemoveFromCart}
