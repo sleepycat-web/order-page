@@ -146,7 +146,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           Failed to detect location. Please input manually.
         </p>
       )}
-      <div className="flex flex-row space-x-4 mt-8 sm:mt-0">
+      <div className="flex flex-row space-x-4 mt-4 sm:mt-0">
         <div className="relative">
           <button
             className="btn text-left"
