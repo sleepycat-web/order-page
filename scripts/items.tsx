@@ -852,7 +852,7 @@ export const menuItems: MenuItem[] = [
   },
   //Misc
   {
-    name: "Miscellaneous",
+    name: "Others",
     price: "0",
     customizationOptions: [
       {
