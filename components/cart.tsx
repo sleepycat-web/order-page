@@ -4,6 +4,7 @@ import { CartItem } from "../app/page"; // Adjust the import path as needed
 interface CartProps {
   items: CartItem[];
   onRemoveItem: (index: number) => void;
+  onUpdateQuantity: (index: number, newQuantity: number) => void;
   onToggle: () => void;
   isOpen: boolean;
 }
@@ -11,6 +12,7 @@ interface CartProps {
 const Cart: React.FC<CartProps> = ({
   items,
   onRemoveItem,
+  onUpdateQuantity,
   onToggle,
   isOpen,
 }) => {
@@ -52,20 +54,59 @@ const Cart: React.FC<CartProps> = ({
                 {items.map((item, index) => (
                   <li key={index} className="border-b border-gray-700 pb-4">
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-grow space-y-2">
                         <h3 className="font-semibold text-lg">
                           {item.item.name}
                         </h3>
-                        <p>Quantity: {item.quantity}</p>
+                        <div className="flex items-center mt-2">
+                          <button
+                            onClick={() =>
+                              onUpdateQuantity(index, item.quantity - 1)
+                            }
+                            className="btn btn-sm mr-2"
+                            disabled={item.quantity <= 1}
+                          >
+                            -
+                          </button>
+                          <span className="mx-2">
+                            Quantity: {item.quantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              onUpdateQuantity(index, item.quantity + 1)
+                            }
+                            className="btn btn-sm ml-2"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className="mt-2 flex items-center">
+                          <span className="mr-2">Price:</span>
+                          <div className="px-2 py-1 bg-blue-600 rounded text-white font-semibold">
+                            ₹{(item.totalPrice * item.quantity).toFixed(2)}
+                          </div>
+                        </div>
                         {Object.entries(item.selectedOptions).map(
                           ([optionName, values]) => (
-                            <p key={optionName}>
-                              {optionName}: {values.join(", ")}
-                            </p>
+                            <div key={optionName} className="mt-1">
+                              <span className="text-sm text-gray-400">
+                                {optionName}:{" "}
+                              </span>
+                              {values.map((value) => (
+                                <span
+                                  key={value}
+                                  className="text-sm mr-2 px-2 py-1 rounded bg-blue-600 text-white"
+                                >
+                                  {value}
+                                </span>
+                              ))}
+                            </div>
                           )
                         )}
                         {item.specialRequests && (
-                          <p>Special: {item.specialRequests}</p>
+                          <p className="text-sm text-gray-400 mt-1">
+                            Special: {item.specialRequests}
+                          </p>
                         )}
                       </div>
                       <button

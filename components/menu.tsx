@@ -54,13 +54,16 @@ export const Menu: React.FC<MenuProps> = ({ items, onSelectItem }) => {
     setSelectedItem(null);
   };
 
-  const handleAddToOrder = (
-    item: MenuItem,
-    selectedOptions: Record<string, string[]>,
-    quantity: number
-  ) => {
-    console.log("Added to order:", item, selectedOptions, quantity);
-  };
+const handleAddToOrder = (
+  item: MenuItem,
+  selectedOptions: Record<string, string[]>,
+  quantity: number,
+  specialRequests: string,
+  totalPrice: number // Add this parameter
+) => {
+  console.log("Added to order:", item, selectedOptions, quantity, totalPrice);
+  // You might want to do something with this data, like adding it to a cart state
+};
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">

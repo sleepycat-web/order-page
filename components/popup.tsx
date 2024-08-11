@@ -8,7 +8,8 @@ interface PopupProps {
     item: MenuItem,
     selectedOptions: Record<string, string[]>,
     quantity: number,
-    specialRequests: string
+    specialRequests: string,
+     totalPrice: number 
   ) => void;
 }
 const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
@@ -132,7 +133,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
 
   const handleAddToOrder = () => {
     if (validateSelection()) {
-      onAddToOrder(item, selectedOptions, quantity, specialRequests);
+      onAddToOrder(item, selectedOptions, quantity, specialRequests,totalPrice);
       onClose();
     } else {
       setError("Please select required options");

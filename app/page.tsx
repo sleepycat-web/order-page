@@ -11,8 +11,8 @@ export interface CartItem {
   selectedOptions: Record<string, string[]>;
   quantity: number;
   specialRequests: string;
+  totalPrice: number; // Add this line
 }
-
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCabin, setSelectedCabin] = useState("");
@@ -64,19 +64,26 @@ export default function Home() {
       setOrderStatus("Failed to submit order.");
     }
   };
-
-  const handleAddToCart = (
-    item: MenuItem,
-    selectedOptions: Record<string, string[]>,
-    quantity: number,
-    specialRequests: string
-  ) => {
-    setCartItems((prevItems) => [
-      ...prevItems,
-      { item, selectedOptions, quantity, specialRequests },
-    ]);
-    setSelectedItem(null);
-  };
+const handleUpdateQuantity = (index: number, newQuantity: number) => {
+  setCartItems((prevItems) =>
+    prevItems.map((item, i) =>
+      i === index ? { ...item, quantity: newQuantity } : item
+    )
+  );
+};
+ const handleAddToCart = (
+   item: MenuItem,
+   selectedOptions: Record<string, string[]>,
+   quantity: number,
+   specialRequests: string,
+   totalPrice: number // Add this parameter
+ ) => {
+   setCartItems((prevItems) => [
+     ...prevItems,
+     { item, selectedOptions, quantity, specialRequests, totalPrice }, // Include totalPrice
+   ]);
+   setSelectedItem(null);
+ };
 
   const handleRemoveFromCart = (index: number) => {
     setCartItems((prevItems) => prevItems.filter((_, i) => i !== index));
@@ -104,6 +111,7 @@ export default function Home() {
           <Cart
             items={cartItems}
             onRemoveItem={handleRemoveFromCart}
+            onUpdateQuantity={handleUpdateQuantity}
             onToggle={toggleCart}
             isOpen={isCartOpen}
           />
