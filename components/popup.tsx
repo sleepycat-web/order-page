@@ -183,11 +183,11 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           {item.customizationOptions?.map((option, index) => (
             <div key={index} className="mb-4">
               <h3 className="font-semibold mb-2">{option.name}</h3>
-              <div className="grid grid-cols-2 gap-x-2">
+              <div className="grid grid-cols-2 gap-2 grid-flow-row-dense">
                 {option.options.map((opt, optIndex) => (
-                  <div key={optIndex}>
+                  <div key={optIndex} className="bg-neutral-900 rounded-lg p-3">
                     <label
-                      className={`flex items-center mb-2 p-4 bg-neutral-900 rounded-lg cursor-pointer ${
+                      className={`flex items-center cursor-pointer ${
                         selectedOptions[option.name]?.includes(opt.label)
                           ? "border border-white"
                           : ""
