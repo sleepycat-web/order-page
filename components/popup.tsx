@@ -211,13 +211,17 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
                         }
                       />
                       <span className="flex-grow text-sm">
-                        {opt.label}
-                        {opt.price &&
-                          option.type === "checkbox" &&
-                          ` (+₹${opt.price})`}
-                        {opt.price &&
-                          option.type !== "checkbox" &&
-                          ` (₹${opt.price})`}
+                        {opt.label}{" "}
+                        <div className="inline-block">
+                          {opt.price && (
+                            <>
+                              {" "}
+                              {option.type === "checkbox"
+                                ? `(+₹${opt.price})`
+                                : `(₹${opt.price})`}
+                            </>
+                          )}
+                        </div>
                       </span>
                     </label>
                   </div>
