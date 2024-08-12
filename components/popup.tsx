@@ -156,7 +156,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
     <div className="fixed inset-0 bg-black bg-opacity-0 flex items-center justify-center z-50 overflow-y-auto p-4">
       <div
         ref={popupRef}
-        className="bg-neutral-950 p-6 rounded-lg shadow-lg w-full max-w-md relative flex flex-col h-[90vh]"
+        className="bg-neutral-950 p-6 rounded-lg shadow-lg w-full max-w-2xl relative flex flex-col h-[90vh]"
       >
         <button
           className="absolute top-4 right-4 text-white hover:text-gray-300"
@@ -183,40 +183,46 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           {item.customizationOptions?.map((option, index) => (
             <div key={index} className="mb-4">
               <h3 className="font-semibold mb-2">{option.name}</h3>
-              {option.options.map((opt, optIndex) => (
-                <div key={optIndex}>
-                  <label
-                    className={`flex items-center mb-4 p-4 bg-neutral-900 rounded-lg cursor-pointer ${
-                      selectedOptions[option.name]?.includes(opt.label)
-                        ? "border border-white"
-                        : ""
-                    }`}
-                  >
-                    <input
-                      type={option.type}
-                      id={`${item.name}-${option.name}-${opt.label}`}
-                      name={option.name}
-                      value={opt.label}
-                      checked={selectedOptions[option.name]?.includes(
-                        opt.label
-                      )}
-                      className="mr-2 cursor-pointer"
-                      onChange={() =>
-                        handleOptionChange(option.name, opt.label, option.type)
-                      }
-                    />
-                    <span className="flex-grow">
-                      {opt.label}
-                      {opt.price &&
-                        option.type === "checkbox" &&
-                        ` (+₹${opt.price})`}
-                      {opt.price &&
-                        option.type !== "checkbox" &&
-                        ` (₹${opt.price})`}
-                    </span>
-                  </label>
-                </div>
-              ))}
+              <div className="grid grid-cols-2 gap-x-2">
+                {option.options.map((opt, optIndex) => (
+                  <div key={optIndex}>
+                    <label
+                      className={`flex items-center mb-2 p-4 bg-neutral-900 rounded-lg cursor-pointer ${
+                        selectedOptions[option.name]?.includes(opt.label)
+                          ? "border border-white"
+                          : ""
+                      }`}
+                    >
+                      <input
+                        type={option.type}
+                        id={`${item.name}-${option.name}-${opt.label}`}
+                        name={option.name}
+                        value={opt.label}
+                        checked={selectedOptions[option.name]?.includes(
+                          opt.label
+                        )}
+                        className="mr-2 cursor-pointer"
+                        onChange={() =>
+                          handleOptionChange(
+                            option.name,
+                            opt.label,
+                            option.type
+                          )
+                        }
+                      />
+                      <span className="flex-grow text-sm">
+                        {opt.label}
+                        {opt.price &&
+                          option.type === "checkbox" &&
+                          ` (+₹${opt.price})`}
+                        {opt.price &&
+                          option.type !== "checkbox" &&
+                          ` (₹${opt.price})`}
+                      </span>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
 

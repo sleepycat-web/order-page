@@ -7,6 +7,9 @@ interface CartProps {
   onUpdateQuantity: (index: number, newQuantity: number) => void;
   onToggle: () => void;
   isOpen: boolean;
+  onCheckout: () => void;
+  selectedLocation: string;
+  selectedCabin: string;
 }
 
 const Cart: React.FC<CartProps> = ({
@@ -15,6 +18,9 @@ const Cart: React.FC<CartProps> = ({
   onUpdateQuantity,
   onToggle,
   isOpen,
+  onCheckout,
+  selectedLocation,
+  selectedCabin,
 }) => {
   return (
     <>
@@ -47,78 +53,98 @@ const Cart: React.FC<CartProps> = ({
                 &times;
               </button>
             </div>
+            {selectedLocation && (
+              <div className="mb-4 p-4 bg-neutral-800 rounded-lg ">
+                <p className="text-md ">
+               {selectedLocation}
+                </p>
+                {selectedCabin && (
+                  <p className="text-md"> {selectedCabin}</p>
+                )}
+              </div>
+            )}
             {items.length === 0 ? (
               <p>Your cart is empty</p>
             ) : (
-              <ul className="space-y-6">
-                {items.map((item, index) => (
-                  <li key={index} className="border-b border-gray-700 pb-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-grow space-y-2">
-                        <h3 className="font-semibold text-lg">
-                          {item.item.name}
-                        </h3>
-                        <div className="flex items-center mt-2">
-                          <button
-                            onClick={() =>
-                              onUpdateQuantity(index, item.quantity - 1)
-                            }
-                            className="btn btn-sm mr-2"
-                            disabled={item.quantity <= 1}
-                          >
-                            -
-                          </button>
-                          <span className="mx-2">
-                            Quantity: {item.quantity}
-                          </span>
-                          <button
-                            onClick={() =>
-                              onUpdateQuantity(index, item.quantity + 1)
-                            }
-                            className="btn btn-sm ml-2"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <div className="mt-2 flex items-center">
-                          <span className="mr-2">Price:</span>
-                          <div className="px-2 py-1 bg-blue-600 rounded text-white font-semibold">
-                            ₹{(item.totalPrice * item.quantity).toFixed(2)}
+              <>
+                <ul className="space-y-6">
+                  {items.map((item, index) => (
+                    <li key={index} className="border-b border-gray-700 pb-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-grow space-y-2">
+                          <h3 className="font-semibold text-lg">
+                            {item.item.name}
+                          </h3>
+                          <div className="flex items-center mt-2">
+                            <button
+                              onClick={() =>
+                                onUpdateQuantity(index, item.quantity - 1)
+                              }
+                              className="btn btn-sm mr-2"
+                              disabled={item.quantity <= 1}
+                            >
+                              -
+                            </button>
+                            <span className="mx-2">
+                              Quantity: {item.quantity}
+                            </span>
+                            <button
+                              onClick={() =>
+                                onUpdateQuantity(index, item.quantity + 1)
+                              }
+                              className="btn btn-sm ml-2"
+                            >
+                              +
+                            </button>
                           </div>
-                        </div>
-                        {Object.entries(item.selectedOptions).map(
-                          ([optionName, values]) => (
-                            <div key={optionName} className="mt-1">
-                              <span className="text-sm text-gray-400">
-                                {optionName}:{" "}
-                              </span>
-                              {values.map((value) => (
-                                <span
-                                  key={value}
-                                  className="text-sm mr-2 px-2 py-1 rounded bg-blue-600 text-white"
-                                >
-                                  {value}
-                                </span>
-                              ))}
+                          <div className="mt-2 flex items-center">
+                            <span className="mr-2">Price:</span>
+                            <div className="px-2 py-1 bg-blue-600 rounded text-white font-semibold">
+                              ₹{(item.totalPrice * item.quantity).toFixed(2)}
                             </div>
-                          )
-                        )}
-                        {item.specialRequests && (
-                          <p className="text-sm text-gray-400 mt-1">
-                            Special: {item.specialRequests}
-                          </p>
-                        )}
+                          </div>
+                          {Object.entries(item.selectedOptions).map(
+                            ([optionName, values]) => (
+                              <div key={optionName} className="mt-1">
+                                <span className="text-sm text-gray-400">
+                                  {optionName}:{" "}
+                                </span>
+                                {values.map((value) => (
+                                  <span
+                                    key={value}
+                                    className="text-sm mr-2 px-2 py-1 rounded bg-blue-600 text-white"
+                                  >
+                                    {value}
+                                  </span>
+                                ))}
+                              </div>
+                            )
+                          )}
+                          {item.specialRequests && (
+                            <p className="text-sm text-gray-400 mt-1">
+                              Special: {item.specialRequests}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => onRemoveItem(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
                       </div>
-                      <button
-                        onClick={() => onRemoveItem(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+                <div className="fixed bottom-4 left-4 right-4 flex justify-center">
+                  <button
+                    className="btn btn-primary  w-full max-w-3xl"
+                    onClick={onCheckout}
+                  >
+                    Checkout
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

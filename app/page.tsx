@@ -11,8 +11,9 @@ export interface CartItem {
   selectedOptions: Record<string, string[]>;
   quantity: number;
   specialRequests: string;
-  totalPrice: number; // Add this line
+  totalPrice: number;
 }
+
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCabin, setSelectedCabin] = useState("");
@@ -64,6 +65,7 @@ export default function Home() {
       setOrderStatus("Failed to submit order.");
     }
   };
+
   const handleUpdateQuantity = (index: number, newQuantity: number) => {
     setCartItems((prevItems) =>
       prevItems.map((item, i) =>
@@ -71,16 +73,17 @@ export default function Home() {
       )
     );
   };
+
   const handleAddToCart = (
     item: MenuItem,
     selectedOptions: Record<string, string[]>,
     quantity: number,
     specialRequests: string,
-    totalPrice: number // Add this parameter
+    totalPrice: number
   ) => {
     setCartItems((prevItems) => [
       ...prevItems,
-      { item, selectedOptions, quantity, specialRequests, totalPrice }, // Include totalPrice
+      { item, selectedOptions, quantity, specialRequests, totalPrice },
     ]);
     setSelectedItem(null);
   };
@@ -93,14 +96,24 @@ export default function Home() {
     setIsCartOpen(!isCartOpen);
   };
 
+  const handleProceedToCheckout = () => {
+    setIsCartOpen(true);
+  };
+
+  const handleCheckout = () => {
+    // Implement your checkout logic here
+    console.log("Proceeding to checkout");
+    // For now, we'll just call handleSubmit
+    handleSubmit();
+  };
+
   return (
-    <div className="relative ">
-      {/* Overlay div for background opacity */}
+    <div className="relative">
       {selectedItem && (
-        <div className="fixed inset-0 bg-black opacity-50 z-40 "></div>
+        <div className="fixed inset-0 bg-black opacity-50 z-40"></div>
       )}
 
-      <main className="p-4 relative z-30 ">
+      <main className="p-4 relative z-30">
         <LocationSelector
           onLocationSelect={handleLocationSelect}
           selectedLocation={selectedLocation}
@@ -114,6 +127,9 @@ export default function Home() {
             onUpdateQuantity={handleUpdateQuantity}
             onToggle={toggleCart}
             isOpen={isCartOpen}
+            onCheckout={handleCheckout}
+            selectedLocation={selectedLocation}
+            selectedCabin={selectedCabin}
           />
         </div>
 
@@ -131,7 +147,18 @@ export default function Home() {
 
         <Menu items={menuItems} onSelectItem={setSelectedItem} />
 
-        <button
+        {cartItems.length > 0 && (
+          <div className="fixed bottom-4 left-4 right-4 flex justify-center">
+            <button
+              className="btn btn-primary w-full max-w-md"
+              onClick={handleProceedToCheckout}
+            >
+              Proceed to Checkout
+            </button>
+          </div>
+        )}
+
+        {/* <button
           className="btn my-8 disabled:text-neutral-200/40"
           onClick={handleSubmit}
           disabled={
@@ -139,10 +166,9 @@ export default function Home() {
           }
         >
           Submit Order
-        </button>
+        </button> */}
       </main>
 
-      {/* Popup component with higher z-index */}
       {selectedItem && (
         <div className="relative z-50">
           <Popup
