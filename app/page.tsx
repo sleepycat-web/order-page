@@ -148,7 +148,7 @@ export default function Home() {
         <Menu items={menuItems} onSelectItem={setSelectedItem} />
 
         {cartItems.length > 0 && (
-          <div className="fixed bottom-4 left-4 right-4 flex justify-center">
+          <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
             <button
               className="btn btn-primary w-full max-w-md"
               onClick={handleProceedToCheckout}

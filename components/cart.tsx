@@ -55,12 +55,8 @@ const Cart: React.FC<CartProps> = ({
             </div>
             {selectedLocation && (
               <div className="mb-4 p-4 bg-neutral-800 rounded-lg ">
-                <p className="text-md ">
-               {selectedLocation}
-                </p>
-                {selectedCabin && (
-                  <p className="text-md"> {selectedCabin}</p>
-                )}
+                <p className="text-md ">{selectedLocation}</p>
+                {selectedCabin && <p className="text-md"> {selectedCabin}</p>}
               </div>
             )}
             {items.length === 0 ? (
@@ -136,7 +132,7 @@ const Cart: React.FC<CartProps> = ({
                     </li>
                   ))}
                 </ul>
-                <div className="fixed bottom-4 left-4 right-4 flex justify-center">
+                <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
                   <button
                     className="btn btn-primary  w-full max-w-3xl"
                     onClick={onCheckout}
