@@ -233,7 +233,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           <div className="mb-4">
             <h3 className="font-semibold mb-2">Special Requests</h3>
             <textarea
-              className="w-full p-2 rounded"
+              className="w-full p-2 rounded bg-neutral-900"
               rows={3}
               placeholder="Enter any special requests here..."
               value={specialRequests}
