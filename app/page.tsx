@@ -1,6 +1,6 @@
 "use client";
 import { menuItems } from "../scripts/items";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LocationSelector from "@/components/location";
 import { Menu, MenuItem } from "@/components/menu";
 import Popup from "@/components/popup";
@@ -56,6 +56,7 @@ export default function Home() {
       }),
     });
 
+    
     if (response.ok) {
       setOrderStatus("Order placed successfully!");
       setSelectedLocation("");

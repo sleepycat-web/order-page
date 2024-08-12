@@ -9,7 +9,7 @@ export const menuItems: MenuItem[] = [
       {
         name: "Temperature",
         type: "radio",
-        options: [{ label: "Room Temperature" }, { label: "Chilled" }],
+        options: [{ label: "Normal" }, { label: "Chilled" }],
       },
       {
         name: "Select Beverage",
