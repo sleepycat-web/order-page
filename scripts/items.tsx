@@ -220,22 +220,17 @@ export const menuItems: MenuItem[] = [
   },
   // Maggi Done
   {
-    name: "Maggi",
+    name: "Maggie",
     price: "50.00",
     customizationOptions: [
-      {
-        name: "Preference",
-        type: "radio",
-        options: [{ label: "Veg", price: "50.00" }],
-      },
       {
         name: "Flavour",
         type: "radio",
         options: [
-          { label: "Plain" },
-          { label: "Masala", price: "20.00" },
-          { label: "Schezwan", price: "30.00" },
-          { label: "Ultimate", price: "50.00" },
+          { label: "Plain", price: "50.00" },
+          { label: "Masala", price: "70.00" },
+          { label: "Schezwan", price: "80.00" },
+          { label: "Ultimate", price: "100.00" },
         ],
       },
       {
