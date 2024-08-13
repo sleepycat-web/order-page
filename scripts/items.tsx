@@ -7,11 +7,6 @@ export const menuItems: MenuItem[] = [
     price: "20.00",
     customizationOptions: [
       {
-        name: "Temperature",
-        type: "radio",
-        options: [{ label: "Normal" }, { label: "Chilled" }],
-      },
-      {
         name: "Select Beverage",
         type: "radio",
         options: [
@@ -35,6 +30,11 @@ export const menuItems: MenuItem[] = [
           { label: "Cranberry Juice", price: "100.00" },
           { label: "Kiwi Juice", price: "100.00" },
         ],
+      },
+      {
+        name: "Temperature",
+        type: "radio",
+        options: [{ label: "Normal" }, { label: "Chilled" }],
       },
       {
         name: "Extras",

@@ -5,6 +5,7 @@ import LocationSelector from "@/components/location";
 import { Menu, MenuItem } from "@/components/menu";
 import Popup from "@/components/popup";
 import Cart from "@/components/cart";
+import { Promo, validatePromo } from "../scripts/promo"; // Make sure to create this file
 
 export interface CartItem {
   item: MenuItem;
@@ -21,7 +22,9 @@ export default function Home() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-
+  const [appliedPromo, setAppliedPromo] = useState<Promo | null>(null);
+  const [total, setTotal] = useState(0);
+  
   const handleLocationSelect = (location: string, cabin: string) => {
     setSelectedLocation(location);
     setSelectedCabin(cabin);
@@ -53,15 +56,16 @@ export default function Home() {
         cabin: selectedCabin,
         timestamp: formattedDate,
         items: cartItems,
+        appliedPromo: appliedPromo,
       }),
     });
 
-    
     if (response.ok) {
       setOrderStatus("Order placed successfully!");
       setSelectedLocation("");
       setSelectedCabin("");
       setCartItems([]);
+      setAppliedPromo(null);
     } else {
       setOrderStatus("Failed to submit order.");
     }
@@ -102,10 +106,22 @@ export default function Home() {
   };
 
   const handleCheckout = () => {
-    // Implement your checkout logic here
-    console.log("Proceeding to checkout");
-    // For now, we'll just call handleSubmit
     handleSubmit();
+  };
+
+  const handleApplyPromo = (promo: Promo | null) => {
+    setAppliedPromo(promo);
+  };
+
+  const calculateTotal = () => {
+    let total = cartItems.reduce(
+      (sum, item) => sum + item.totalPrice * item.quantity,
+      0
+    );
+    if (appliedPromo) {
+      total = total * (1 - appliedPromo.percentage / 100);
+    }
+    return total;
   };
 
   return (
@@ -131,6 +147,10 @@ export default function Home() {
             onCheckout={handleCheckout}
             selectedLocation={selectedLocation}
             selectedCabin={selectedCabin}
+            onApplyPromo={handleApplyPromo}
+            appliedPromo={appliedPromo}
+            total={calculateTotal()}
+            setTotal={setTotal} // Add this line
           />
         </div>
 
@@ -158,16 +178,6 @@ export default function Home() {
             </button>
           </div>
         )}
-
-        {/* <button
-          className="btn my-8 disabled:text-neutral-200/40"
-          onClick={handleSubmit}
-          disabled={
-            !selectedLocation || !selectedCabin || cartItems.length === 0
-          }
-        >
-          Submit Order
-        </button> */}
       </main>
 
       {selectedItem && (

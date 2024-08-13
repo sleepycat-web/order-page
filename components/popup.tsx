@@ -185,14 +185,19 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
               <h3 className="font-semibold mb-2">{option.name}</h3>
               <div className="grid grid-cols-2 gap-2 grid-flow-row-dense">
                 {option.options.map((opt, optIndex) => (
-                  <div key={optIndex} className="bg-neutral-900 rounded-lg p-3">
-                    <label
-                      className={`flex items-center cursor-pointer ${
-                        selectedOptions[option.name]?.includes(opt.label)
-                          ? "border border-white"
-                          : ""
-                      }`}
-                    >
+                  <div
+                    key={optIndex}
+                    className={`bg-neutral-900 rounded-lg p-3 cursor-pointer ${
+                      selectedOptions[option.name]?.includes(opt.label)
+                        ? "border border-white"
+                        : ""
+                    }`} // Add cursor-pointer here
+                    onClick={() =>
+                      handleOptionChange(option.name, opt.label, option.type)
+                    } // Make the entire div clickable
+                  >
+                    {" "}
+                    <label className={`flex items-center cursor-pointer `}>
                       <input
                         type={option.type}
                         id={`${item.name}-${option.name}-${opt.label}`}

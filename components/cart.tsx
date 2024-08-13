@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { CartItem } from "../app/page"; // Adjust the import path as needed
+import { validatePromo, Promo } from "../scripts/promo"; // Adjust the import path as needed
 
 interface CartProps {
   items: CartItem[];
@@ -10,6 +11,10 @@ interface CartProps {
   onCheckout: () => void;
   selectedLocation: string;
   selectedCabin: string;
+  onApplyPromo: (promo: Promo | null) => void;
+  appliedPromo: Promo | null;
+  total: number;
+  setTotal: (total: number) => void;
 }
 
 const Cart: React.FC<CartProps> = ({
@@ -21,7 +26,46 @@ const Cart: React.FC<CartProps> = ({
   onCheckout,
   selectedLocation,
   selectedCabin,
+  onApplyPromo,
+  appliedPromo,
+  total,
+  setTotal,
 }) => {
+  const [promoCode, setPromoCode] = useState("");
+  const [promoError, setPromoError] = useState("");
+  const [tableDelivery, setTableDelivery] = useState(false);
+
+  const handleApplyPromo = () => {
+    const validPromo = validatePromo(promoCode);
+    if (validPromo) {
+      onApplyPromo(validPromo);
+      setPromoError("");
+    } else {
+      setPromoError("Invalid promo code");
+      onApplyPromo(null);
+    }
+  };
+ const subtotal = items.reduce(
+   (total, item) => total + item.totalPrice * item.quantity,
+   0
+ );
+ const calculateTotal = () => {
+   const subtotal = items.reduce(
+     (total, item) => total + item.totalPrice * item.quantity,
+     0
+   );
+   const deliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
+   const discountableTotal = subtotal;
+   const discount = appliedPromo
+     ? discountableTotal * (appliedPromo.percentage / 100)
+     : 0;
+   return subtotal - discount + deliveryCharge;
+ };
+
+  useEffect(() => {
+    setTotal(calculateTotal());
+  }, [items, appliedPromo, tableDelivery, setTotal]);
+
   return (
     <>
       {!isOpen && (
@@ -46,7 +90,7 @@ const Cart: React.FC<CartProps> = ({
 
       {isOpen && (
         <div className="fixed inset-0 bg-neutral-900 z-40 overflow-y-auto">
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto px-4 py-8 pb-16 md:pb-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Cart</h2>
               <button onClick={onToggle} className="text-3xl">
@@ -101,14 +145,18 @@ const Cart: React.FC<CartProps> = ({
                           </div>
                           {Object.entries(item.selectedOptions).map(
                             ([optionName, values]) => (
-                              <div key={optionName} className="mt-1">
+                              <div
+                                key={optionName}
+                                className="flex flex-wrap items-center gap-1"
+                              >
+                                {" "}
                                 <span className="text-sm text-gray-400">
                                   {optionName}:{" "}
                                 </span>
                                 {values.map((value) => (
                                   <span
                                     key={value}
-                                    className="text-sm mr-2 px-2 py-1 rounded bg-blue-600 text-white"
+                                    className="text-sm  px-2 py-1 rounded bg-blue-600 text-white"
                                   >
                                     {value}
                                   </span>
@@ -132,13 +180,65 @@ const Cart: React.FC<CartProps> = ({
                     </li>
                   ))}
                 </ul>
-                <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
-                  <button
-                    className="btn btn-primary  w-full max-w-3xl"
-                    onClick={onCheckout}
-                  >
-                    Checkout
-                  </button>
+
+                <div className="mt-6 space-y-4">
+                  <div className="sticky bottom-0 bg-neutral-900  mt-auto">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        placeholder="Enter promo code"
+                        className="input bg-neutral-800  max-w-xs"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                      />
+                      <button
+                        className="btn btn-primary"
+                        onClick={handleApplyPromo}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {promoError && <p className="text-red-500">{promoError}</p>}
+                    <div className="mt-6 space-y-4  mb-4">
+                      {appliedPromo && (
+                        <div className="text-green-500 text-left">
+                          Applied Promo: {appliedPromo.code} (
+                          {appliedPromo.percentage}% off) - Saved ₹
+                          {((subtotal * appliedPromo.percentage) / 100).toFixed(
+                            2
+                          )}
+                        </div>
+                      )}
+
+                      <label className="flex items-center justify-between w-full max-w-xs">
+                        <span className="label-text">
+                          Table Delivery (5% charge) - ₹
+                          {(subtotal * 0.05).toFixed(2)}
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={tableDelivery}
+                          onChange={(e) => setTableDelivery(e.target.checked)}
+                          className="checkbox checkbox-primary checkbox-sm"
+                        />
+                      </label>
+
+                      <div className="text-xl font-bold text-left">
+                        Total: ₹{calculateTotal().toFixed(2)}
+                      </div>
+                    </div>
+
+                    <div className="fixed bottom-0 left-0 right-0 p-4">
+                      <div className="container mx-auto max-w-3xl">
+                        <button
+                          className="btn btn-primary w-full"
+                          onClick={onCheckout}
+                        >
+                          Checkout
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </>
             )}
