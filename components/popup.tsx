@@ -22,16 +22,14 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-  const [mandatoryOptions, setMandatoryOptions] = useState<string[]>([]);
+  const [showErrorHighlight, setShowErrorHighlight] = useState(false);
 
   const calculateTotalPrice = (): number => {
-      let total = 0;
-
+    let total = 0;
     Object.entries(selectedOptions).forEach(([optionName, selectedValues]) => {
       const option = item.customizationOptions?.find(
         (opt) => opt.name === optionName
       );
-
       if (option) {
         selectedValues.forEach((value) => {
           const selectedOpt = option.options.find((opt) => opt.label === value);
@@ -41,7 +39,6 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
         });
       }
     });
-
     return total * quantity;
   };
 
@@ -94,7 +91,6 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
         onClose();
       }
     };
-
     document.addEventListener("click", handleClickOutside, true);
     return () => {
       document.removeEventListener("click", handleClickOutside, true);
@@ -110,32 +106,45 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
       const timer = setTimeout(() => {
         setError(null);
       }, 3000);
-
       return () => clearTimeout(timer);
     }
   }, [error]);
 
   useEffect(() => {
-    const mandatoryOpts =
-      item.customizationOptions
-        ?.filter((option) => option.type === "radio")
-        .map((option) => option.name) || [];
-    setMandatoryOptions(mandatoryOpts);
-  }, [item]);
+    if (showErrorHighlight) {
+      const isValid = validateSelection();
+      if (isValid) {
+        setShowErrorHighlight(false);
+      }
+    }
+  }, [selectedOptions]);
 
   const validateSelection = (): boolean => {
     if (!item.customizationOptions) return true;
 
+    let hasOnlyCheckboxes = true;
+    let hasSelectedCheckbox = false;
+
     for (const option of item.customizationOptions) {
-      if (
-        option.type === "radio" &&
-        (!selectedOptions[option.name] ||
-          selectedOptions[option.name].length === 0)
-      ) {
-        return false;
+      if (option.type === "radio") {
+        hasOnlyCheckboxes = false;
+        if (
+          !selectedOptions[option.name] ||
+          selectedOptions[option.name].length === 0
+        ) {
+          return false;
+        }
+      } else if (option.type === "checkbox") {
+        if (
+          selectedOptions[option.name] &&
+          selectedOptions[option.name].length > 0
+        ) {
+          hasSelectedCheckbox = true;
+        }
       }
     }
-    return true;
+
+    return !hasOnlyCheckboxes || hasSelectedCheckbox;
   };
 
   const handleAddToOrder = () => {
@@ -149,7 +158,14 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
       );
       onClose();
     } else {
-      setError("Please select all required options");
+      setShowErrorHighlight(true);
+      if (
+        item.customizationOptions?.every((option) => option.type === "checkbox")
+      ) {
+        setError("Please select at least one option");
+      } else {
+        setError("Please select required options");
+      }
     }
   };
 
@@ -160,15 +176,8 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
 
   const hasSelectedOptions = Object.keys(selectedOptions).length > 0;
 
-  const getMissingMandatoryOptions = (): string[] => {
-    return mandatoryOptions.filter(
-      (option) =>
-        !selectedOptions[option] || selectedOptions[option].length === 0
-    );
-  };
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-0 flex items-center justify-center z-50 overflow-y-auto p-4">
       <div
         ref={popupRef}
         className="bg-neutral-950 p-6 rounded-lg shadow-lg w-full max-w-2xl relative flex flex-col h-[90vh]"
@@ -193,15 +202,26 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           </svg>
         </button>
         <h2 className="text-xl font-bold mb-4">{item.name}</h2>
-
         <div className="max-h-[70vh] overflow-y-auto">
           {item.customizationOptions?.map((option, index) => (
             <div key={index} className="mb-4">
-              <h3 className="font-semibold mb-2">
-                {option.name}{" "}
-                {/* {option.type === "radio" && (
-                  <span className="text-red-500">*</span>
-                )} */}
+              <h3
+                className={`font-semibold mb-2 p-1 rounded-lg ${
+                  showErrorHighlight &&
+                  ((option.type === "radio" &&
+                    (!selectedOptions[option.name] ||
+                      selectedOptions[option.name].length === 0)) ||
+                    (option.type === "checkbox" &&
+                      item.customizationOptions?.every(
+                        (opt) => opt.type === "checkbox"
+                      ) &&
+                      (!selectedOptions[option.name] ||
+                        selectedOptions[option.name].length === 0)))
+                    ? "bg-red-900"
+                    : ""
+                }`}
+              >
+                {option.name}
               </h3>
               <div className="grid grid-cols-2 gap-2 grid-flow-row-dense">
                 {option.options.map((opt, optIndex) => (
@@ -253,7 +273,6 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
               </div>
             </div>
           ))}
-
           <div className="mb-4">
             <h3 className="font-semibold mb-2">Special Requests</h3>
             <textarea
@@ -283,14 +302,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           </div>
         )}
         {error && <p className="text-red-500 mt-2">{error}</p>}
-        <div className="mt-4">
-          {getMissingMandatoryOptions().length > 0 && (
-            <p className="text-yellow-500 mb-2">
-              Select options: {getMissingMandatoryOptions().join(", ")}
-            </p>
-          )}
-        </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 ">
           <button
             className="btn mt-2 btn-primary w-2/3"
             onClick={handleAddToOrder}
@@ -299,7 +311,6 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
               ? `Add to my order ₹${totalPrice.toFixed(2)}`
               : "Add to my order"}
           </button>
-
           <button
             className="btn btn-ghost bg-neutral-900 w-1/3 mt-2"
             onClick={onClose}
