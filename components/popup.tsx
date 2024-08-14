@@ -22,9 +22,10 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [mandatoryOptions, setMandatoryOptions] = useState<string[]>([]);
 
   const calculateTotalPrice = (): number => {
-    let total = 0;
+      let total = 0;
 
     Object.entries(selectedOptions).forEach(([optionName, selectedValues]) => {
       const option = item.customizationOptions?.find(
@@ -57,33 +58,32 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
     );
   };
 
-   const handleOptionChange = (
-     optionName: string,
-     value: string,
-     type: "radio" | "checkbox"
-   ) => {
-     setSelectedOptions((prev: Record<string, string[]>) => {
-       const newOptions = { ...prev };
-       if (type === "radio") {
-         newOptions[optionName] = [value];
-       } else if (type === "checkbox") {
-         if (!newOptions[optionName]) {
-           newOptions[optionName] = [];
-         }
-         const index = newOptions[optionName].indexOf(value);
-         if (index > -1) {
-           newOptions[optionName] = newOptions[optionName].filter(
-             (item) => item !== value
-           );
-         } else {
-           newOptions[optionName] = [...newOptions[optionName], value];
-         }
-       }
-       return newOptions;
-     });
-     setError(null);
-   };
-
+  const handleOptionChange = (
+    optionName: string,
+    value: string,
+    type: "radio" | "checkbox"
+  ) => {
+    setSelectedOptions((prev: Record<string, string[]>) => {
+      const newOptions = { ...prev };
+      if (type === "radio") {
+        newOptions[optionName] = [value];
+      } else if (type === "checkbox") {
+        if (!newOptions[optionName]) {
+          newOptions[optionName] = [];
+        }
+        const index = newOptions[optionName].indexOf(value);
+        if (index > -1) {
+          newOptions[optionName] = newOptions[optionName].filter(
+            (item) => item !== value
+          );
+        } else {
+          newOptions[optionName] = [...newOptions[optionName], value];
+        }
+      }
+      return newOptions;
+    });
+    setError(null);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -115,6 +115,14 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
     }
   }, [error]);
 
+  useEffect(() => {
+    const mandatoryOpts =
+      item.customizationOptions
+        ?.filter((option) => option.type === "radio")
+        .map((option) => option.name) || [];
+    setMandatoryOptions(mandatoryOpts);
+  }, [item]);
+
   const validateSelection = (): boolean => {
     if (!item.customizationOptions) return true;
 
@@ -141,7 +149,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
       );
       onClose();
     } else {
-      setError("Please select required options");
+      setError("Please select all required options");
     }
   };
 
@@ -152,8 +160,15 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
 
   const hasSelectedOptions = Object.keys(selectedOptions).length > 0;
 
+  const getMissingMandatoryOptions = (): string[] => {
+    return mandatoryOptions.filter(
+      (option) =>
+        !selectedOptions[option] || selectedOptions[option].length === 0
+    );
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-0 flex items-center justify-center z-50 overflow-y-auto p-4">
+    <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto p-4">
       <div
         ref={popupRef}
         className="bg-neutral-950 p-6 rounded-lg shadow-lg w-full max-w-2xl relative flex flex-col h-[90vh]"
@@ -182,7 +197,12 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
         <div className="max-h-[70vh] overflow-y-auto">
           {item.customizationOptions?.map((option, index) => (
             <div key={index} className="mb-4">
-              <h3 className="font-semibold mb-2">{option.name}</h3>
+              <h3 className="font-semibold mb-2">
+                {option.name}{" "}
+                {/* {option.type === "radio" && (
+                  <span className="text-red-500">*</span>
+                )} */}
+              </h3>
               <div className="grid grid-cols-2 gap-2 grid-flow-row-dense">
                 {option.options.map((opt, optIndex) => (
                   <div
@@ -191,13 +211,12 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
                       selectedOptions[option.name]?.includes(opt.label)
                         ? "border border-white"
                         : ""
-                    }`} // Add cursor-pointer here
+                    }`}
                     onClick={() =>
                       handleOptionChange(option.name, opt.label, option.type)
-                    } // Make the entire div clickable
+                    }
                   >
-                    {" "}
-                    <label className={`flex items-center cursor-pointer `}>
+                    <label className={`flex items-center cursor-pointer`}>
                       <input
                         type={option.type}
                         id={`${item.name}-${option.name}-${opt.label}`}
@@ -264,7 +283,14 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
           </div>
         )}
         {error && <p className="text-red-500 mt-2">{error}</p>}
-        <div className="flex gap-2 ">
+        <div className="mt-4">
+          {getMissingMandatoryOptions().length > 0 && (
+            <p className="text-yellow-500 mb-2">
+              Select options: {getMissingMandatoryOptions().join(", ")}
+            </p>
+          )}
+        </div>
+        <div className="flex gap-2">
           <button
             className="btn mt-2 btn-primary w-2/3"
             onClick={handleAddToOrder}
