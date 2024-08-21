@@ -210,7 +210,7 @@ const Cart: React.FC<CartProps> = ({
                         </div>
                       )}
 
-                      <label className="flex items-center justify-between w-full max-w-xs">
+                      {/* <label className="flex items-center justify-between w-full max-w-xs">
                         <span className="label-text">
                           Table Delivery (5% charge) - ₹
                           {(subtotal * 0.05).toFixed(2)}
@@ -221,7 +221,7 @@ const Cart: React.FC<CartProps> = ({
                           onChange={(e) => setTableDelivery(e.target.checked)}
                           className="checkbox checkbox-primary checkbox-sm"
                         />
-                      </label>
+                      </label> */}
 
                       <div className="text-xl font-bold text-left">
                         Total: ₹{calculateTotal().toFixed(2)}
@@ -233,9 +233,16 @@ const Cart: React.FC<CartProps> = ({
                         <button
                           className="btn btn-primary w-full"
                           onClick={onCheckout}
+                          disabled={!selectedLocation || !selectedCabin}
                         >
                           Checkout
                         </button>
+                        {(!selectedLocation || !selectedCabin) && (
+                          <p className="text-red-500 text-center mt-2">
+                            Please select location and cabin before
+                            checkout
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
