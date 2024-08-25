@@ -235,7 +235,7 @@ const Cart: React.FC<CartProps> = ({
                         />
                       </label> */}
 
-                    <div className="fixed bottom-0 left-0 right-0 p-4 ">
+                    <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
                       <div className="container mx-auto max-w-3xl">
                         <button
                           className="btn btn-primary w-full"
