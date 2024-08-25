@@ -231,12 +231,10 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
                       selectedOptions[option.name]?.includes(opt.label)
                         ? "border border-white"
                         : ""
-                    }`}
-                    onClick={() =>
-                      handleOptionChange(option.name, opt.label, option.type)
-                    }
+                      }`}
+                      onClick={() => handleOptionChange(option.name, opt.label, option.type)} // Handle click on div
                   >
-                    <label className={`flex items-center cursor-pointer`}>
+                    <label className={`flex items-center cursor-pointer w-full`}>
                       <input
                         type={option.type}
                         id={`${item.name}-${option.name}-${opt.label}`}

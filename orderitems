@@ -1,0 +1,39 @@
+  <div className="orderitems">
+          <div className="mb-4 bg-neutral-800 rounded-lg p-4">
+            <p className="text-md "> {selectedLocation}</p>
+            <p className="text-md ">{selectedCabin}</p>
+          </div>
+          <ul className="space-y-4">
+            {items.map((item, index) => (
+              <li key={index} className="border-b border-gray-700 pb-4">
+                <h3 className="text-lg font-semibold mb-2">{item.item.name}</h3>
+                <p>Quantity: {item.quantity}</p>
+                {Object.entries(item.selectedOptions).map(
+                  ([optionName, values]) => (
+                    <div
+                      key={optionName}
+                      className="flex flex-wrap items-center gap-1"
+                    >
+                      <span className="text-sm py-2 text-gray-400">
+                        {optionName}:{" "}
+                      </span>
+                      {values.map((value) => (
+                        <span
+                          key={value}
+                          className="text-sm px-2 py-0.5 rounded bg-blue-600 text-white"
+                        >
+                          {value}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                )}
+                {item.specialRequests && (
+                  <p className="text-sm text-gray-400 mt-1">
+                    Special: {item.specialRequests}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>

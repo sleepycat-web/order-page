@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CartItem } from "../app/page"; // Adjust the import path as needed
 import { validatePromo, Promo } from "../scripts/promo"; // Adjust the import path as needed
+import Checkout from "./checkout"; 
 
 interface CartProps {
   items: CartItem[];
@@ -15,6 +16,7 @@ interface CartProps {
   appliedPromo: Promo | null;
   total: number;
   setTotal: (total: number) => void;
+  
 }
 
 const Cart: React.FC<CartProps> = ({
@@ -30,9 +32,11 @@ const Cart: React.FC<CartProps> = ({
   appliedPromo,
   total,
   setTotal,
+  // setIsCartOpen,
 }) => {
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [tableDelivery, setTableDelivery] = useState(false);
 
   const handleApplyPromo = () => {
@@ -45,22 +49,29 @@ const Cart: React.FC<CartProps> = ({
       onApplyPromo(null);
     }
   };
- const subtotal = items.reduce(
-   (total, item) => total + item.totalPrice * item.quantity,
-   0
- );
- const calculateTotal = () => {
-   const subtotal = items.reduce(
-     (total, item) => total + item.totalPrice * item.quantity,
-     0
-   );
-   const deliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
-   const discountableTotal = subtotal;
-   const discount = appliedPromo
-     ? discountableTotal * (appliedPromo.percentage / 100)
-     : 0;
-   return subtotal - discount + deliveryCharge;
- };
+  const handleCheckout = () => {
+  onCheckout();  };
+
+  const handleCloseCheckout = () => {
+    setIsCheckoutOpen(false);
+    onToggle();
+  };
+  const subtotal = items.reduce(
+    (total, item) => total + item.totalPrice * item.quantity,
+    0
+  );
+  const calculateTotal = () => {
+    const subtotal = items.reduce(
+      (total, item) => total + item.totalPrice * item.quantity,
+      0
+    );
+    const deliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
+    const discountableTotal = subtotal;
+    const discount = appliedPromo
+      ? discountableTotal * (appliedPromo.percentage / 100)
+      : 0;
+    return subtotal - discount + deliveryCharge;
+  };
 
   useEffect(() => {
     setTotal(calculateTotal());
@@ -239,8 +250,7 @@ const Cart: React.FC<CartProps> = ({
                         </button>
                         {(!selectedLocation || !selectedCabin) && (
                           <p className="text-red-500 text-center mt-2">
-                            Please select location and cabin before
-                            checkout
+                            Please select location and cabin before checkout
                           </p>
                         )}
                       </div>
@@ -251,6 +261,15 @@ const Cart: React.FC<CartProps> = ({
             )}
           </div>
         </div>
+      )}
+      {/* Previous JSX */}
+      {isCheckoutOpen && (
+        <Checkout
+          items={items}
+          selectedLocation={selectedLocation}
+          selectedCabin={selectedCabin}
+          onClose={handleCloseCheckout}
+        />
       )}
     </>
   );

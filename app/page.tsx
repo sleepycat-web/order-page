@@ -6,7 +6,7 @@ import { Menu, MenuItem } from "@/components/menu";
 import Popup from "@/components/popup";
 import Cart from "@/components/cart";
 import { Promo, validatePromo } from "../scripts/promo"; // Make sure to create this file
-
+import Checkout from "@/components/checkout";
 export interface CartItem {
   item: MenuItem;
   selectedOptions: Record<string, string[]>;
@@ -24,12 +24,24 @@ export default function Home() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [appliedPromo, setAppliedPromo] = useState<Promo | null>(null);
   const [total, setTotal] = useState(0);
-  
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
   const handleLocationSelect = (location: string, cabin: string) => {
     setSelectedLocation(location);
     setSelectedCabin(cabin);
   };
 
+    const handleOpenCheckout = () => {
+      setIsCartOpen(false);
+      setIsCheckoutOpen(true);
+    };
+
+    const handleCloseCheckout = () => {
+      setIsCheckoutOpen(false);
+      setIsCartOpen(true);
+
+    };
+  
   const handleSubmit = async () => {
     if (!selectedLocation || !selectedCabin) return;
 
@@ -144,7 +156,7 @@ export default function Home() {
             onUpdateQuantity={handleUpdateQuantity}
             onToggle={toggleCart}
             isOpen={isCartOpen}
-            onCheckout={handleCheckout}
+            onCheckout={handleOpenCheckout}
             selectedLocation={selectedLocation}
             selectedCabin={selectedCabin}
             onApplyPromo={handleApplyPromo}
@@ -188,6 +200,14 @@ export default function Home() {
             onAddToOrder={handleAddToCart}
           />
         </div>
+      )}
+      {isCheckoutOpen && (
+        <Checkout
+          items={cartItems}
+          selectedLocation={selectedLocation}
+          selectedCabin={selectedCabin}
+          onClose={handleCloseCheckout}
+        />
       )}
     </div>
   );
