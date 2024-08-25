@@ -334,9 +334,9 @@ const closeUserModal = () => {
                 Total: ₹{total.toFixed(2)}
               </div>
             </div>
-            <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
-              <div className="container mx-auto max-w-3xl">
-                <button className="btn btn-primary w-full">Confirm</button>
+            <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center  max-w-md">
+              <div className="container mx-auto max-w-3xll">
+                <button className="btn btn-primary w-ful">Confirm</button>
               </div>
             </div>
           </div>
@@ -347,7 +347,7 @@ const closeUserModal = () => {
             onClick={closeUserModal}
           >
             <div
-              className="bg-neutral-900 p-6 rounded-lg"
+              className="bg-neutral-900 p-6 rounded-lg w-full max-w-md" // Increased width here
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold mb-4">Enter Your Details</h3>
@@ -361,15 +361,16 @@ const closeUserModal = () => {
                 }
                 required
               />
-              <input
-                type="email"
-                placeholder="Email"
-                className="input w-full mb-4 bg-neutral-800"
-                value={userData.email}
-                onChange={(e) =>
-                  setUserData({ ...userData, email: e.target.value })
-                }
-              />
+              {/* Email input commented out as requested */}
+              {/* <input
+          type="email"
+          placeholder="Email"
+          className="input w-full mb-4 bg-neutral-800"
+          value={userData.email}
+          onChange={(e) =>
+            setUserData({ ...userData, email: e.target.value })
+          }
+        /> */}
               <button
                 className="btn btn-primary w-full"
                 onClick={handleUserDataSubmit}
