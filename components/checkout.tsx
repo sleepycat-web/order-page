@@ -276,7 +276,9 @@ const closeUserModal = () => {
         ) : (
           <div className="orderitems pb-16">
             <p className="text-lg font-semibold mb-4">
-              Dear {customerName}, Kindly Confirm your order
+              {customerName
+                ? `Dear ${customerName}, Kindly Confirm your order`
+                : "Kindly confirm your order"}
             </p>
             <div className="mb-4 bg-neutral-800 rounded-lg p-4">
               <p className="text-md">{selectedLocation}</p>
