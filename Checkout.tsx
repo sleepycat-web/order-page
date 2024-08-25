@@ -1,8 +1,8 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react";
-import { CartItem } from "../app/page"; // Adjust the import path as needed
+import { CartItem } from "./app/page"; // Adjust the import path as needed
 import dotenv from "dotenv";
 import axios from "axios";
-import { Promo } from "../scripts/promo";
+import { Promo } from "./scripts/promo";
 
 dotenv.config({ path: "local.env" });
 
