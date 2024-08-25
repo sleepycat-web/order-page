@@ -1,5 +1,5 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react";
-import { CartItem } from "../app/page"; // Adjust the import path as needed
+import { CartItem } from "../app/page";
 import dotenv from "dotenv";
 import axios from "axios";
 import { Promo } from "../scripts/promo";
@@ -12,7 +12,12 @@ interface CheckoutProps {
   selectedCabin: string;
   onClose: () => void;
   total: number;
-  appliedPromo: Promo | null; // New prop for the total amount
+  appliedPromo: Promo | null;
+}
+
+interface UserData {
+  name: string;
+  email?: string;
 }
 
 const Checkout: React.FC<CheckoutProps> = ({
@@ -20,7 +25,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   selectedLocation,
   selectedCabin,
   onClose,
-  total, // New prop
+  total,
   appliedPromo,
 }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -30,12 +35,74 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [otpInputs, setOtpInputs] = useState(["", "", "", ""]);
   const [otpMessage, setOtpMessage] = useState("");
   const [timer, setTimer] = useState(0);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [userData, setUserData] = useState<UserData>({ name: "", email: "" });
+  const [customerName, setCustomerName] = useState("");
   const otpRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ];
+
+  const checkUserExists = async (phoneNumber: string): Promise<boolean> => {
+    const response = await axios.post("/api/userData", {
+      action: "checkUserExists",
+      phoneNumber,
+    });
+    return response.data.exists;
+  };
+
+  const addNewUser = async (
+    phoneNumber: string,
+    name: string,
+    email?: string
+  ): Promise<void> => {
+    await axios.post("/api/userData", {
+      action: "addNewUser",
+      phoneNumber,
+      name,
+      email,
+    });
+  };
+
+  const getUserData = async (
+    phoneNumber: string
+  ): Promise<{ name: string; email?: string }> => {
+    const response = await axios.post("/api/userData", {
+      action: "getUserData",
+      phoneNumber,
+    });
+    return response.data;
+  };
+
+  const shouldSkipOtp = () => {
+    const allowedItems = items.every(
+      (item) =>
+        (item.item.name === "Beverages" &&
+          item.selectedOptions["Select Beverage"]?.includes("Water")) ||
+        (item.item.name === "Others" &&
+          item.selectedOptions["Cigarette"]?.length > 0)
+    );
+    return allowedItems;
+  };
+
+  useEffect(() => {
+    if (shouldSkipOtp()) {
+      setOtpVerified(true);
+    } else {
+      const cachedVerification = localStorage.getItem("otpVerified");
+      if (cachedVerification) {
+        const { verified, expiry } = JSON.parse(cachedVerification);
+        if (verified && new Date().getTime() < expiry) {
+          setOtpVerified(true);
+          setIsOtpSent(true);
+        } else {
+          localStorage.removeItem("otpVerified");
+        }
+      }
+    }
+  }, [items]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -53,13 +120,48 @@ const Checkout: React.FC<CheckoutProps> = ({
       setPhoneNumber(value);
     }
   };
+const closeUserModal = () => {
+  setShowUserModal(false);
+};
+  const handleGetOtp = async () => {
+    try {
+      const userExists = await checkUserExists(phoneNumber);
+      if (userExists) {
+        const fetchedUserData = await getUserData(phoneNumber);
+        setCustomerName(fetchedUserData.name.split(" ")[0]);
+      } else {
+        setShowUserModal(true);
+        return;
+      }
 
-  const handleGetOtp = () => {
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedOtp(otp);
-    setIsOtpSent(true);
-    setTimer(30);
-    setOtpMessage(`Your OTP is: ${otp}`);
+      const otp = Math.floor(1000 + Math.random() * 9000).toString();
+      setGeneratedOtp(otp);
+      setIsOtpSent(true);
+      setTimer(30);
+      setOtpMessage(`Your OTP is: ${otp}`);
+    } catch (error) {
+      console.error("Error checking user or generating OTP:", error);
+      setOtpMessage("An error occurred. Please try again.");
+    }
+  };
+
+  const handleUserDataSubmit = async () => {
+    if (userData.name) {
+      try {
+        await addNewUser(phoneNumber, userData.name, userData.email);
+        setCustomerName(userData.name.split(" ")[0]);
+        setShowUserModal(false);
+
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        setGeneratedOtp(otp);
+        setIsOtpSent(true);
+        setTimer(30);
+        setOtpMessage(`Your OTP is: ${otp}`);
+      } catch (error) {
+        console.error("Error adding new user:", error);
+        setOtpMessage("An error occurred. Please try again.");
+      }
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -84,9 +186,22 @@ const Checkout: React.FC<CheckoutProps> = ({
     const enteredOtp = otpInputs.join("");
     if (enteredOtp === generatedOtp) {
       setOtpVerified(true);
+      const now = new Date();
+      const midnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+      localStorage.setItem(
+        "otpVerified",
+        JSON.stringify({
+          verified: true,
+          expiry: midnight.getTime(),
+        })
+      );
     } else {
-      // Handle incorrect OTP
       console.log("Incorrect OTP");
+      setOtpMessage("Incorrect OTP. Please try again.");
     }
   };
 
@@ -159,9 +274,9 @@ const Checkout: React.FC<CheckoutProps> = ({
             )}
           </div>
         ) : (
-          <div className="orderitems">
+          <div className="orderitems pb-16">
             <p className="text-lg font-semibold mb-4">
-              Dear Customer, Kindly Confirm your order
+              Dear {customerName}, Kindly Confirm your order
             </p>
             <div className="mb-4 bg-neutral-800 rounded-lg p-4">
               <p className="text-md">{selectedLocation}</p>
@@ -209,7 +324,6 @@ const Checkout: React.FC<CheckoutProps> = ({
               ))}
             </ul>
             <div className="mt-2 space-y-2  mb-2">
-              {" "}
               {appliedPromo && (
                 <div className="text-green-500">
                   Applied Promo: {appliedPromo.code} ({appliedPromo.percentage}%
@@ -224,6 +338,45 @@ const Checkout: React.FC<CheckoutProps> = ({
               <div className="container mx-auto max-w-3xl">
                 <button className="btn btn-primary w-full">Confirm</button>
               </div>
+            </div>
+          </div>
+        )}
+        {showUserModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            onClick={closeUserModal}
+          >
+            <div
+              className="bg-neutral-900 p-6 rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold mb-4">Enter Your Details</h3>
+              <input
+                type="text"
+                placeholder="Name"
+                className="input w-full mb-4 bg-neutral-800"
+                value={userData.name}
+                onChange={(e) =>
+                  setUserData({ ...userData, name: e.target.value })
+                }
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                className="input w-full mb-4 bg-neutral-800"
+                value={userData.email}
+                onChange={(e) =>
+                  setUserData({ ...userData, email: e.target.value })
+                }
+              />
+              <button
+                className="btn btn-primary w-full"
+                onClick={handleUserDataSubmit}
+                disabled={!userData.name}
+              >
+                Submit
+              </button>
             </div>
           </div>
         )}
