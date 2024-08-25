@@ -22,14 +22,14 @@ export const checkUserExists = async (
 export const addNewUser = async (
   phoneNumber: string,
   name: string,
-  email?: string
+//   email?: string
 ): Promise<void> => {
   const database = await connectToDatabase();
   const collection = database.collection("UserData");
   await collection.insertOne({
     phoneNumber,
     name,
-    email: email || null,
+    // email: email || null,
   });
 };
 

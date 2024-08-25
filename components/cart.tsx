@@ -236,7 +236,7 @@ const Cart: React.FC<CartProps> = ({
                       </label> */}
 
                     <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
-                      <div className="container mx-auto max-w-3xl">
+                      <div className="container mx-auto max-w-lg">
                         <button
                           className="btn btn-primary w-full"
                           onClick={handleCheckout}

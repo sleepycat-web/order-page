@@ -15,7 +15,9 @@ export default async function handler(
           res.status(200).json({ exists });
           break;
         case "addNewUser":
-          await addNewUser(phoneNumber, name, email);
+            //   await addNewUser(phoneNumber, name, email);
+        await addNewUser(phoneNumber, name);
+
           res.status(200).json({ success: true });
           break;
         case "getUserData":

@@ -217,7 +217,7 @@ const handleAddToCart = (
         {cartItems.length > 0 && (
           <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
             <button
-              className="btn btn-primary w-full max-w-md"
+              className="btn btn-primary w-full max-w-lg"
               onClick={handleProceedToCheckout}
             >
               Proceed to Checkout

@@ -334,10 +334,10 @@ const closeUserModal = () => {
                 Total: ₹{total.toFixed(2)}
               </div>
             </div>
-            <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center  max-w-md">
-              <div className="container mx-auto max-w-3xll">
-                <button className="btn btn-primary w-ful">Confirm</button>
-              </div>
+            <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
+              <button className="btn btn-primary  w-full max-w-lg ">
+                Confirm
+              </button>
             </div>
           </div>
         )}
