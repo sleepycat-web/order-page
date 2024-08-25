@@ -180,7 +180,7 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
     <div className="fixed inset-0 bg-black bg-opacity-0 flex items-center justify-center z-50 overflow-y-auto p-4">
       <div
         ref={popupRef}
-        className="bg-neutral-950 p-6 rounded-lg shadow-lg w-full max-w-2xl relative flex flex-col h-[90vh]"
+        className="bg-neutral-950 p-6 rounded-lg  w-full max-w-2xl relative flex flex-col h-[90vh]"
       >
         <button
           className="absolute top-4 right-4 text-white hover:text-gray-300"

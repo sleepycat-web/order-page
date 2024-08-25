@@ -30,7 +30,7 @@ export const MenuItemComponent: React.FC<MenuItem> = ({
   description,
   soldOut,
 }) => (
-  <div className="p-4 bg-neutral-950 rounded-lg shadow-sm hover:cursor-pointer ">
+  <div className="p-4 bg-neutral-950 rounded-lg  hover:cursor-pointer ">
     <h3 className="text-base font-semibold">{name}</h3>
     <p className={`text-base ${soldOut ? "text-red-500" : "text-green-600"}`}>
       ₹{price} {soldOut && "Sold Out"}

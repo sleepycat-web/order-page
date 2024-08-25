@@ -28,7 +28,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpInputs, setOtpInputs] = useState(["", "", "", ""]);
-  const [otpMessage, setOtpMessage] = useState("");
+  // const [otpMessage, setOtpMessage] = useState("");
   const [timer, setTimer] = useState(0);
   const otpRefs = [
     useRef<HTMLInputElement>(null),
@@ -54,12 +54,22 @@ const Checkout: React.FC<CheckoutProps> = ({
     }
   };
 
-  const handleGetOtp = () => {
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedOtp(otp);
-    setIsOtpSent(true);
-    setTimer(30);
-    setOtpMessage(`Your OTP is: ${otp}`);
+  const handleGetOtp = async () => {
+    try {
+      const response = await axios.post("/api/sendOtp", { phoneNumber });
+      if (response.status === 200) {
+        const { otp } = response.data;
+        console.log("Generated OTP:", otp); // Log the OTP to the console
+        setGeneratedOtp(otp); // Store OTP for later verification
+        setIsOtpSent(true); // Update state to show OTP input fields
+        setTimer(30); // Start the timer for OTP resend
+        console.log("OTP sent successfully");
+      } else {
+        console.error("Failed to send OTP");
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -129,7 +139,7 @@ const Checkout: React.FC<CheckoutProps> = ({
 
             {isOtpSent && (
               <div className="flex flex-col items-center mt-4">
-                <p className="text-sm mb-2">{otpMessage}</p>
+                {/* <p className="text-sm mb-2">{otpMessage}</p> */}
                 <div className="flex space-x-2">
                   {otpInputs.map((digit, index) => (
                     <input

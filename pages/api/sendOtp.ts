@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 // @ts-ignore
-import SibApiV3Sdk from 'sib-api-v3-sdk';
+import SibApiV3Sdk from "sib-api-v3-sdk";
 
 // Configure API key authorization
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
@@ -23,15 +23,21 @@ export default async function handler(
     return res.status(400).json({ message: "Phone number is required" });
   }
 
+  // Ensure the phone number includes the '+91' country code
+  const formattedPhoneNumber = phoneNumber.startsWith("+91")
+    ? phoneNumber
+    : `+91${phoneNumber}`;
+
   // Generate a random 4-digit OTP
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
   const sendSmsApi = new SibApiV3Sdk.TransactionalSMSApi();
   const sendSms = new SibApiV3Sdk.SendSms();
 
-  sendSms.sender = "YourSender";
-  sendSms.recipient = phoneNumber;
-  sendSms.content = `Your OTP is: ${otp}`;
+    sendSms.name = "CHMINE";
+  sendSms.sender = "CHMINE";
+  sendSms.recipient = formattedPhoneNumber;
+  sendSms.content = `Your OTP for your order is: ${otp}. Thank you for choosing Chai Mine!`;
 
   try {
     await sendSmsApi.sendTransacSms(sendSms);

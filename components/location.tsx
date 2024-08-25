@@ -114,7 +114,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
     <>
       {isLocationPromptVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-black p-6 rounded-lg shadow-lg">
+          <div className="bg-black p-6 rounded-lg ">
             <h2 className="text-xl font-bold mb-4">Enable Location Services</h2>
             <p className="mb-4">
               Please enable location services to automatically detect your
@@ -163,7 +163,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
             </svg>
           </button>
           {isDropdownOpen && (
-            <ul className="menu bg-base-100 rounded-box shadow-lg absolute z-10 mt-1 p-2 w-52">
+            <ul className="menu bg-base-100 rounded-box absolute z-10 mt-1 p-2 w-52">
               {locations.map((location) => (
                 <li key={location.name}>
                   <Link
@@ -201,7 +201,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
             </svg>
           </button>
           {isCabinDropdownOpen && selectedLocation && (
-            <ul className="menu bg-base-100 rounded-box shadow-lg absolute z-10 mt-1 p-2 w-52">
+            <ul className="menu bg-base-100 rounded-box absolute z-10 mt-1 p-2 w-52">
               {getCabinOptions().map((cabin) => (
                 <li key={cabin}>
                   <Link

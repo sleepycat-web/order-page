@@ -13,6 +13,7 @@ export interface CartItem {
   quantity: number;
   specialRequests: string;
   totalPrice: number;
+  
 }
 
 export default function Home() {
@@ -91,19 +92,52 @@ export default function Home() {
     );
   };
 
-  const handleAddToCart = (
-    item: MenuItem,
-    selectedOptions: Record<string, string[]>,
-    quantity: number,
-    specialRequests: string,
-    totalPrice: number
-  ) => {
-    setCartItems((prevItems) => [
-      ...prevItems,
-      { item, selectedOptions, quantity, specialRequests, totalPrice },
-    ]);
-    setSelectedItem(null);
+const areItemsIdentical = (item1: CartItem, item2: CartItem) => {
+  return (
+    item1.item.name === item2.item.name &&
+    JSON.stringify(item1.selectedOptions) ===
+      JSON.stringify(item2.selectedOptions) &&
+    item1.specialRequests === item2.specialRequests
+  );
+};
+
+const handleAddToCart = (
+  item: MenuItem,
+  selectedOptions: Record<string, string[]>,
+  quantity: number,
+  specialRequests: string,
+  totalPrice: number
+) => {
+  const newItem: CartItem = {
+    item,
+    selectedOptions,
+    quantity,
+    specialRequests,
+    totalPrice,
   };
+
+  setCartItems((prevItems) => {
+    const existingItemIndex = prevItems.findIndex((cartItem) =>
+      areItemsIdentical(cartItem, newItem)
+    );
+
+    if (existingItemIndex !== -1) {
+      // If an identical item exists, update its quantity by adding only the new quantity
+      return prevItems.map((cartItem, index) =>
+        index === existingItemIndex
+          ? { ...cartItem, quantity: cartItem.quantity + quantity }
+          : cartItem
+      );
+    } else {
+      // If no identical item exists, add the new item with its quantity
+      return [...prevItems, newItem];
+    }
+  });
+
+  setSelectedItem(null);
+};
+
+
 
   const handleRemoveFromCart = (index: number) => {
     setCartItems((prevItems) => prevItems.filter((_, i) => i !== index));
@@ -207,6 +241,8 @@ export default function Home() {
           selectedLocation={selectedLocation}
           selectedCabin={selectedCabin}
           onClose={handleCloseCheckout}
+          total={total} // Pass the total amount
+          appliedPromo={appliedPromo} // Pass the applied promo code
         />
       )}
     </div>

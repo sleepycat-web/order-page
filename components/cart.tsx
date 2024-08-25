@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CartItem } from "../app/page"; // Adjust the import path as needed
 import { validatePromo, Promo } from "../scripts/promo"; // Adjust the import path as needed
-import Checkout from "./checkout"; 
+import Checkout from "./checkout";
 
 interface CartProps {
   items: CartItem[];
@@ -16,7 +16,6 @@ interface CartProps {
   appliedPromo: Promo | null;
   total: number;
   setTotal: (total: number) => void;
-  
 }
 
 const Cart: React.FC<CartProps> = ({
@@ -32,12 +31,12 @@ const Cart: React.FC<CartProps> = ({
   appliedPromo,
   total,
   setTotal,
-  // setIsCartOpen,
 }) => {
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [tableDelivery, setTableDelivery] = useState(false);
+  const [ultraGrandTotal, setUltraGrandTotal] = useState(0);
 
   const handleApplyPromo = () => {
     const validPromo = validatePromo(promoCode);
@@ -49,17 +48,16 @@ const Cart: React.FC<CartProps> = ({
       onApplyPromo(null);
     }
   };
+
   const handleCheckout = () => {
-  onCheckout();  };
+    setIsCheckoutOpen(true);
+  };
 
   const handleCloseCheckout = () => {
     setIsCheckoutOpen(false);
     onToggle();
   };
-  const subtotal = items.reduce(
-    (total, item) => total + item.totalPrice * item.quantity,
-    0
-  );
+
   const calculateTotal = () => {
     const subtotal = items.reduce(
       (total, item) => total + item.totalPrice * item.quantity,
@@ -74,7 +72,9 @@ const Cart: React.FC<CartProps> = ({
   };
 
   useEffect(() => {
-    setTotal(calculateTotal());
+    const newTotal = calculateTotal();
+    setUltraGrandTotal(newTotal);
+    setTotal(newTotal);
   }, [items, appliedPromo, tableDelivery, setTotal]);
 
   return (
@@ -160,7 +160,6 @@ const Cart: React.FC<CartProps> = ({
                                 key={optionName}
                                 className="flex flex-wrap items-center gap-1"
                               >
-                                {" "}
                                 <span className="text-sm text-gray-400">
                                   {optionName}:{" "}
                                 </span>
@@ -214,14 +213,16 @@ const Cart: React.FC<CartProps> = ({
                       {appliedPromo && (
                         <div className="text-green-500 text-left">
                           Applied Promo: {appliedPromo.code} (
-                          {appliedPromo.percentage}% off) - Saved ₹
-                          {((subtotal * appliedPromo.percentage) / 100).toFixed(
-                            2
-                          )}
+                          {appliedPromo.percentage}% off)
                         </div>
                       )}
 
-                      {/* <label className="flex items-center justify-between w-full max-w-xs">
+                      <div className="text-xl font-bold text-left">
+                        Total: ₹{ultraGrandTotal.toFixed(2)}
+                      </div>
+                    </div>
+
+                    {/* <label className="flex items-center justify-between w-full max-w-xs">
                         <span className="label-text">
                           Table Delivery (5% charge) - ₹
                           {(subtotal * 0.05).toFixed(2)}
@@ -234,16 +235,11 @@ const Cart: React.FC<CartProps> = ({
                         />
                       </label> */}
 
-                      <div className="text-xl font-bold text-left">
-                        Total: ₹{calculateTotal().toFixed(2)}
-                      </div>
-                    </div>
-
-                    <div className="fixed bottom-0 left-0 right-0 p-4">
+                    <div className="fixed bottom-0 left-0 right-0 p-4 ">
                       <div className="container mx-auto max-w-3xl">
                         <button
                           className="btn btn-primary w-full"
-                          onClick={onCheckout}
+                          onClick={handleCheckout}
                           disabled={!selectedLocation || !selectedCabin}
                         >
                           Checkout
@@ -262,13 +258,14 @@ const Cart: React.FC<CartProps> = ({
           </div>
         </div>
       )}
-      {/* Previous JSX */}
       {isCheckoutOpen && (
         <Checkout
           items={items}
           selectedLocation={selectedLocation}
           selectedCabin={selectedCabin}
           onClose={handleCloseCheckout}
+          total={ultraGrandTotal}
+          appliedPromo={appliedPromo}
         />
       )}
     </>
