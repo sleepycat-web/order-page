@@ -35,12 +35,14 @@ const Cart: React.FC<CartProps> = ({
   total,
   setTotal,
   onResetCart,
+  
 }) => {
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [tableDelivery, setTableDelivery] = useState(false);
   const [ultraGrandTotal, setUltraGrandTotal] = useState(0);
+  
 
   const handleApplyPromo = () => {
     const validPromo = validatePromo(promoCode);
@@ -53,14 +55,17 @@ const Cart: React.FC<CartProps> = ({
     }
   };
 
-  const handleCheckout = () => {
-    setIsCheckoutOpen(true);
-  };
+   const handleCheckout = () => {
+     setIsCheckoutOpen(true);
+     onToggle(); // This will close the cart
+   };
 
-  const handleCloseCheckout = () => {
-    setIsCheckoutOpen(false);
-    onToggle();
-  };
+    const handleCloseCheckout = () => {
+      setIsCheckoutOpen(false);
+      if (items.length > 0) {
+        onToggle(); // This will open the cart if it's closed
+      }
+    };
 
   const calculateTotal = () => {
     const subtotal = items.reduce(
@@ -271,7 +276,7 @@ const Cart: React.FC<CartProps> = ({
           total={ultraGrandTotal}
           appliedPromo={appliedPromo}
           onOrderSuccess={onOrderSuccess}
-          onResetCart={onResetCart} // Pass this prop to Checkout
+          onResetCart={onResetCart}
         />
       )}
     </>

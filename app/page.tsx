@@ -37,11 +37,12 @@ export default function Home() {
       setIsCheckoutOpen(true);
     };
 
-    const handleCloseCheckout = () => {
-      setIsCheckoutOpen(false);
-      setIsCartOpen(true);
-
-    };
+   const handleCloseCheckout = () => {
+     setIsCheckoutOpen(false);
+     if (cartItems.length > 0) {
+       setIsCartOpen(true);
+     }
+   };
   
   
 

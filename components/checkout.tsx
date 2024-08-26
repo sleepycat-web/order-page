@@ -43,6 +43,8 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [userData, setUserData] = useState<UserData>({ name: "", email: "" });
   const [customerName, setCustomerName] = useState("");
+  const [isBanned, setIsBanned] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
   const otpRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -50,14 +52,25 @@ const Checkout: React.FC<CheckoutProps> = ({
     useRef<HTMLInputElement>(null),
   ];
 
+const handleClose = () => {
+  if (orderPlaced) {
+    // If order is placed, reset everything and go to homepage
+    onResetCart();
+    onClose();
+  } else {
+    // If order is not placed, go back to cart
+    onClose();
+  }
+};
 
-
-  const checkUserExists = async (phoneNumber: string): Promise<boolean> => {
+  const checkUserExists = async (
+    phoneNumber: string
+  ): Promise<{ exists: boolean; banStatus: boolean }> => {
     const response = await axios.post("/api/userData", {
       action: "checkUserExists",
       phoneNumber,
     });
-    return response.data.exists;
+    return response.data;
   };
 
   const handleConfirmOrder = async () => {
@@ -145,20 +158,36 @@ const Checkout: React.FC<CheckoutProps> = ({
   }, [timer]);
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 10) {
       setPhoneNumber(value);
+      setPhoneError(""); // Clear any existing error message
     }
   };
-
   const closeUserModal = () => {
     setShowUserModal(false);
   };
-
+ const validatePhoneNumber = (number: string): boolean => {
+   const validStartDigits = ["9", "8", "7", "6"];
+   return number.length === 10 && validStartDigits.includes(number[0]);
+ };
   const handleGetOtp = async () => {
+    if (!validatePhoneNumber(phoneNumber)) {
+      setPhoneError(
+        "Please enter a valid phone number"
+      );
+      setTimeout(() => setPhoneError(""), 5000);
+      return;
+    }
+
     try {
-      const userExists = await checkUserExists(phoneNumber);
-      if (userExists) {
+      const { exists, banStatus } = await checkUserExists(phoneNumber);
+      if (banStatus) {
+        setIsBanned(true);
+        setShowUserModal(true);
+        return;
+      }
+      if (exists) {
         const fetchedUserData = await getUserData(phoneNumber);
         setCustomerName(fetchedUserData.name.split(" ")[0]);
       } else {
@@ -247,7 +276,7 @@ const Checkout: React.FC<CheckoutProps> = ({
         <div className="flex justify-between items-center mb-6">
           {!orderPlaced && <h2 className="text-2xl font-bold">Checkout</h2>}
           <div className="flex-grow" />
-          <button onClick={onClose} className="text-3xl">
+          <button onClick={handleClose} className="text-3xl">
             &times;
           </button>
         </div>
@@ -272,11 +301,13 @@ const Checkout: React.FC<CheckoutProps> = ({
               >
                 Get OTP
               </button>
-            </div>
+            </div>{" "}
+            {phoneError && (
+              <p className="text-red-500 text-sm mt-2">{phoneError}</p>
+            )}
             {timer > 0 && (
               <p className="text-sm mt-2">Resend OTP in {timer}s</p>
             )}
-
             {isOtpSent && (
               <div className="flex flex-col items-center mt-4">
                 <p className="text-sm mb-2">{otpMessage}</p>
@@ -403,27 +434,42 @@ const Checkout: React.FC<CheckoutProps> = ({
             onClick={closeUserModal}
           >
             <div
-              className="bg-neutral-900 p-6 rounded-lg w-full max-w-md"
+              className="bg-neutral-900 p-6 rounded-lg w-full max-w-md m-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold mb-4">Enter Your Details</h3>
-              <input
-                type="text"
-                placeholder="Name"
-                className="input w-full mb-4 bg-neutral-800"
-                value={userData.name}
-                onChange={(e) =>
-                  setUserData({ ...userData, name: e.target.value })
-                }
-                required
-              />
-              <button
-                className="btn btn-primary w-full"
-                onClick={handleUserDataSubmit}
-                disabled={!userData.name}
-              >
-                Submit
-              </button>
+              {isBanned ? (
+                <div>
+                  <h3 className="text-xl font-bold mb-4">Account Banned</h3>
+                  <p>You have been banned from placing orders at Chai Mine.</p>
+                  <button
+                    className="btn btn-primary w-full mt-4"
+                    onClick={onClose}
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-xl font-bold mb-4">Enter Your Details</h3>
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    className="input w-full mb-4 bg-neutral-800"
+                    value={userData.name}
+                    onChange={(e) =>
+                      setUserData({ ...userData, name: e.target.value })
+                    }
+                    required
+                  />
+                  <button
+                    className="btn btn-primary w-full"
+                    onClick={handleUserDataSubmit}
+                    disabled={!userData.name}
+                  >
+                    Submit
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
