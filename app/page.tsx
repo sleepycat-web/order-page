@@ -7,6 +7,7 @@ import Popup from "@/components/popup";
 import Cart from "@/components/cart";
 import { Promo, validatePromo } from "../scripts/promo"; // Make sure to create this file
 import Checkout from "@/components/checkout";
+
 export interface CartItem {
   item: MenuItem;
   selectedOptions: Record<string, string[]>;
@@ -26,6 +27,7 @@ export default function Home() {
   const [appliedPromo, setAppliedPromo] = useState<Promo | null>(null);
   const [total, setTotal] = useState(0);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
 
  const handleLocationSelect = (location: string, cabin: string) => {
     setSelectedLocation(location);

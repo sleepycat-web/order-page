@@ -114,7 +114,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
     <>
       {isLocationPromptVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-neutral-950 p-6 rounded-lg ">
+          <div className="bg-neutral-900 p-6 rounded-lg ">
             <h2 className="text-xl font-bold mb-4">Enable Location Services</h2>
             <p className="mb-4">
               Please enable location services to automatically detect your

@@ -45,12 +45,39 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [customerName, setCustomerName] = useState("");
   const [isBanned, setIsBanned] = useState(false);
   const [phoneError, setPhoneError] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
   const otpRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ];
+    const resetCheckoutState = () => {
+      setOtpVerified(false);
+      setPhoneNumber("");
+      setIsOtpSent(false);
+      setCustomerName("");
+      setOtpInputs(["", "", "", ""]);
+      setOtpMessage("");
+      setTimer(0);
+      setShowUserModal(false);
+      setOrderPlaced(false);
+      setIsBanned(false);
+      setPhoneError("");
+    };
+  useEffect(() => {
+    const handleUserBanned = () => {
+      resetCheckoutState();
+      localStorage.removeItem("otpVerified");
+      setIsLoading(false);
+    };
+
+    window.addEventListener("userBanned", handleUserBanned);
+
+    return () => {
+      window.removeEventListener("userBanned", handleUserBanned);
+    };
+  }, []);
 
 const handleClose = () => {
   if (orderPlaced) {
@@ -129,23 +156,58 @@ const handleClose = () => {
     );
     return allowedItems;
   };
+useEffect(() => {
+  const checkVerificationAndBanStatus = async () => {
+    setIsLoading(true);
 
-  useEffect(() => {
     if (shouldSkipOtp()) {
       setOtpVerified(true);
-    } else {
-      const cachedVerification = localStorage.getItem("otpVerified");
-      if (cachedVerification) {
-        const { verified, expiry } = JSON.parse(cachedVerification);
-        if (verified && new Date().getTime() < expiry) {
-          setOtpVerified(true);
-          setIsOtpSent(true);
-        } else {
-          localStorage.removeItem("otpVerified");
-        }
-      }
+      setIsLoading(false);
+      return;
     }
-  }, [items]);
+
+    const cachedVerification = localStorage.getItem("otpVerified");
+    if (cachedVerification) {
+      const {
+        verified,
+        expiry,
+        phoneNumber: cachedPhoneNumber,
+      } = JSON.parse(cachedVerification);
+      if (verified && new Date().getTime() < expiry) {
+        try {
+          const response = await axios.get(
+            `/api/banValidate?phoneNumber=${encodeURIComponent(
+              cachedPhoneNumber
+            )}`
+          );
+          if (response.data.isBanned) {
+            resetCheckoutState();
+            localStorage.removeItem("otpVerified");
+          } else {
+            setOtpVerified(true);
+            setIsOtpSent(true);
+            setPhoneNumber(cachedPhoneNumber);
+            // Optionally, you might want to fetch and set the customer name here
+            // const userData = await getUserData(cachedPhoneNumber);
+            // setCustomerName(userData.name);
+          }
+        } catch (error) {
+          console.error("Error checking ban status:", error);
+          resetCheckoutState();
+        }
+      } else {
+        localStorage.removeItem("otpVerified");
+        resetCheckoutState();
+      }
+    } else {
+      resetCheckoutState();
+    }
+
+    setIsLoading(false);
+  };
+
+  checkVerificationAndBanStatus();
+}, [items]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -260,6 +322,7 @@ const handleClose = () => {
         JSON.stringify({
           verified: true,
           expiry: midnight.getTime(),
+          phoneNumber: phoneNumber,
         })
       );
     } else {
@@ -269,7 +332,15 @@ const handleClose = () => {
   };
 
   const isGetOtpDisabled = phoneNumber.length !== 10 || timer > 0;
-
+if (isLoading) {
+  return (
+    <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50">
+      <div className="text-white text-2xl">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    </div>
+  );
+}
   return (
     <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50 overflow-y-auto">
       <div className="container bg-neutral-900 rounded-lg px-4 py-8 pb-16 md:pb-12  w-full h-full relative">
