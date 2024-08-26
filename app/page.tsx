@@ -43,46 +43,7 @@ export default function Home() {
 
     };
   
-  const handleSubmit = async () => {
-    if (!selectedLocation || !selectedCabin) return;
-
-    const currentDate = new Date();
-    const istTimeZoneOffset = 5.5;
-    const istDate = new Date(
-      currentDate.getTime() + istTimeZoneOffset * 60 * 60 * 1000
-    );
-
-    const formattedDate = istDate.toLocaleString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    });
-
-    const response = await fetch("/api/submitOrder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: selectedLocation,
-        cabin: selectedCabin,
-        timestamp: formattedDate,
-        items: cartItems,
-        appliedPromo: appliedPromo,
-      }),
-    });
-
-    if (response.ok) {
-      setOrderStatus("Order placed successfully!");
-      setSelectedLocation("");
-      setSelectedCabin("");
-      setCartItems([]);
-      setAppliedPromo(null);
-    } else {
-      setOrderStatus("Failed to submit order.");
-    }
-  };
+  
 
   const handleUpdateQuantity = (index: number, newQuantity: number) => {
     setCartItems((prevItems) =>
@@ -150,9 +111,13 @@ const handleAddToCart = (
   const handleProceedToCheckout = () => {
     setIsCartOpen(true);
   };
-
-  const handleCheckout = () => {
-    handleSubmit();
+  const handleOrderSuccess = () => {
+    setCartItems([]); // Reset cart items
+    setAppliedPromo(null); // Reset applied promo
+    setTotal(0); // Reset total
+    setIsCheckoutOpen(false); // Close checkout
+    setIsCartOpen(false); // Close cart
+    // You might also want to show a success message here
   };
 
   const handleApplyPromo = (promo: Promo | null) => {
@@ -197,6 +162,8 @@ const handleAddToCart = (
             appliedPromo={appliedPromo}
             total={calculateTotal()}
             setTotal={setTotal} // Add this line
+            onOrderSuccess={handleOrderSuccess}
+            onResetCart={handleOrderSuccess}
           />
         </div>
 
@@ -243,6 +210,8 @@ const handleAddToCart = (
           onClose={handleCloseCheckout}
           total={total} // Pass the total amount
           appliedPromo={appliedPromo} // Pass the applied promo code
+          onOrderSuccess={handleOrderSuccess}
+          onResetCart={handleOrderSuccess}
         />
       )}
     </div>

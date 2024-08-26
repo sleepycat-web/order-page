@@ -16,6 +16,8 @@ interface CartProps {
   appliedPromo: Promo | null;
   total: number;
   setTotal: (total: number) => void;
+  onOrderSuccess: () => void;
+  onResetCart: () => void;
 }
 
 const Cart: React.FC<CartProps> = ({
@@ -25,12 +27,14 @@ const Cart: React.FC<CartProps> = ({
   onToggle,
   isOpen,
   onCheckout,
+  onOrderSuccess,
   selectedLocation,
   selectedCabin,
   onApplyPromo,
   appliedPromo,
   total,
   setTotal,
+  onResetCart,
 }) => {
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
@@ -266,6 +270,8 @@ const Cart: React.FC<CartProps> = ({
           onClose={handleCloseCheckout}
           total={ultraGrandTotal}
           appliedPromo={appliedPromo}
+          onOrderSuccess={onOrderSuccess}
+          onResetCart={onResetCart} // Pass this prop to Checkout
         />
       )}
     </>

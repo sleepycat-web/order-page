@@ -12,30 +12,32 @@ const connectToDatabase = async (): Promise<Db> => {
 
 export const checkUserExists = async (
   phoneNumber: string
-): Promise<boolean> => {
+): Promise<{ exists: boolean; banStatus: boolean }> => {
   const database = await connectToDatabase();
   const collection = database.collection("UserData");
   const user = await collection.findOne({ phoneNumber });
-  return !!user;
+  return {
+    exists: !!user,
+    banStatus: user?.banStatus || false,
+  };
 };
 
 export const addNewUser = async (
   phoneNumber: string,
-  name: string,
-//   email?: string
+  name: string
 ): Promise<void> => {
   const database = await connectToDatabase();
   const collection = database.collection("UserData");
   await collection.insertOne({
     phoneNumber,
     name,
-    // email: email || null,
+    banStatus: false,
   });
 };
 
 export const getUserData = async (
   phoneNumber: string
-): Promise<{ name: string; email?: string }> => {
+): Promise<{ name: string; email?: string; banStatus: boolean }> => {
   const database = await connectToDatabase();
   const collection = database.collection("UserData");
   const user = await collection.findOne({ phoneNumber });
@@ -44,6 +46,7 @@ export const getUserData = async (
     return {
       name: user.name,
       email: user.email || undefined,
+      banStatus: user.banStatus || false,
     };
   }
 

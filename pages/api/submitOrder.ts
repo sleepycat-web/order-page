@@ -1,51 +1,67 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+// pages/api/submitOrder.ts
+import { NextApiRequest, NextApiResponse } from "next";
+import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../lib/mongodb";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method === "POST") {
-    const { location, cabin, timestamp } = req.body;
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method Not Allowed" });
+  }
 
-    if (!location || !cabin) {
-      return res.status(400).json({ error: "Location and cabin are required" });
+  try {
+    const { db } = await connectToDatabase();
+
+    let {
+      items,
+      selectedLocation,
+      selectedCabin,
+      total,
+      appliedPromo,
+      phoneNumber,
+      customerName,
+    } = req.body;
+
+    // Check database for user name
+    const userData = await db.collection("UserData").findOne({ phoneNumber });
+    if (userData && userData.name) {
+      customerName = userData.name;
     }
 
-    try {
-      const { db } = await connectToDatabase();
-      let collectionName: string;
+    const collection = selectedLocation.includes("Sevoke Road")
+      ? db.collection("OrderSevoke")
+      : db.collection("OrderDagapur");
 
-      if (location === "Sevoke Road") {
-        collectionName = "OrderSevoke";
-      } else if (location === "Dagapur") {
-        collectionName = "OrderDagapur";
-      } else {
-        return res.status(400).json({ error: "Invalid location" });
-      }
+    // Create a specific date and time in IST
+    const orderDate = new Date("2024-08-11T14:00:00+05:30");
 
-      const collection = db.collection(collectionName);
+    const orderDocument = {
+      items,
+      selectedLocation,
+      selectedCabin,
+      total,
+      appliedPromo,
+      phoneNumber,
+      customerName,
+      status: "pending",
+      order: "pending",
+      createdAt: orderDate,
+      _id: new ObjectId(),
+    };
 
-      // Generate IST timestamp if not provided
+    const result = await collection.insertOne(orderDocument);
 
-      const result = await collection.insertOne({
-        location,
-        cabin,
-        timestamp
-      });
-
-      res.status(200).json({
-        message: "Order submitted successfully",
-        orderId: result.insertedId,
-      });
-    } catch (error) {
-      console.error("Error submitting order:", error);
-      res.status(500).json({ error: "Failed to submit order" });
-    }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.status(200).json({
+      message: "Order submitted successfully",
+      orderId: result.insertedId,
+      orderDate: orderDate.toISOString(),
+      phoneNumber,
+      customerName,
+    });
+  } catch (error) {
+    console.error("Error submitting order:", error);
+    res.status(500).json({ message: "Error submitting order" });
   }
 }
-
-

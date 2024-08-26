@@ -11,13 +11,11 @@ export default async function handler(
     try {
       switch (action) {
         case "checkUserExists":
-          const exists = await checkUserExists(phoneNumber);
-          res.status(200).json({ exists });
+          const { exists, banStatus } = await checkUserExists(phoneNumber);
+          res.status(200).json({ exists, banStatus });
           break;
         case "addNewUser":
-            //   await addNewUser(phoneNumber, name, email);
-        await addNewUser(phoneNumber, name);
-
+          await addNewUser(phoneNumber, name);
           res.status(200).json({ success: true });
           break;
         case "getUserData":

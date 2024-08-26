@@ -13,6 +13,8 @@ interface CheckoutProps {
   onClose: () => void;
   total: number;
   appliedPromo: Promo | null;
+  onOrderSuccess: () => void;
+  onResetCart: () => void;
 }
 
 interface UserData {
@@ -25,8 +27,10 @@ const Checkout: React.FC<CheckoutProps> = ({
   selectedLocation,
   selectedCabin,
   onClose,
+  onOrderSuccess,
   total,
   appliedPromo,
+  onResetCart
 }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
@@ -36,6 +40,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [otpMessage, setOtpMessage] = useState("");
   const [timer, setTimer] = useState(0);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
   const [userData, setUserData] = useState<UserData>({ name: "", email: "" });
   const [customerName, setCustomerName] = useState("");
   const otpRefs = [
@@ -45,12 +50,37 @@ const Checkout: React.FC<CheckoutProps> = ({
     useRef<HTMLInputElement>(null),
   ];
 
+
+
   const checkUserExists = async (phoneNumber: string): Promise<boolean> => {
     const response = await axios.post("/api/userData", {
       action: "checkUserExists",
       phoneNumber,
     });
     return response.data.exists;
+  };
+
+  const handleConfirmOrder = async () => {
+    try {
+      const response = await axios.post("/api/submitOrder", {
+        items,
+        selectedLocation,
+        selectedCabin,
+        total,
+        appliedPromo,
+        phoneNumber,
+        customerName,
+      });
+
+      if (response.status === 200) {
+        console.log("Order submitted:", response.data.orderId);
+        setOrderPlaced(true);
+        onOrderSuccess();
+        onResetCart(); // Add this line
+      }
+    } catch (error) {
+      console.error("Error submitting order:", error);
+    }
   };
 
   const addNewUser = async (
@@ -120,9 +150,11 @@ const Checkout: React.FC<CheckoutProps> = ({
       setPhoneNumber(value);
     }
   };
-const closeUserModal = () => {
-  setShowUserModal(false);
-};
+
+  const closeUserModal = () => {
+    setShowUserModal(false);
+  };
+
   const handleGetOtp = async () => {
     try {
       const userExists = await checkUserExists(phoneNumber);
@@ -172,6 +204,8 @@ const closeUserModal = () => {
 
       if (value !== "" && index < 3) {
         otpRefs[index + 1].current?.focus();
+      } else if (index === 3 && value !== "") {
+        otpRefs[index].current?.blur();
       }
     }
   };
@@ -211,7 +245,8 @@ const closeUserModal = () => {
     <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50 overflow-y-auto">
       <div className="container bg-neutral-900 rounded-lg px-4 py-8 pb-16 md:pb-12  w-full h-full relative">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Checkout</h2>
+          {!orderPlaced && <h2 className="text-2xl font-bold">Checkout</h2>}
+          <div className="flex-grow" />
           <button onClick={onClose} className="text-3xl">
             &times;
           </button>
@@ -275,72 +310,91 @@ const closeUserModal = () => {
           </div>
         ) : (
           <div className="orderitems pb-16">
-            <p className="text-lg font-semibold mb-4">
-              {customerName
-                ? `Dear ${customerName}, Kindly Confirm your order`
-                : "Kindly confirm your order"}
-            </p>
-            <div className="mb-4 bg-neutral-800 rounded-lg p-4">
-              <p className="text-md">{selectedLocation}</p>
-              <p className="text-md">{selectedCabin}</p>
-            </div>
-            <ul className="space-y-4">
-              {items.map((item, index) => (
-                <li key={index} className="border-b border-gray-700 pb-4">
-                  <h3 className="text-lg font-semibold mb-2">
-                    {item.item.name}
-                  </h3>
-                  <p>Quantity: {item.quantity}</p>
-                  <div className="mt-2 flex items-center">
-                    <span className="mr-2">Price:</span>
-                    <div className="px-2 py- bg-blue-600 rounded text-white font-semibold">
-                      ₹{(item.totalPrice * item.quantity).toFixed(2)}
-                    </div>
-                  </div>
-                  {Object.entries(item.selectedOptions).map(
-                    ([optionName, values]) => (
-                      <div
-                        key={optionName}
-                        className="flex flex-wrap items-center gap-1"
-                      >
-                        <span className="text-sm py-2 text-gray-400">
-                          {optionName}:{" "}
-                        </span>
-                        {values.map((value) => (
-                          <span
-                            key={value}
-                            className="text-sm px-2 py-0.5 rounded bg-blue-600 text-white"
-                          >
-                            {value}
-                          </span>
-                        ))}
-                      </div>
-                    )
-                  )}
-                  {item.specialRequests && (
-                    <p className="text-sm text-gray-400 ">
-                      Special: {item.specialRequests}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-2 space-y-2  mb-2">
-              {appliedPromo && (
-                <div className="text-green-500">
-                  Applied Promo: {appliedPromo.code} ({appliedPromo.percentage}%
-                  off)
-                </div>
-              )}
-              <div className="text-xl font-bold">
-                Total: ₹{total.toFixed(2)}
+            {orderPlaced ? (
+              <div className="text-center">
+                <p className="text-xl font-bold mb-4">
+                  Order Placed Successfully!
+                </p>
+                <p>
+                  <a className="underline" href="www.chaimine.com">
+                    {" "}
+                    Go to Home Page
+                  </a>
+                </p>
               </div>
-            </div>
-            <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
-              <button className="btn btn-primary  w-full max-w-lg ">
-                Confirm
-              </button>
-            </div>
+            ) : (
+              <>
+                <p className="text-lg font-semibold mb-4">
+                  {customerName
+                    ? `Dear ${customerName}, Kindly Confirm your order`
+                    : "Kindly confirm your order"}
+                </p>
+                <div className="mb-4 bg-neutral-800 rounded-lg p-4">
+                  <p className="text-md">{selectedLocation}</p>
+                  <p className="text-md">{selectedCabin}</p>
+                </div>
+                <ul className="space-y-4">
+                  {items.map((item, index) => (
+                    <li key={index} className="border-b border-gray-700 pb-4">
+                      <h3 className="text-lg font-semibold mb-2">
+                        {item.item.name}
+                      </h3>
+                      <p>Quantity: {item.quantity}</p>
+                      <div className="mt-2 flex items-center">
+                        <span className="mr-2">Price:</span>
+                        <div className="px-2 py- bg-blue-600 rounded text-white font-semibold">
+                          ₹{(item.totalPrice * item.quantity).toFixed(2)}
+                        </div>
+                      </div>
+                      {Object.entries(item.selectedOptions).map(
+                        ([optionName, values]) => (
+                          <div
+                            key={optionName}
+                            className="flex flex-wrap items-center gap-1"
+                          >
+                            <span className="text-sm py-2 text-gray-400">
+                              {optionName}:{" "}
+                            </span>
+                            {values.map((value) => (
+                              <span
+                                key={value}
+                                className="text-sm px-2 py-0.5 rounded bg-blue-600 text-white"
+                              >
+                                {value}
+                              </span>
+                            ))}
+                          </div>
+                        )
+                      )}
+                      {item.specialRequests && (
+                        <p className="text-sm text-gray-400 ">
+                          Special: {item.specialRequests}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-2 space-y-2  mb-2">
+                  {appliedPromo && (
+                    <div className="text-green-500">
+                      Applied Promo: {appliedPromo.code} (
+                      {appliedPromo.percentage}% off)
+                    </div>
+                  )}
+                  <div className="text-xl font-bold">
+                    Total: ₹{total.toFixed(2)}
+                  </div>
+                </div>
+                <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
+                  <button
+                    className="btn btn-primary w-full max-w-lg"
+                    onClick={handleConfirmOrder}
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
         {showUserModal && (
@@ -349,7 +403,7 @@ const closeUserModal = () => {
             onClick={closeUserModal}
           >
             <div
-              className="bg-neutral-900 p-6 rounded-lg w-full max-w-md" // Increased width here
+              className="bg-neutral-900 p-6 rounded-lg w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold mb-4">Enter Your Details</h3>
@@ -363,16 +417,6 @@ const closeUserModal = () => {
                 }
                 required
               />
-              {/* Email input commented out as requested */}
-              {/* <input
-          type="email"
-          placeholder="Email"
-          className="input w-full mb-4 bg-neutral-800"
-          value={userData.email}
-          onChange={(e) =>
-            setUserData({ ...userData, email: e.target.value })
-          }
-        /> */}
               <button
                 className="btn btn-primary w-full"
                 onClick={handleUserDataSubmit}
