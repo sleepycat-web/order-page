@@ -27,7 +27,7 @@ export default function Home() {
   const [total, setTotal] = useState(0);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  const handleLocationSelect = (location: string, cabin: string) => {
+ const handleLocationSelect = (location: string, cabin: string) => {
     setSelectedLocation(location);
     setSelectedCabin(cabin);
   };

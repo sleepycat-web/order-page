@@ -56,9 +56,9 @@ const Cart: React.FC<CartProps> = ({
   };
 
    const handleCheckout = () => {
-     setIsCheckoutOpen(true);
-     onToggle(); // This will close the cart
-   };
+    setIsCheckoutOpen(true);
+    onToggle(); // This will close the cart
+  };
 
     const handleCloseCheckout = () => {
       setIsCheckoutOpen(false);
@@ -276,7 +276,7 @@ const Cart: React.FC<CartProps> = ({
           total={ultraGrandTotal}
           appliedPromo={appliedPromo}
           onOrderSuccess={onOrderSuccess}
-          onResetCart={onResetCart}
+          onResetCart={onResetCart} // Pass this prop to Checkout
         />
       )}
     </>
