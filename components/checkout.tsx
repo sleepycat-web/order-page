@@ -45,7 +45,8 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [customerName, setCustomerName] = useState("");
   const [isBanned, setIsBanned] = useState(false);
   const [phoneError, setPhoneError] = useState("");
-    const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
   const otpRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -233,40 +234,58 @@ useEffect(() => {
    const validStartDigits = ["9", "8", "7", "6"];
    return number.length === 10 && validStartDigits.includes(number[0]);
  };
-  const handleGetOtp = async () => {
-    if (!validatePhoneNumber(phoneNumber)) {
-      setPhoneError(
-        "Please enter a valid phone number"
-      );
-      setTimeout(() => setPhoneError(""), 5000);
-      return;
-    }
+ const handleGetOtp = async () => {
+   if (!validatePhoneNumber(phoneNumber)) {
+     setPhoneError("Please enter a valid phone number");
+     setTimeout(() => setPhoneError(""), 5000);
+     return;
+   }
 
-    try {
-      const { exists, banStatus } = await checkUserExists(phoneNumber);
-      if (banStatus) {
-        setIsBanned(true);
-        setShowUserModal(true);
-        return;
-      }
-      if (exists) {
-        const fetchedUserData = await getUserData(phoneNumber);
-        setCustomerName(fetchedUserData.name.split(" ")[0]);
-      } else {
-        setShowUserModal(true);
-        return;
-      }
+   setIsOtpLoading(true);
 
-      const otp = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedOtp(otp);
-      setIsOtpSent(true);
-      setTimer(30);
-      setOtpMessage(`Your OTP is: ${otp}`);
-    } catch (error) {
-      console.error("Error checking user or generating OTP:", error);
-      setOtpMessage("An error occurred. Please try again.");
-    }
-  };
+   try {
+     // Parallel API calls
+     const [userExistsResponse, otpResponse] = await Promise.all([
+       checkUserExists(phoneNumber),
+       generateOtp(),
+     ]);
+
+     const { exists, banStatus } = userExistsResponse;
+
+     if (banStatus) {
+       setIsBanned(true);
+       setShowUserModal(true);
+       return;
+     }
+
+     if (exists) {
+       const fetchedUserData = await getUserData(phoneNumber);
+       setCustomerName(fetchedUserData.name.split(" ")[0]);
+     } else {
+       setShowUserModal(true);
+       return;
+     }
+
+     const otp = otpResponse.otp;
+     setGeneratedOtp(otp);
+     setIsOtpSent(true);
+     setTimer(30);
+     setOtpMessage(`Your OTP is: ${otp}`);
+   } catch (error) {
+     console.error("Error checking user or generating OTP:", error);
+     setOtpMessage("An error occurred. Please try again.");
+   } finally {
+     setIsOtpLoading(false);
+   }
+ };
+
+ // Separate function for OTP generation
+ const generateOtp = async () => {
+   const otp = Math.floor(1000 + Math.random() * 9000).toString();
+   // Simulate API call for OTP generation
+   await new Promise((resolve) => setTimeout(resolve, 100));
+   return { otp };
+ };
 
   const handleUserDataSubmit = async () => {
     if (userData.name) {
@@ -379,7 +398,13 @@ if (isLoading) {
             {timer > 0 && (
               <p className="text-sm mt-2">Resend OTP in {timer}s</p>
             )}
-            {isOtpSent && (
+            {isOtpLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="text-white text-2xl">
+                  <span className="loading loading-spinner loading-lg"></span>
+                </div>
+              </div>
+            ) : isOtpSent ? (
               <div className="flex flex-col items-center mt-4">
                 <p className="text-sm mb-2">{otpMessage}</p>
                 <div className="flex space-x-2">
@@ -408,7 +433,7 @@ if (isLoading) {
                   Verify
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
         ) : (
           <div className="orderitems pb-16">
