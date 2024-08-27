@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, createRef } from "react";
 import { MenuItem, CustomizationOption } from "./menu"; // Adjust the import path as needed
 
 interface PopupProps {
@@ -23,7 +23,21 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [showErrorHighlight, setShowErrorHighlight] = useState(false);
+const optionRefs = useRef<Array<HTMLDivElement | null>>([]);
 
+useEffect(() => {
+  if (item.customizationOptions) {
+    optionRefs.current = new Array(item.customizationOptions.length).fill(null);
+  }
+}, [item.customizationOptions]);
+  
+useEffect(() => {
+  if (item.customizationOptions) {
+    optionRefs.current = new Array(item.customizationOptions.length).fill(null);
+  }
+}, [item.customizationOptions]);
+
+  
   const calculateTotalPrice = (): number => {
     let total = 0;
     Object.entries(selectedOptions).forEach(([optionName, selectedValues]) => {
@@ -147,28 +161,55 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
     return !hasOnlyCheckboxes || hasSelectedCheckbox;
   };
 
-  const handleAddToOrder = () => {
-    if (validateSelection()) {
-      onAddToOrder(
-        item,
-        selectedOptions,
-        quantity,
-        specialRequests,
-        totalPrice
-      );
-      onClose();
+const handleAddToOrder = () => {
+  if (validateSelection()) {
+    onAddToOrder(item, selectedOptions, quantity, specialRequests, totalPrice);
+    onClose();
+  } else {
+    setShowErrorHighlight(true);
+    if (
+      item.customizationOptions?.every((option) => option.type === "checkbox")
+    ) {
+      setError("Please select at least one option");
     } else {
-      setShowErrorHighlight(true);
-      if (
-        item.customizationOptions?.every((option) => option.type === "checkbox")
-      ) {
-        setError("Please select at least one option");
-      } else {
-        setError("Please select required options");
+      setError("Please select required options");
+    }
+
+    // Find the first invalid option and scroll to it
+    const firstInvalidOptionIndex = item.customizationOptions?.findIndex(
+      (option, index) => {
+        if (option.type === "radio") {
+          return (
+            !selectedOptions[option.name] ||
+            selectedOptions[option.name].length === 0
+          );
+        } else if (option.type === "checkbox") {
+          return (
+            item.customizationOptions?.every(
+              (opt) => opt.type === "checkbox"
+            ) &&
+            (!selectedOptions[option.name] ||
+              selectedOptions[option.name].length === 0)
+          );
+        }
+        return false;
+      }
+    );
+
+    if (
+      firstInvalidOptionIndex !== -1 &&
+      firstInvalidOptionIndex !== undefined
+    ) {
+      const invalidElement = optionRefs.current[firstInvalidOptionIndex];
+      if (invalidElement) {
+        invalidElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }
     }
-  };
-
+  }
+};
   const handleQuantityChange = (change: number) => {
     const newQuantity = Math.max(1, quantity + change);
     setQuantity(newQuantity);
@@ -204,7 +245,15 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
         <h2 className="text-xl font-bold mb-4">{item.name}</h2>
         <div className="max-h-[70vh] overflow-y-auto">
           {item.customizationOptions?.map((option, index) => (
-            <div key={index} className="mb-4">
+            <div
+              key={index}
+              className="mb-4"
+              ref={(el) => {
+                if (el && optionRefs.current) {
+                  optionRefs.current[index] = el;
+                }
+              }}
+            >
               <h3
                 className={`font-semibold mb-2 p-1 rounded-lg ${
                   showErrorHighlight &&
@@ -231,10 +280,14 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
                       selectedOptions[option.name]?.includes(opt.label)
                         ? "border border-white"
                         : ""
-                      }`}
-                      onClick={() => handleOptionChange(option.name, opt.label, option.type)} // Handle click on div
+                    }`}
+                    onClick={() =>
+                      handleOptionChange(option.name, opt.label, option.type)
+                    } // Handle click on div
                   >
-                    <label className={`flex items-center cursor-pointer w-full`}>
+                    <label
+                      className={`flex items-center cursor-pointer w-full`}
+                    >
                       <input
                         type={option.type}
                         id={`${item.name}-${option.name}-${opt.label}`}
