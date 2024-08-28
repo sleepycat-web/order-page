@@ -155,60 +155,81 @@ const handleClose = () => {
         (item.item.name === "Others" &&
           item.selectedOptions["Cigarette"]?.length > 0)
     );
-    return allowedItems;
-  };
-useEffect(() => {
-  const checkVerificationAndBanStatus = async () => {
-    setIsLoading(true);
 
-    if (shouldSkipOtp()) {
-      setOtpVerified(true);
-      setIsLoading(false);
-      return;
-    }
+    if (allowedItems) {
+      const cachedVerification = localStorage.getItem("otpVerified");
+      const cachedName = localStorage.getItem("userName");
 
-    const cachedVerification = localStorage.getItem("otpVerified");
-    if (cachedVerification) {
-      const {
-        verified,
-        expiry,
-        phoneNumber: cachedPhoneNumber,
-      } = JSON.parse(cachedVerification);
-      if (verified && new Date().getTime() < expiry) {
-        try {
-          const response = await axios.get(
-            `/api/banValidate?phoneNumber=${encodeURIComponent(
-              cachedPhoneNumber
-            )}`
-          );
-          if (response.data.isBanned) {
-            resetCheckoutState();
-            localStorage.removeItem("otpVerified");
-          } else {
-            setOtpVerified(true);
-            setIsOtpSent(true);
-            setPhoneNumber(cachedPhoneNumber);
-            // Optionally, you might want to fetch and set the customer name here
-            // const userData = await getUserData(cachedPhoneNumber);
-            // setCustomerName(userData.name);
-          }
-        } catch (error) {
-          console.error("Error checking ban status:", error);
-          resetCheckoutState();
-        }
-      } else {
-        localStorage.removeItem("otpVerified");
-        resetCheckoutState();
+      if (cachedVerification && cachedName) {
+        const { phoneNumber: cachedPhoneNumber } =
+          JSON.parse(cachedVerification);
+        setPhoneNumber(cachedPhoneNumber);
+        setCustomerName(cachedName);
+        return true;
       }
-    } else {
-      resetCheckoutState();
     }
 
-    setIsLoading(false);
+    return false;
   };
+ useEffect(() => {
+   const checkVerificationAndBanStatus = async () => {
+     setIsLoading(true);
 
-  checkVerificationAndBanStatus();
-}, [items]);
+     if (shouldSkipOtp()) {
+       setOtpVerified(true);
+       setIsLoading(false);
+       return;
+     }
+
+     const cachedVerification = localStorage.getItem("otpVerified");
+     if (cachedVerification) {
+       const {
+         verified,
+         expiry,
+         phoneNumber: cachedPhoneNumber,
+       } = JSON.parse(cachedVerification);
+       if (verified && new Date().getTime() < expiry) {
+         try {
+           const response = await axios.get(
+             `/api/banValidate?phoneNumber=${encodeURIComponent(
+               cachedPhoneNumber
+             )}`
+           );
+           if (response.data.isBanned) {
+             resetCheckoutState();
+             localStorage.removeItem("otpVerified");
+             localStorage.removeItem("userName");
+           } else {
+             setOtpVerified(true);
+             setIsOtpSent(true);
+             setPhoneNumber(cachedPhoneNumber);
+             const cachedName = localStorage.getItem("userName");
+             if (cachedName) {
+               setCustomerName(cachedName);
+             } else {
+               const userData = await getUserData(cachedPhoneNumber);
+               setCustomerName(userData.name.split(" ")[0]);
+             }
+           }
+         } catch (error) {
+           console.error("Error checking ban status:", error);
+           resetCheckoutState();
+         }
+       } else {
+         localStorage.removeItem("otpVerified");
+         localStorage.removeItem("userName");
+         resetCheckoutState();
+       }
+     } else {
+       resetCheckoutState();
+     }
+
+     setIsLoading(false);
+   };
+
+   checkVerificationAndBanStatus();
+ }, [items]);
+
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -326,7 +347,8 @@ useEffect(() => {
     }
   };
 
-  const handleVerifyOtp = () => {
+ 
+  const handleVerifyOtp = async () => {
     const enteredOtp = otpInputs.join("");
     if (enteredOtp === generatedOtp) {
       setOtpVerified(true);
@@ -344,6 +366,12 @@ useEffect(() => {
           phoneNumber: phoneNumber,
         })
       );
+
+      // Fetch and save user name
+      const userData = await getUserData(phoneNumber);
+      const userName = userData.name.split(" ")[0];
+      setCustomerName(userName);
+      localStorage.setItem("userName", userName);
     } else {
       console.log("Incorrect OTP");
       setOtpMessage("Incorrect OTP. Please try again.");
