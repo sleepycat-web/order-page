@@ -63,8 +63,19 @@ export default function OrderDagapur() {
     const intervalId = setInterval(fetchOrders, 3000);
     return () => clearInterval(intervalId);
   }, []);
-
-  const handleDispatch = async (orderId: string, type: "order" | "payment") => {
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  };
+  return date.toLocaleString("en-US", options);
+};
+  const handleDispatch = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
         method: "POST",
@@ -73,28 +84,50 @@ export default function OrderDagapur() {
         },
         body: JSON.stringify({
           orderId,
-          type,
-          newStatus: type === "order" ? "dispatched" : "fulfilled",
+          type: "order",
+          newStatus: "dispatched",
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update order status");
+        throw new Error("Failed to update order dispatch status");
       }
 
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order._id === orderId
-            ? {
-                ...order,
-                order: type === "order" ? "dispatched" : order.order,
-                status: type === "payment" ? "fulfilled" : order.status,
-              }
-            : order
+          order._id === orderId ? { ...order, order: "dispatched" } : order
         )
       );
     } catch (error) {
-      console.error("Error updating order status:", error);
+      console.error("Error updating order dispatch status:", error);
+    }
+  };
+
+  const handlePayment = async (orderId: string) => {
+    try {
+      const response = await fetch("/api/updateOrderStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId,
+          type: "payment",
+          newStatus: "fulfilled",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update payment status");
+      }
+
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === orderId ? { ...order, status: "fulfilled" } : order
+        )
+      );
+    } catch (error) {
+      console.error("Error updating payment status:", error);
     }
   };
 
@@ -167,37 +200,14 @@ export default function OrderDagapur() {
                         </p>
                         {order.order !== "dispatched" && (
                           <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() => handleDispatch(order._id, "order")}
+                            className="btn py-1 btn-primary btn-sm"
+                            onClick={() => handleDispatch(order._id)}
                           >
                             Dispatch
                           </button>
                         )}
                       </div>
-                      <div className="flex items-center mb-2">
-                        {" "}
-                        <div className="flex items-center mb-2">
-                          <p className="mr-2">
-                            Order Delivery:
-                            <span
-                              className={`p-1 rounded ml-2 ${
-                                order.order === "dispatched"
-                                  ? "bg-green-500"
-                                  : "bg-red-500"
-                              }`}
-                            >
-                              {order.order}
-                            </span>
-                          </p>
-                          {order.order !== "dispatched" && (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleDispatch(order._id, "order")}
-                            >
-                              Dispatch
-                            </button>
-                          )}
-                        </div>
+                     
                         <div className="flex items-center mb-2">
                           <p className="mr-2">
                             Payment Status:
@@ -213,37 +223,17 @@ export default function OrderDagapur() {
                           </p>
                           {order.status !== "fulfilled" && (
                             <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() =>
-                                handleDispatch(order._id, "payment")
-                              }
+                              className="btn py-1 btn-primary btn-sm"
+                              onClick={() => handlePayment(order._id)}
                             >
                               Fulfill
                             </button>
                           )}
                         </div>
-                        <p className="mr-2">
-                          Payment Status:
-                          <span
-                            className={`p-1 rounded ml-2 ${
-                              order.status === "fulfilled"
-                                ? "bg-green-500"
-                                : "bg-red-500"
-                            }`}
-                          >
-                            {order.status}
-                          </span>
-                        </p>
-                        {order.status !== "fulfilled" && (
-                          <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() => handleDispatch(order._id, "payment")}
-                          >
-                            Fulfill
-                          </button>
-                        )}
-                      </div>
-                      <p className="mb-4">Date: {order.createdAt}</p>
+                   
+                      <p className="mb-4">
+                        Date: {formatDate(order.createdAt)}
+                      </p>
                       <h3 className="text-xl font-semibold mb-2">Items:</h3>
                       <ul className="space-y-4 mb-4">
                         {order.items.map((item, index) => (
@@ -312,7 +302,6 @@ export default function OrderDagapur() {
     <div className="container mx-auto px-4 py-8 text-white min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Dagapur Orders</h1>
 
-      <h2 className="text-2xl font-bold mb-4">Current Orders</h2>
       {renderOrders(groupedOrders.current)}
 
       <div className="mt-8">
