@@ -37,7 +37,7 @@ export default async function handler(
     sendSms.name = "CHMINE";
   sendSms.sender = "CHMINE";
   sendSms.recipient = formattedPhoneNumber;
-  sendSms.content = `Your OTP for your order is: ${otp}. Thank you for choosing Chai Mine!`;
+  sendSms.content = `The OTP for your order is: ${otp}. Thank you for choosing Chai Mine!`;
 
   try {
     await sendSmsApi.sendTransacSms(sendSms);
