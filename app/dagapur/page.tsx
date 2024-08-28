@@ -63,7 +63,6 @@ export default function OrderDagapur() {
     const intervalId = setInterval(fetchOrders, 3000);
     return () => clearInterval(intervalId);
   }, []);
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const options: Intl.DateTimeFormatOptions = {
@@ -76,7 +75,6 @@ export default function OrderDagapur() {
     };
     return date.toLocaleString("en-US", options);
   };
-
   const handleDispatch = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -99,17 +97,6 @@ export default function OrderDagapur() {
           order._id === orderId ? { ...order, order: "dispatched" } : order
         )
       );
-
-      // Call sendConfirmation API for individual dispatch
-      await fetch("/api/sendConfirmation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId,
-        }),
-      });
     } catch (error) {
       console.error("Error updating order dispatch status:", error);
     }
@@ -141,79 +128,6 @@ export default function OrderDagapur() {
       console.error("Error updating payment status:", error);
     }
   };
-
-const handleDispatchAll = async () => {
-  try {
-    const phoneNumbersSet = new Set(orders.map((order) => order.phoneNumber));
-    const phoneNumbers = Array.from(phoneNumbersSet);
-
-    for (const phoneNumber of phoneNumbers) {
-      const response = await fetch("/api/updateOrderStatus", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phoneNumber,
-          type: "/dispatchAll",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to dispatch orders for ${phoneNumber}`);
-      }
-    }
-
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => ({ ...order, order: "dispatched" }))
-    );
-
-    // Call sendConfirmation API once for all dispatched orders
-    await fetch("/api/sendConfirmation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        phoneNumbers,
-      }),
-    });
-  } catch (error) {
-    console.error("Error dispatching all orders:", error);
-  }
-};
-
-const handleFulfillAll = async () => {
-  try {
-    const phoneNumbersSet = new Set(orders.map((order) => order.phoneNumber));
-    const phoneNumbers = Array.from(phoneNumbersSet);
-
-    for (const phoneNumber of phoneNumbers) {
-      const response = await fetch("/api/updateOrderStatus", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phoneNumber,
-          type: "/fulfillAll",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fulfill orders for ${phoneNumber}`);
-      }
-    }
-
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => ({ ...order, status: "fulfilled" }))
-    );
-  } catch (error) {
-    console.error("Error fulfilling all orders:", error);
-  }
-};
-
-
 
   if (loading) return <div>Loading orders...</div>;
   if (error) return <div>{error}</div>;
@@ -387,28 +301,6 @@ const handleFulfillAll = async () => {
       <h1 className="text-3xl font-bold mb-6">Dagapur Orders</h1>
 
       {renderOrders(groupedOrders.current)}
-
-      <div className="mt-8 flex items-center justify-between">
-        <p className="text-xl font-bold mb-1">
-          <span className="bg-rose-800 p-2 rounded">
-            Total: ₹{orders.reduce((sum, order) => sum + order.total, 0)}
-          </span>
-        </p>
-        <div>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
-            onClick={handleDispatchAll}
-          >
-            Dispatch All
-          </button>
-          <button
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-            onClick={handleFulfillAll}
-          >
-            Fulfill All
-          </button>
-        </div>
-      </div>
 
       <div className="mt-8">
         <button
