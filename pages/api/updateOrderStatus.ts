@@ -18,43 +18,64 @@ export default async function handler(
   try {
     const { db } = await connectToDatabase();
 
-    const { orderId, type } = req.body;
+    const { orderId, type, phoneNumber } = req.body;
 
-    if (!orderId || !type) {
+    if ((!orderId && !phoneNumber) || !type) {
       return res.status(400).json({ message: "Missing required parameters" });
     }
 
     let collection;
-    // Determine which collection to use based on the orderId
-    const orderIdObj = new ObjectId(orderId);
-    const sevokeOrder = await db
-      .collection("OrderSevoke")
-      .findOne({ _id: orderIdObj });
-    if (sevokeOrder) {
-      collection = db.collection("OrderSevoke");
-    } else {
+    let filter: any = {};
+
+    if (orderId) {
+      // Single order update
+      const orderIdObj = new ObjectId(orderId);
+      const sevokeOrder = await db
+        .collection("OrderSevoke")
+        .findOne({ _id: orderIdObj });
+      collection = sevokeOrder
+        ? db.collection("OrderSevoke")
+        : db.collection("OrderDagapur");
+      filter = { _id: orderIdObj };
+    } else if (phoneNumber) {
+      // Bulk update for a phone number
+      // We'll update both collections to ensure all orders are covered
       collection = db.collection("OrderDagapur");
+      filter = { phoneNumber: phoneNumber };
+    } else {
+      return res.status(400).json({ message: "Invalid parameters" });
     }
 
     const updateFields: UpdateFields = {};
 
-    if (type === "/dispatch") {
+    if (type === "/dispatch" || type === "/dispatchAll") {
       updateFields.order = "dispatched";
-    } else if (type === "/payment") {
+    } else if (type === "/payment" || type === "/fulfillAll") {
       updateFields.status = "fulfilled";
     } else {
       return res.status(400).json({ message: "Invalid type parameter" });
     }
 
-    const result = await collection.updateOne(
-      { _id: orderIdObj },
-      { $set: updateFields }
-    );
+    let result;
+    if (phoneNumber) {
+      // Update in OrderDagapur
+      result = await db
+        .collection("OrderDagapur")
+        .updateMany(filter, { $set: updateFields });
+
+      // Update in OrderSevoke
+      await db
+        .collection("OrderSevoke")
+        .updateMany(filter, { $set: updateFields });
+    } else {
+      // Single order update
+      result = await collection.updateOne(filter, { $set: updateFields });
+    }
 
     if (result.modifiedCount === 0) {
       return res
         .status(404)
-        .json({ message: "Order not found or status not updated" });
+        .json({ message: "Order(s) not found or status not updated" });
     }
 
     res.status(200).json({ message: "Order status updated successfully" });

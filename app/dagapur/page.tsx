@@ -63,71 +63,157 @@ export default function OrderDagapur() {
     const intervalId = setInterval(fetchOrders, 3000);
     return () => clearInterval(intervalId);
   }, []);
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const options: Intl.DateTimeFormatOptions = {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    };
+    return date.toLocaleString("en-US", options);
   };
-  return date.toLocaleString("en-US", options);
+
+  const handleDispatch = async (orderId: string) => {
+    try {
+      const response = await fetch("/api/updateOrderStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId,
+          type: "/dispatch",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update order dispatch status");
+      }
+
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === orderId ? { ...order, order: "dispatched" } : order
+        )
+      );
+
+      // Call sendConfirmation API for individual dispatch
+      await fetch("/api/sendConfirmation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId,
+        }),
+      });
+    } catch (error) {
+      console.error("Error updating order dispatch status:", error);
+    }
+  };
+
+  const handlePayment = async (orderId: string) => {
+    try {
+      const response = await fetch("/api/updateOrderStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId,
+          type: "/payment",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update payment status");
+      }
+
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === orderId ? { ...order, status: "fulfilled" } : order
+        )
+      );
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+    }
+  };
+
+const handleDispatchAll = async () => {
+  try {
+    const phoneNumbersSet = new Set(orders.map((order) => order.phoneNumber));
+    const phoneNumbers = Array.from(phoneNumbersSet);
+
+    for (const phoneNumber of phoneNumbers) {
+      const response = await fetch("/api/updateOrderStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber,
+          type: "/dispatchAll",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to dispatch orders for ${phoneNumber}`);
+      }
+    }
+
+    setOrders((prevOrders) =>
+      prevOrders.map((order) => ({ ...order, order: "dispatched" }))
+    );
+
+    // Call sendConfirmation API once for all dispatched orders
+    await fetch("/api/sendConfirmation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phoneNumbers,
+      }),
+    });
+  } catch (error) {
+    console.error("Error dispatching all orders:", error);
+  }
 };
- const handleDispatch = async (orderId: string) => {
-   try {
-     const response = await fetch("/api/updateOrderStatus", {
-       method: "POST",
-       headers: {
-         "Content-Type": "application/json",
-       },
-       body: JSON.stringify({
-         orderId,
-         type: "/dispatch",
-       }),
-     });
 
-     if (!response.ok) {
-       throw new Error("Failed to update order dispatch status");
-     }
+const handleFulfillAll = async () => {
+  try {
+    const phoneNumbersSet = new Set(orders.map((order) => order.phoneNumber));
+    const phoneNumbers = Array.from(phoneNumbersSet);
 
-     setOrders((prevOrders) =>
-       prevOrders.map((order) =>
-         order._id === orderId ? { ...order, order: "dispatched" } : order
-       )
-     );
-   } catch (error) {
-     console.error("Error updating order dispatch status:", error);
-   }
- };
+    for (const phoneNumber of phoneNumbers) {
+      const response = await fetch("/api/updateOrderStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber,
+          type: "/fulfillAll",
+        }),
+      });
 
-   const handlePayment = async (orderId: string) => {
-     try {
-       const response = await fetch("/api/updateOrderStatus", {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-         },
-         body: JSON.stringify({
-           orderId,
-           type: "/payment",
-         }),
-       });
+      if (!response.ok) {
+        throw new Error(`Failed to fulfill orders for ${phoneNumber}`);
+      }
+    }
 
-       if (!response.ok) {
-         throw new Error("Failed to update payment status");
-       }
+    setOrders((prevOrders) =>
+      prevOrders.map((order) => ({ ...order, status: "fulfilled" }))
+    );
+  } catch (error) {
+    console.error("Error fulfilling all orders:", error);
+  }
+};
 
-       setOrders((prevOrders) =>
-         prevOrders.map((order) =>
-           order._id === orderId ? { ...order, status: "fulfilled" } : order
-         )
-       );
-     } catch (error) {
-       console.error("Error updating payment status:", error);
-     }
-   };
+
 
   if (loading) return <div>Loading orders...</div>;
   if (error) return <div>{error}</div>;
@@ -205,30 +291,30 @@ const formatDate = (dateString: string) => {
                           </button>
                         )}
                       </div>
-                     
-                        <div className="flex items-center mb-2">
-                          <p className="mr-2">
-                            Payment Status:
-                            <span
-                              className={`p-1 rounded ml-2 ${
-                                order.status === "fulfilled"
-                                  ? "bg-green-500"
-                                  : "bg-red-500"
-                              }`}
-                            >
-                              {order.status}
-                            </span>
-                          </p>
-                          {order.status !== "fulfilled" && (
-                            <button
-                              className="btn py-1 btn-primary btn-sm"
-                              onClick={() => handlePayment(order._id)}
-                            >
-                              Fulfill
-                            </button>
-                          )}
-                        </div>
-                   
+
+                      <div className="flex items-center mb-2">
+                        <p className="mr-2">
+                          Payment Status:
+                          <span
+                            className={`p-1 rounded ml-2 ${
+                              order.status === "fulfilled"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
+                          >
+                            {order.status}
+                          </span>
+                        </p>
+                        {order.status !== "fulfilled" && (
+                          <button
+                            className="btn py-1 btn-primary btn-sm"
+                            onClick={() => handlePayment(order._id)}
+                          >
+                            Fulfill
+                          </button>
+                        )}
+                      </div>
+
                       <p className="mb-4">
                         Date: {formatDate(order.createdAt)}
                       </p>
@@ -301,6 +387,28 @@ const formatDate = (dateString: string) => {
       <h1 className="text-3xl font-bold mb-6">Dagapur Orders</h1>
 
       {renderOrders(groupedOrders.current)}
+
+      <div className="mt-8 flex items-center justify-between">
+        <p className="text-xl font-bold mb-1">
+          <span className="bg-rose-800 p-2 rounded">
+            Total: ₹{orders.reduce((sum, order) => sum + order.total, 0)}
+          </span>
+        </p>
+        <div>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
+            onClick={handleDispatchAll}
+          >
+            Dispatch All
+          </button>
+          <button
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleFulfillAll}
+          >
+            Fulfill All
+          </button>
+        </div>
+      </div>
 
       <div className="mt-8">
         <button
