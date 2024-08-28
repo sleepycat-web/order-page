@@ -1,4 +1,3 @@
-// pages/api/submitOrder.ts
 import { NextApiRequest, NextApiResponse } from "next";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../lib/mongodb";
@@ -34,8 +33,8 @@ export default async function handler(
       ? db.collection("OrderSevoke")
       : db.collection("OrderDagapur");
 
-    // Create a specific date and time in IST
-    const orderDate = new Date("2024-08-11T14:00:00+05:30");
+    // Get current date and time
+    const now = new Date();
 
     const orderDocument = {
       items,
@@ -47,7 +46,7 @@ export default async function handler(
       customerName,
       status: "pending",
       order: "pending",
-      createdAt: orderDate,
+      createdAt: now, // Store as Date object
       _id: new ObjectId(),
     };
 
@@ -56,7 +55,7 @@ export default async function handler(
     res.status(200).json({
       message: "Order submitted successfully",
       orderId: result.insertedId,
-      orderDate: orderDate.toISOString(),
+      orderDate: now.toISOString(),
       phoneNumber,
       customerName,
     });
