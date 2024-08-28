@@ -75,61 +75,59 @@ const formatDate = (dateString: string) => {
   };
   return date.toLocaleString("en-US", options);
 };
-  const handleDispatch = async (orderId: string) => {
-    try {
-      const response = await fetch("/api/updateOrderStatus", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId,
-          type: "order",
-          newStatus: "dispatched",
-        }),
-      });
+ const handleDispatch = async (orderId: string) => {
+   try {
+     const response = await fetch("/api/updateOrderStatus", {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify({
+         orderId,
+         type: "/dispatch",
+       }),
+     });
 
-      if (!response.ok) {
-        throw new Error("Failed to update order dispatch status");
-      }
+     if (!response.ok) {
+       throw new Error("Failed to update order dispatch status");
+     }
 
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order._id === orderId ? { ...order, order: "dispatched" } : order
-        )
-      );
-    } catch (error) {
-      console.error("Error updating order dispatch status:", error);
-    }
-  };
+     setOrders((prevOrders) =>
+       prevOrders.map((order) =>
+         order._id === orderId ? { ...order, order: "dispatched" } : order
+       )
+     );
+   } catch (error) {
+     console.error("Error updating order dispatch status:", error);
+   }
+ };
 
-  const handlePayment = async (orderId: string) => {
-    try {
-      const response = await fetch("/api/updateOrderStatus", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId,
-          type: "payment",
-          newStatus: "fulfilled",
-        }),
-      });
+   const handlePayment = async (orderId: string) => {
+     try {
+       const response = await fetch("/api/updateOrderStatus", {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+         },
+         body: JSON.stringify({
+           orderId,
+           type: "/payment",
+         }),
+       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update payment status");
-      }
+       if (!response.ok) {
+         throw new Error("Failed to update payment status");
+       }
 
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order._id === orderId ? { ...order, status: "fulfilled" } : order
-        )
-      );
-    } catch (error) {
-      console.error("Error updating payment status:", error);
-    }
-  };
+       setOrders((prevOrders) =>
+         prevOrders.map((order) =>
+           order._id === orderId ? { ...order, status: "fulfilled" } : order
+         )
+       );
+     } catch (error) {
+       console.error("Error updating payment status:", error);
+     }
+   };
 
   if (loading) return <div>Loading orders...</div>;
   if (error) return <div>{error}</div>;

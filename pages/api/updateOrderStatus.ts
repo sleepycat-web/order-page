@@ -2,6 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../lib/mongodb";
 
+interface UpdateFields {
+  order?: string;
+  status?: string;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -31,10 +36,19 @@ export default async function handler(
       collection = db.collection("OrderDagapur");
     }
 
-    // Update both 'order' and 'status' fields
+    const updateFields: UpdateFields = {};
+
+    if (type === "/dispatch") {
+      updateFields.order = "dispatched";
+    } else if (type === "/payment") {
+      updateFields.status = "fulfilled";
+    } else {
+      return res.status(400).json({ message: "Invalid type parameter" });
+    }
+
     const result = await collection.updateOne(
       { _id: orderIdObj },
-      { $set: { order: "dispatched", status: "fulfilled" } }
+      { $set: updateFields }
     );
 
     if (result.modifiedCount === 0) {
