@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import CompactOrderInfo from "@components/compactinfo";
+import CompactOrderInfo from "@/components/compactinfo";
+
 interface Order {
   _id: string;
   items: Array<{
@@ -57,14 +58,14 @@ const Timer: React.FC<{ startTime: string }> = ({ startTime }) => {
   }, [startTime]);
 
   if (timeLeft === null) {
-    return <span className="bg-red-500 p-1 rounded font-bold">Time up</span>;
+    return <span className="bg-red-500 p-1 ml-1 rounded font-bold"> Time up</span>;
   }
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
   return (
-    <span className="bg-yellow-500 p-1 rounded font-bold">
+    <span className="bg-yellow-500 p-1 rounded ml-1 font-bold">
       {minutes.toString().padStart(2, "0")}:
       {seconds.toString().padStart(2, "0")}
     </span>
@@ -201,34 +202,16 @@ const renderOrders = (orders: { [key: string]: Order[] }) => {
         (column, colIndex) => (
           <div key={colIndex} className="space-y-8">
             {column.map(([phoneNumber, customerOrders]) => (
-              <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-6">
-                <h2 className="text-xl font-semibold mb-4 bg-neutral-700 p-2 rounded-lg inline-block">
-                  Orders for {customerOrders[0].customerName}
-                </h2>
-                <a href={`tel:+91${phoneNumber}`}>
-                  <p className="mb-2">
-                    Phone:{" "}
-                    <span className="bg-blue-600 rounded p-1 text-white">
-                      {phoneNumber}
-                    </span>
-                  </p>
-                </a>
-
-                <p className="mb-4">
-                  Cabin:{" "}
-                  <span className="bg-blue-600 rounded p-1">
-                    {customerOrders[0].selectedCabin}
-                  </span>
-                </p>
-                <p className="text-xl font-bold mb-2   ">
-                  <span className="bg-rose-800 p-2  rounded">
-                    Total: ₹
-                    {customerOrders.reduce(
-                      (sum, order) => sum + order.total,
-                      0
-                    )}
-                  </span>
-                </p>
+              <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
+                <CompactOrderInfo
+                  customerName={customerOrders[0].customerName}
+                  phoneNumber={phoneNumber}
+                  cabin={customerOrders[0].selectedCabin}
+                  total={customerOrders.reduce(
+                    (sum, order) => sum + order.total,
+                    0
+                  )}
+                />
                 {customerOrders
                   .sort(
                     (a, b) =>
@@ -259,7 +242,6 @@ const renderOrders = (orders: { [key: string]: Order[] }) => {
                           </button>
                         )}
                       </div>
-
                       <div className="flex items-center mb-2">
                         <p className="mr-2">
                           Payment Status:
@@ -282,7 +264,6 @@ const renderOrders = (orders: { [key: string]: Order[] }) => {
                           </button>
                         )}
                       </div>
-
                       <p className="mb-4">
                         Date: {formatDate(order.createdAt)}{" "}
                         <Timer startTime={order.updatedAt || order.createdAt} />

@@ -1,10 +1,22 @@
 import React from "react";
 
-const CompactOrderInfo = ({ customerName, phoneNumber, cabin, total }) => {
+interface CompactInfoProps {
+  customerName: string;
+  phoneNumber: string;
+  cabin: string;
+  total: number;
+}
+
+const CompactInfo: React.FC<CompactInfoProps> = ({
+  customerName,
+  phoneNumber,
+  cabin,
+  total,
+}) => {
   return (
     <div className="bg-neutral-800 p-4 rounded-lg mb-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span className="font-semibold">{customerName}</span>
           <a
             href={`tel:+91${phoneNumber}`}
@@ -22,4 +34,4 @@ const CompactOrderInfo = ({ customerName, phoneNumber, cabin, total }) => {
   );
 };
 
-export default CompactOrderInfo;
+export default CompactInfo;
