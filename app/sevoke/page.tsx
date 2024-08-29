@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-
+import CompactOrderInfo from "@components/compactinfo";
 interface Order {
   _id: string;
   items: Array<{
@@ -35,8 +35,41 @@ interface Order {
   status: string;
   order: string;
   createdAt: string;
+  updatedAt?: string;
 }
+const Timer: React.FC<{ startTime: string }> = ({ startTime }) => {
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const start = new Date(startTime).getTime();
+      const now = new Date().getTime();
+      const difference = start + 15 * 60 * 1000 - now;
+      return difference > 0 ? Math.floor(difference / 1000) : null;
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [startTime]);
+
+  if (timeLeft === null) {
+    return <span className="bg-red-500 p-1 rounded font-bold">Time up</span>;
+  }
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+
+  return (
+    <span className="bg-yellow-500 p-1 rounded font-bold">
+      {minutes.toString().padStart(2, "0")}:
+      {seconds.toString().padStart(2, "0")}
+    </span>
+  );
+};
 export default function OrderSevoke() {
   const slug = "sevoke";
   const [orders, setOrders] = useState<Order[]>([]);
@@ -155,38 +188,54 @@ export default function OrderSevoke() {
     { current: {}, previous: {} } as {
       [key: string]: { [key: string]: Order[] };
     }
-  );
+    );
+    
+    
+const renderOrders = (orders: { [key: string]: Order[] }) => {
+  const orderEntries = Object.entries(orders);
+  const midPoint = Math.ceil(orderEntries.length / 2);
 
-  const renderOrders = (orders: { [key: string]: Order[] }) => {
-    const orderEntries = Object.entries(orders);
-    const midPoint = Math.ceil(orderEntries.length / 2);
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[orderEntries.slice(0, midPoint), orderEntries.slice(midPoint)].map(
-          (column, colIndex) => (
-            <div key={colIndex} className="space-y-8">
-              {column.map(([phoneNumber, orders]) => (
-                <div
-                  key={phoneNumber}
-                  className="bg-neutral-900 rounded-lg p-6"
-                >
-                  <h2 className="text-xl font-semibold mb-4 bg-neutral-700 p-2 rounded-lg inline-block">
-                    Orders for {orders[0].customerName}
-                  </h2>
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {[orderEntries.slice(0, midPoint), orderEntries.slice(midPoint)].map(
+        (column, colIndex) => (
+          <div key={colIndex} className="space-y-8">
+            {column.map(([phoneNumber, customerOrders]) => (
+              <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-6">
+                <h2 className="text-xl font-semibold mb-4 bg-neutral-700 p-2 rounded-lg inline-block">
+                  Orders for {customerOrders[0].customerName}
+                </h2>
+                <a href={`tel:+91${phoneNumber}`}>
                   <p className="mb-2">
                     Phone:{" "}
-                    <span className="bg-blue-600 rounded p-1">
+                    <span className="bg-blue-600 rounded p-1 text-white">
                       {phoneNumber}
                     </span>
                   </p>
-                  <p className="mb-2">
-                    Cabin:{" "}
-                    <span className="bg-blue-600 rounded p-1">
-                      {orders[0].selectedCabin}
-                    </span>
-                  </p>
-                  {orders.map((order, orderIndex) => (
+                </a>
+
+                <p className="mb-4">
+                  Cabin:{" "}
+                  <span className="bg-blue-600 rounded p-1">
+                    {customerOrders[0].selectedCabin}
+                  </span>
+                </p>
+                <p className="text-xl font-bold mb-2   ">
+                  <span className="bg-rose-800 p-2  rounded">
+                    Total: ₹
+                    {customerOrders.reduce(
+                      (sum, order) => sum + order.total,
+                      0
+                    )}
+                  </span>
+                </p>
+                {customerOrders
+                  .sort(
+                    (a, b) =>
+                      new Date(b.createdAt).getTime() -
+                      new Date(a.createdAt).getTime()
+                  )
+                  .map((order, orderIndex) => (
                     <div key={order._id} className="mb-6">
                       <div className="flex items-center mb-2">
                         <p className="mr-2">
@@ -235,7 +284,8 @@ export default function OrderSevoke() {
                       </div>
 
                       <p className="mb-4">
-                        Date: {formatDate(order.createdAt)}
+                        Date: {formatDate(order.createdAt)}{" "}
+                        <Timer startTime={order.updatedAt || order.createdAt} />
                       </p>
                       <h3 className="text-xl font-semibold mb-2">Items:</h3>
                       <ul className="space-y-4 mb-4">
@@ -281,25 +331,19 @@ export default function OrderSevoke() {
                           {order.appliedPromo.percentage}% off)
                         </p>
                       )}
-                      {orderIndex < orders.length - 1 && (
+                      {orderIndex < customerOrders.length - 1 && (
                         <hr className="my-4 border-gray-600" />
                       )}
                     </div>
                   ))}
-                  <p className="text-xl font-bold mb-1 ">
-                    <span className="bg-rose-800 p-2 rounded">
-                      Total: ₹
-                      {orders.reduce((sum, order) => sum + order.total, 0)}
-                    </span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          )
-        )}
-      </div>
-    );
-  };
+              </div>
+            ))}
+          </div>
+        )
+      )}
+    </div>
+  );
+};
 
   return (
     <div className="container mx-auto px-4 py-8 text-white min-h-screen">
