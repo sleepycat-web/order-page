@@ -63,7 +63,7 @@ interface TimerProps {
 
 // Components
 const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
-  <div className="bg-neutral-700 p-4 rounded-lg flex flex-col h-full">
+  <div className="bg-neutral-700 p-2 rounded-lg flex flex-col h-full">
     <div className="flex justify-between items-start mb-2">
       <span className="bg-purple-700 px-2 py-1 rounded font-bold text-sm">
         {item.name}
