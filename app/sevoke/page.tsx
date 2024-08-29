@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import CompactOrderInfo from "@/components/compactinfo";
+import OrderItem from "@/components/orderitem";
 
 interface Order {
   _id: string;
@@ -192,139 +193,110 @@ export default function OrderSevoke() {
     );
     
     
-const renderOrders = (orders: { [key: string]: Order[] }) => {
-  const orderEntries = Object.entries(orders);
-  const midPoint = Math.ceil(orderEntries.length / 2);
+  const renderOrders = (orders: { [key: string]: Order[] }) => {
+    const orderEntries = Object.entries(orders);
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {[orderEntries.slice(0, midPoint), orderEntries.slice(midPoint)].map(
-        (column, colIndex) => (
-          <div key={colIndex} className="space-y-8">
-            {column.map(([phoneNumber, customerOrders]) => (
-              <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
-                <CompactOrderInfo
-                  customerName={customerOrders[0].customerName}
-                  phoneNumber={phoneNumber}
-                  cabin={customerOrders[0].selectedCabin}
-                  total={customerOrders.reduce(
-                    (sum, order) => sum + order.total,
-                    0
+    return (
+      <div className="space-y-8">
+        {orderEntries.map(([phoneNumber, customerOrders]) => (
+          <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
+            <CompactOrderInfo
+              customerName={customerOrders[0].customerName}
+              phoneNumber={phoneNumber}
+              cabin={customerOrders[0].selectedCabin}
+              total={customerOrders.reduce(
+                (sum, order) => sum + order.total,
+                0
+              )}
+            />
+            {customerOrders
+              .sort(
+                (a, b) =>
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+              )
+              .map((order, orderIndex) => (
+                <div key={order._id} className="mb-6">
+                  <div className="flex items-center mb-2">
+                    <p className="mr-2">
+                      Order Delivery:
+                      <span
+                        className={`p-1 rounded ml-2 ${
+                          order.order === "dispatched"
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                        }`}
+                      >
+                        {order.order}
+                      </span>
+                    </p>
+                    {order.order !== "dispatched" && (
+                      <button
+                        className="btn py-1 btn-primary btn-sm"
+                        onClick={() => handleDispatch(order._id)}
+                      >
+                        Dispatch
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center mb-2">
+                    <p className="mr-2">
+                      Payment Status:
+                      <span
+                        className={`p-1 rounded ml-2 ${
+                          order.status === "fulfilled"
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </p>
+                    {order.status !== "fulfilled" && (
+                      <button
+                        className="btn py-1 btn-primary btn-sm"
+                        onClick={() => handlePayment(order._id)}
+                      >
+                        Fulfill
+                      </button>
+                    )}
+                  </div>
+                  <p className="mb-4">
+                    Date: {formatDate(order.createdAt)}{" "}
+                    <Timer startTime={order.updatedAt || order.createdAt} />
+                  </p>
+                  <h3 className="text-xl font-semibold mb-2">Items:</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    {order.items.map((orderItem, index) => (
+                      <OrderItem
+                        key={index}
+                        item={{
+                          name: orderItem.item.name,
+                          totalPrice: orderItem.totalPrice,
+                          quantity: orderItem.quantity,
+                          selectedOptions: orderItem.selectedOptions,
+                          specialRequests: orderItem.specialRequests,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <p className="font-semibold">Subtotal: ₹{order.total}</p>
+                  {order.appliedPromo && (
+                    <p className="mt-1 text-green-500">
+                      Promo Applied: {order.appliedPromo.code} (
+                      {order.appliedPromo.percentage}% off)
+                    </p>
                   )}
-                />
-                {customerOrders
-                  .sort(
-                    (a, b) =>
-                      new Date(b.createdAt).getTime() -
-                      new Date(a.createdAt).getTime()
-                  )
-                  .map((order, orderIndex) => (
-                    <div key={order._id} className="mb-6">
-                      <div className="flex items-center mb-2">
-                        <p className="mr-2">
-                          Order Delivery:
-                          <span
-                            className={`p-1 rounded ml-2 ${
-                              order.order === "dispatched"
-                                ? "bg-green-500"
-                                : "bg-red-500"
-                            }`}
-                          >
-                            {order.order}
-                          </span>
-                        </p>
-                        {order.order !== "dispatched" && (
-                          <button
-                            className="btn py-1 btn-primary btn-sm"
-                            onClick={() => handleDispatch(order._id)}
-                          >
-                            Dispatch
-                          </button>
-                        )}
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <p className="mr-2">
-                          Payment Status:
-                          <span
-                            className={`p-1 rounded ml-2 ${
-                              order.status === "fulfilled"
-                                ? "bg-green-500"
-                                : "bg-red-500"
-                            }`}
-                          >
-                            {order.status}
-                          </span>
-                        </p>
-                        {order.status !== "fulfilled" && (
-                          <button
-                            className="btn py-1 btn-primary btn-sm"
-                            onClick={() => handlePayment(order._id)}
-                          >
-                            Fulfill
-                          </button>
-                        )}
-                      </div>
-                      <p className="mb-4">
-                        Date: {formatDate(order.createdAt)}{" "}
-                        <Timer startTime={order.updatedAt || order.createdAt} />
-                      </p>
-                      <h3 className="text-xl font-semibold mb-2">Items:</h3>
-                      <ul className="space-y-4 mb-4">
-                        {order.items.map((item, index) => (
-                          <li
-                            key={index}
-                            className="bg-neutral-700 px-4 py-4 rounded-lg"
-                          >
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="bg-purple-700 p-1 rounded font-bold">
-                                {item.item.name}
-                              </span>
-                              <span className="bg-orange-500 px-2 py-1 rounded-full text-sm font-semibold">
-                                Qty: {item.quantity}
-                              </span>
-                            </div>
-                            <p className="mb-2">₹{item.totalPrice}</p>
-                            {Object.entries(item.selectedOptions).map(
-                              ([optionName, selectedValues]) => (
-                                <p key={optionName} className="mb-2">
-                                  {optionName}:{" "}
-                                  <span className="bg-blue-500 p-1 rounded">
-                                    {selectedValues.join(", ")}
-                                  </span>
-                                </p>
-                              )
-                            )}
-                            {item.specialRequests && (
-                              <p className="">
-                                Special Requests:{" "}
-                                <span className="bg-blue-500 p-1 rounded">
-                                  {item.specialRequests}
-                                </span>
-                              </p>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="font-semibold">Subtotal: ₹{order.total}</p>
-                      {order.appliedPromo && (
-                        <p className="mt-1 text-green-500">
-                          Promo Applied: {order.appliedPromo.code} (
-                          {order.appliedPromo.percentage}% off)
-                        </p>
-                      )}
-                      {orderIndex < customerOrders.length - 1 && (
-                        <hr className="my-4 border-gray-600" />
-                      )}
-                    </div>
-                  ))}
-              </div>
-            ))}
+                  {orderIndex < customerOrders.length - 1 && (
+                    <hr className="my-4 border-gray-600" />
+                  )}
+                </div>
+              ))}
           </div>
-        )
-      )}
-    </div>
-  );
-};
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 text-white min-h-screen">
