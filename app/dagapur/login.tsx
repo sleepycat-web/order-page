@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 interface LoginProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (location: string) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
@@ -33,7 +33,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       const data = await response.json();
 
       if (data.success) {
-        onLoginSuccess();
+        onLoginSuccess(location); // Pass the location to the success handler
       } else {
         alert("Invalid credentials");
       }

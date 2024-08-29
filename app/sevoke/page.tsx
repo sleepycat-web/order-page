@@ -129,7 +129,12 @@ export default function OrderSevoke() {
     }
   };
 
-  if (loading) return <div>Loading orders...</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
   if (error) return <div>{error}</div>;
 
   const groupedOrders = orders.reduce(

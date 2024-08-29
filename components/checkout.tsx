@@ -471,7 +471,7 @@ if (isLoading) {
                   Order Placed Successfully!
                 </p>
                 <p>
-                  <a className="underline" href="www.chaimine.com">
+                  <a className="underline" href="https://www.chaimine.com">
                     {" "}
                     Go to Home Page
                   </a>
