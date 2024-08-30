@@ -7,7 +7,6 @@ const defaultClient = SibApiV3Sdk.ApiClient.instance;
 const apiKey = defaultClient.authentications["api-key"];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -16,33 +15,35 @@ export default async function handler(
     return res.status(405).json({ message: "Method Not Allowed" });
   }
 
-  const { phoneNumber } = req.body;
+  const { phoneNumber, customerName } = req.body;
 
-  if (!phoneNumber) {
-    return res.status(400).json({ message: "Phone number is required" });
+  if (!phoneNumber || !customerName) {
+    return res
+      .status(400)
+      .json({ message: "Phone number and customer name are required" });
   }
+
+  // Extract the first name from the full name
+  const firstName = customerName.split(" ")[0];
 
   // Ensure the phone number includes the '+91' country code
   const formattedPhoneNumber = phoneNumber.startsWith("+91")
     ? phoneNumber
     : `+91${phoneNumber}`;
 
-  // Generate a random 4-digit OTP
-  const otp = Math.floor(1000 + Math.random() * 9000).toString();
-
   const sendSmsApi = new SibApiV3Sdk.TransactionalSMSApi();
   const sendSms = new SibApiV3Sdk.SendSms();
 
-    sendSms.name = "CHMINE";
+  sendSms.name = "CHMINE";
   sendSms.sender = "CHMINE";
   sendSms.recipient = formattedPhoneNumber;
-  sendSms.content = `The OTP for your order is: ${otp}. Thank you for choosing Chai Mine!`;
+  sendSms.content = `Dear ${firstName}, your order has been dispatched and is on its way. Thank you for choosing Chai Mine!`;
 
   try {
     await sendSmsApi.sendTransacSms(sendSms);
-    res.status(200).json({ message: "OTP sent successfully", otp });
+    res.status(200).json({ message: "Dispatch SMS sent successfully" });
   } catch (error) {
     console.error("Error sending SMS:", error);
-    res.status(500).json({ message: "Failed to send OTP" });
+    res.status(500).json({ message: "Failed to send dispatch SMS" });
   }
 }

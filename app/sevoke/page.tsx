@@ -51,7 +51,28 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPreviousOrders, setShowPreviousOrders] = useState(false);
+const sendConfirmation = async (order: Order) => {
+  try {
+    const response = await fetch("/api/sendConfirmation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phoneNumber: order.phoneNumber,
+        customerName: order.customerName,
+      }),
+    });
 
+    if (!response.ok) {
+      throw new Error("Failed to send confirmation message");
+    }
+
+    console.log("Confirmation message sent successfully");
+  } catch (error) {
+    console.error("Error sending confirmation message:", error);
+  }
+};
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -71,7 +92,25 @@ export default function OrderPage() {
     const intervalId = setInterval(fetchOrders, 3000);
     return () => clearInterval(intervalId);
   }, []);
+  const sendDispatchSms = async (phoneNumber: string, customerName: string) => {
+    try {
+      const response = await fetch("/api/sendDispatchSms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phoneNumber, customerName }),
+      });
 
+      if (!response.ok) {
+        throw new Error("Failed to send dispatch SMS");
+      }
+
+      console.log("Dispatch SMS sent successfully");
+    } catch (error) {
+      console.error("Error sending dispatch SMS:", error);
+    }
+  };
   const handleDispatch = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -98,7 +137,37 @@ export default function OrderPage() {
       console.error("Error updating order dispatch status:", error);
     }
   };
+  
+  const handleDispatchSms = async (orderId: string) => {
+    try {
+      const response = await fetch("/api/updateOrderStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId,
+          type: "/dispatch",
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error("Failed to update order dispatch status");
+      }
+
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => {
+          if (order._id === orderId) {
+            sendDispatchSms(order.phoneNumber, order.customerName);
+            return { ...order, order: "dispatched" };
+          }
+          return order;
+        })
+      );
+    } catch (error) {
+      console.error("Error updating order dispatch status:", error);
+    }
+  };
   const handlePayment = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -127,8 +196,24 @@ export default function OrderPage() {
   };
 
   const handleDispatchAll = async (orderIds: string[]) => {
+    let phoneNumber = "";
+    let customerName = "";
+
     for (const orderId of orderIds) {
-      await handleDispatch(orderId);
+      const order = orders.find((o) => o._id === orderId);
+      if (order) {
+        await handleDispatch(orderId);
+        // Store the phone number and customer name from the first order
+        if (!phoneNumber && !customerName) {
+          phoneNumber = order.phoneNumber;
+          customerName = order.customerName;
+        }
+      }
+    }
+
+    // Send dispatch SMS once after processing all orders
+    if (phoneNumber && customerName) {
+      await sendDispatchSms(phoneNumber, customerName);
     }
   };
 
@@ -178,6 +263,7 @@ export default function OrderPage() {
 
 const renderOrders = (orders: { [key: string]: Order[] }) => {
   // Sort the order groups based on the most recent order in each group
+  
   const sortedOrderEntries = Object.entries(orders).sort((a, b) => {
     const latestOrderA = a[1].reduce((latest, current) =>
       new Date(current.createdAt) > new Date(latest.createdAt)
@@ -240,7 +326,7 @@ const renderOrders = (orders: { [key: string]: Order[] }) => {
                     <SingleItemOrder
                       key={order._id}
                       order={order}
-                      onDispatch={handleDispatch}
+                      onDispatch={handleDispatchSms}
                       onPayment={handlePayment}
                     />
                   ))}
@@ -255,7 +341,7 @@ const renderOrders = (orders: { [key: string]: Order[] }) => {
                     <MultiItemOrder
                       key={order._id}
                       order={order}
-                      onDispatch={handleDispatch}
+                      onDispatch={handleDispatchSms}
                       onPayment={handlePayment}
                     />
                   ))}
