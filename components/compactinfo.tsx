@@ -56,7 +56,10 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
               {customerName}
             </span>
             <span className="text-blue-400 text-sm sm:text-base">
-              {phoneNumber}
+              <a
+                href={`tel:${phoneNumber}`}>
+                {phoneNumber}
+              </a>
             </span>
             <span className="bg-blue-600 px-2 py-0.5 rounded text-xs sm:text-sm">
               {cabin}
