@@ -40,10 +40,9 @@ interface Order {
   order: string;
   createdAt: string;
   updatedAt?: string;
-}
-
-interface TimerProps {
-  startTime: string;
+  dispatchedAt?: string;
+  fulfilledAt?: string;
+  tableDeliveryCharge?: number;
 }
 
 export default function OrderSevoke() {
@@ -73,7 +72,6 @@ export default function OrderSevoke() {
     return () => clearInterval(intervalId);
   }, []);
 
-  
   const handleDispatch = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -140,6 +138,16 @@ export default function OrderSevoke() {
     }
   };
 
+  const calculateTotalDeliveryCharges = (orders: {
+    [key: string]: Order[];
+  }) => {
+    return Object.values(orders)
+      .flat()
+      .reduce((total, order) => {
+        return total + (order.tableDeliveryCharge || 0);
+      }, 0);
+  };
+
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -166,10 +174,8 @@ export default function OrderSevoke() {
     { current: {}, previous: {} } as {
       [key: string]: { [key: string]: Order[] };
     }
-    );
-    
-    
-  
+  );
+
   const renderOrders = (orders: { [key: string]: Order[] }) => {
     const orderEntries = Object.entries(orders);
 
@@ -268,6 +274,20 @@ export default function OrderSevoke() {
       {showPreviousOrders && (
         <div className="mt-4">
           <h2 className="text-2xl font-bold mb-4">Previous Orders</h2>
+          {Object.values(groupedOrders.previous).some((orders) =>
+            orders.some((order) =>
+              order.selectedLocation.includes("Sevoke Road")
+            )
+          ) && (
+            <div className="mb-4 ">
+              <span className="bg-teal-600 p-2 rounded">
+                <span className="font-semibold">Total tips for the day: </span>
+                <span className="">
+                  ₹{calculateTotalDeliveryCharges(groupedOrders.previous)}
+                </span>
+              </span>
+            </div>
+          )}
           {renderOrders(groupedOrders.previous)}
         </div>
       )}

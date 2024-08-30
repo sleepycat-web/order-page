@@ -40,10 +40,9 @@ interface Order {
   order: string;
   createdAt: string;
   updatedAt?: string;
-}
-
-interface TimerProps {
-  startTime: string;
+  dispatchedAt?: string;
+  fulfilledAt?: string;
+  tableDeliveryCharge?: number;
 }
 
 export default function OrderDagapur() {
@@ -137,6 +136,16 @@ export default function OrderDagapur() {
     for (const orderId of orderIds) {
       await handlePayment(orderId);
     }
+  };
+
+  const calculateTotalDeliveryCharges = (orders: {
+    [key: string]: Order[];
+  }) => {
+    return Object.values(orders)
+      .flat()
+      .reduce((total, order) => {
+        return total + (order.tableDeliveryCharge || 0);
+      }, 0);
   };
 
   if (loading)
@@ -265,6 +274,20 @@ export default function OrderDagapur() {
       {showPreviousOrders && (
         <div className="mt-4">
           <h2 className="text-2xl font-bold mb-4">Previous Orders</h2>
+          {Object.values(groupedOrders.previous).some((orders) =>
+            orders.some((order) =>
+              order.selectedLocation.includes("Sevoke Road")
+            )
+          ) && (
+            <div className="mb-4 ">
+              <span className="bg-teal-600 p-2 rounded">
+                <span className="font-semibold">Total tips for the day: </span>
+                <span className="">
+                  ₹{calculateTotalDeliveryCharges(groupedOrders.previous)}
+                </span>
+              </span>
+            </div>
+          )}
           {renderOrders(groupedOrders.previous)}
         </div>
       )}

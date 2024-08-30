@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 // Helper function to format dates
 const formatDate = (dateString: string) => {
@@ -10,8 +11,10 @@ const formatDate = (dateString: string) => {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+
   };
-  return date.toLocaleString("en-US", options);
+  
+  return date.toLocaleString("en-US", options).replace(",", "");;
 };
 
 // Interfaces
@@ -41,6 +44,8 @@ interface Order {
   updatedAt?: string;
   selectedLocation: string;
   tableDeliveryCharge?: number;
+  dispatchedAt?: string;
+  fulfilledAt?: string;
 }
 
 interface OrderItemProps {
@@ -61,6 +66,7 @@ interface OrderComponentProps {
 
 interface TimerProps {
   startTime: string;
+  isDispatched: boolean;
 }
 
 // Components
@@ -109,7 +115,8 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
   </div>
 );
 
-const Timer: React.FC<TimerProps> = ({ startTime }) => {
+
+const Timer: React.FC<TimerProps> = ({ startTime, isDispatched }) => {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
@@ -128,9 +135,19 @@ const Timer: React.FC<TimerProps> = ({ startTime }) => {
     return () => clearInterval(timer);
   }, [startTime]);
 
+  if (isDispatched && timeLeft !== null) {
+    return (
+      <span className="bg-green-500 p-1 ml-1 text-sm rounded font-bold">
+        On Time
+      </span>
+    );
+  }
+
   if (timeLeft === null) {
     return (
-      <span className="bg-red-500 p-1 ml-1 text-sm rounded font-bold"> Time up</span>
+      <span className="bg-red-500 p-1 ml-1 text-sm rounded font-bold">
+        Time up
+      </span>
     );
   }
 
@@ -144,6 +161,7 @@ const Timer: React.FC<TimerProps> = ({ startTime }) => {
     </span>
   );
 };
+
 
 const OrderStatus: React.FC<OrderComponentProps> = ({
   order,
@@ -204,7 +222,10 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
     <OrderStatus order={order} onDispatch={onDispatch} onPayment={onPayment} />
     <p className="mb-2 ">
       Date: {formatDate(order.createdAt)}{" "}
-      <Timer startTime={order.updatedAt || order.createdAt} />
+      <Timer
+        startTime={order.updatedAt || order.createdAt}
+        isDispatched={order.order === "dispatched"}
+      />{" "}
     </p>
     <div className="mt-2">
       <OrderItem
@@ -225,11 +246,21 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
       </p>
     )}
     {order.selectedLocation.includes("Sevoke Road") &&
-      order.tableDeliveryCharge && (
-        <p className="mt-1 text-blue-500 text-sm">
-          Delivery Charge: ₹{order.tableDeliveryCharge}
-        </p>
-      )}
+    order.tableDeliveryCharge ? (
+      <p className="mt-1 text-blue-500 text-sm">
+        Delivery Charge: ₹{order.tableDeliveryCharge}
+      </p>
+    ) : null}
+    {order.dispatchedAt && (
+      <p className="mt-1 text-sm  text-yellow-500">
+        Dispatched at: {formatDate(order.dispatchedAt)}
+      </p>
+    )}
+    {order.fulfilledAt && (
+      <p className="mt-1 text-sm text-green-500">
+        Fulfilled at: {formatDate(order.fulfilledAt)}
+      </p>
+    )}
   </div>
 );
 
@@ -242,7 +273,10 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
     <OrderStatus order={order} onDispatch={onDispatch} onPayment={onPayment} />
     <p className="mb-2">
       Date: {formatDate(order.createdAt)}{" "}
-      <Timer startTime={order.updatedAt || order.createdAt} />
+      <Timer
+        startTime={order.updatedAt || order.createdAt}
+        isDispatched={order.order === "dispatched"}
+      />{" "}
     </p>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
       {order.items.map((orderItem, index) => (
@@ -271,6 +305,16 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
           Delivery Charge: ₹{order.tableDeliveryCharge}
         </p>
       )}
+    {order.dispatchedAt && (
+      <p className="mt-1 text-sm text-yellow-500">
+        Dispatched at: {formatDate(order.dispatchedAt)}
+      </p>
+    )}
+    {order.fulfilledAt && (
+      <p className="mt-1 text-sm text-green-500">
+        Fulfilled at: {formatDate(order.fulfilledAt)}
+      </p>
+    )}
   </div>
 );
 
@@ -291,25 +335,62 @@ const OrderManagementPage: React.FC = () => {
     fetchOrders();
   }, []);
 
-  const handleDispatch = (orderId: string) => {
-    // Update order status to dispatched
-    setOrders(
-      orders.map((order) =>
-        order._id === orderId ? { ...order, order: "dispatched" } : order
-      )
-    );
-    // In a real app, you'd also make an API call to update the backend
-  };
+ const handleDispatch = async (orderId: string) => {
+   try {
+     const response = await axios.post("/api/updateOrderStatus", {
+       orderId,
+       type: "/dispatch",
+     });
 
-  const handlePayment = (orderId: string) => {
-    // Update order status to fulfilled
-    setOrders(
-      orders.map((order) =>
-        order._id === orderId ? { ...order, status: "fulfilled" } : order
-      )
-    );
-    // In a real app, you'd also make an API call to update the backend
-  };
+     if (response.status === 200) {
+       const { dispatchedAt } = response.data.updatedFields;
+       setOrders(
+         orders.map((order) =>
+           order._id === orderId
+             ? {
+                 ...order,
+                 order: "dispatched",
+                 dispatchedAt: dispatchedAt,
+               }
+             : order
+         )
+       );
+     } else {
+       console.error("Failed to update order status");
+     }
+   } catch (error) {
+     console.error("Error updating order status:", error);
+   }
+ };
+
+ const handlePayment = async (orderId: string) => {
+   try {
+     const response = await axios.post("/api/updateOrderStatus", {
+       orderId,
+       type: "/payment",
+     });
+
+     if (response.status === 200) {
+       const { fulfilledAt } = response.data.updatedFields;
+       setOrders(
+         orders.map((order) =>
+           order._id === orderId
+             ? {
+                 ...order,
+                 status: "fulfilled",
+                 fulfilledAt: fulfilledAt,
+               }
+             : order
+         )
+       );
+     } else {
+       console.error("Failed to update order status");
+     }
+   } catch (error) {
+     console.error("Error updating order status:", error);
+   }
+ };
+
 
   return (
     <div className="container mx-auto p-4">

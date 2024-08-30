@@ -5,6 +5,8 @@ import { connectToDatabase } from "../../lib/mongodb";
 interface UpdateFields {
   order?: string;
   status?: string;
+  dispatchedAt?: Date;
+  fulfilledAt?: Date;
 }
 
 export default async function handler(
@@ -37,11 +39,16 @@ export default async function handler(
     }
 
     const updateFields: UpdateFields = {};
+    const now = new Date();
+    now.setHours(now.getHours() + 5);
+    now.setMinutes(now.getMinutes() + 30);
 
     if (type === "/dispatch") {
       updateFields.order = "dispatched";
+      updateFields.dispatchedAt = now;
     } else if (type === "/payment") {
       updateFields.status = "fulfilled";
+      updateFields.fulfilledAt = now;
     } else {
       return res.status(400).json({ message: "Invalid type parameter" });
     }
@@ -57,7 +64,10 @@ export default async function handler(
         .json({ message: "Order not found or status not updated" });
     }
 
-    res.status(200).json({ message: "Order status updated successfully" });
+    res.status(200).json({
+      message: "Order status updated successfully",
+      updatedFields: updateFields,
+    });
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ message: "Error updating order status" });
