@@ -45,7 +45,7 @@ interface Order {
   tableDeliveryCharge?: number;
 }
 
-export default function OrderDagapur() {
+export default function OrderPage() {
   const slug = "dagapur";
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,7 +176,6 @@ export default function OrderDagapur() {
     }
   );
 
- 
   const renderOrders = (orders: { [key: string]: Order[] }) => {
     // Sort the order groups based on the most recent order in each group
     const sortedOrderEntries = Object.entries(orders).sort((a, b) => {
@@ -205,23 +204,28 @@ export default function OrderDagapur() {
           const multiItemOrders = customerOrders.filter(
             (order) => order.items.length > 1
           );
-  const sortOrders = (orders: Order[]) =>
-    orders.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+          const sortOrders = (orders: Order[]) =>
+            orders.sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            );
+
+          // Sort customerOrders to get the newest order first
+          const sortedCustomerOrders = sortOrders(customerOrders);
+          const newestOrder = sortedCustomerOrders[0];
 
           return (
             <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
               <CompactOrderInfo
-                customerName={customerOrders[0].customerName}
+                customerName={newestOrder.customerName}
                 phoneNumber={phoneNumber}
-                cabin={customerOrders[0].selectedCabin}
+                cabin={newestOrder.selectedCabin}
                 total={customerOrders.reduce(
                   (sum, order) => sum + order.total,
                   0
                 )}
-                orders={customerOrders.map((order) => ({
+                orders={sortedCustomerOrders.map((order) => ({
                   _id: order._id,
                   order: order.order,
                   status: order.status,
@@ -268,7 +272,10 @@ export default function OrderDagapur() {
 
   return (
     <div className="container mx-auto px-4 py-8 text-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">Dagapur Orders</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        {" "}
+        {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
+      </h1>
 
       {renderOrders(groupedOrders.current)}
 

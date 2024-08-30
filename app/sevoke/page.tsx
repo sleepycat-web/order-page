@@ -45,7 +45,7 @@ interface Order {
   tableDeliveryCharge?: number;
 }
 
-export default function OrderSevoke() {
+export default function OrderPage() {
   const slug = "sevoke";
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,99 +176,106 @@ export default function OrderSevoke() {
     }
   );
 
-  const renderOrders = (orders: { [key: string]: Order[] }) => {
-    // Sort the order groups based on the most recent order in each group
-    const sortedOrderEntries = Object.entries(orders).sort((a, b) => {
-      const latestOrderA = a[1].reduce((latest, current) =>
-        new Date(current.createdAt) > new Date(latest.createdAt)
-          ? current
-          : latest
-      );
-      const latestOrderB = b[1].reduce((latest, current) =>
-        new Date(current.createdAt) > new Date(latest.createdAt)
-          ? current
-          : latest
-      );
-      return (
-        new Date(latestOrderB.createdAt).getTime() -
-        new Date(latestOrderA.createdAt).getTime()
-      );
-    });
-
-    return (
-      <div className="space-y-8">
-        {sortedOrderEntries.map(([phoneNumber, customerOrders]) => {
-          const singleItemOrders = customerOrders.filter(
-            (order) => order.items.length === 1
-          );
-          const multiItemOrders = customerOrders.filter(
-            (order) => order.items.length > 1
-          );
-          const sortOrders = (orders: Order[]) =>
-            orders.sort(
-              (a, b) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-            );
-
-          return (
-            <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
-              <CompactOrderInfo
-                customerName={customerOrders[0].customerName}
-                phoneNumber={phoneNumber}
-                cabin={customerOrders[0].selectedCabin}
-                total={customerOrders.reduce(
-                  (sum, order) => sum + order.total,
-                  0
-                )}
-                orders={customerOrders.map((order) => ({
-                  _id: order._id,
-                  order: order.order,
-                  status: order.status,
-                }))}
-                onDispatchAll={handleDispatchAll}
-                onFulfillAll={handleFulfillAll}
-              />
-
-              {singleItemOrders.length > 0 && (
-                <div className="mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {sortOrders(singleItemOrders).map((order) => (
-                      <SingleItemOrder
-                        key={order._id}
-                        order={order}
-                        onDispatch={handleDispatch}
-                        onPayment={handlePayment}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {multiItemOrders.length > 0 && (
-                <div className="mt-4">
-                  <div className="space-y-4">
-                    {sortOrders(multiItemOrders).map((order) => (
-                      <MultiItemOrder
-                        key={order._id}
-                        order={order}
-                        onDispatch={handleDispatch}
-                        onPayment={handlePayment}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+const renderOrders = (orders: { [key: string]: Order[] }) => {
+  // Sort the order groups based on the most recent order in each group
+  const sortedOrderEntries = Object.entries(orders).sort((a, b) => {
+    const latestOrderA = a[1].reduce((latest, current) =>
+      new Date(current.createdAt) > new Date(latest.createdAt)
+        ? current
+        : latest
     );
-  };
+    const latestOrderB = b[1].reduce((latest, current) =>
+      new Date(current.createdAt) > new Date(latest.createdAt)
+        ? current
+        : latest
+    );
+    return (
+      new Date(latestOrderB.createdAt).getTime() -
+      new Date(latestOrderA.createdAt).getTime()
+    );
+  });
+
+  return (
+    <div className="space-y-8">
+      {sortedOrderEntries.map(([phoneNumber, customerOrders]) => {
+        const singleItemOrders = customerOrders.filter(
+          (order) => order.items.length === 1
+        );
+        const multiItemOrders = customerOrders.filter(
+          (order) => order.items.length > 1
+        );
+        const sortOrders = (orders: Order[]) =>
+          orders.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+
+        // Sort customerOrders to get the newest order first
+        const sortedCustomerOrders = sortOrders(customerOrders);
+        const newestOrder = sortedCustomerOrders[0];
+
+        return (
+          <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
+            <CompactOrderInfo
+              customerName={newestOrder.customerName}
+              phoneNumber={phoneNumber}
+              cabin={newestOrder.selectedCabin}
+              total={customerOrders.reduce(
+                (sum, order) => sum + order.total,
+                0
+              )}
+              orders={sortedCustomerOrders.map((order) => ({
+                _id: order._id,
+                order: order.order,
+                status: order.status,
+              }))}
+              onDispatchAll={handleDispatchAll}
+              onFulfillAll={handleFulfillAll}
+            />
+
+            {singleItemOrders.length > 0 && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sortOrders(singleItemOrders).map((order) => (
+                    <SingleItemOrder
+                      key={order._id}
+                      order={order}
+                      onDispatch={handleDispatch}
+                      onPayment={handlePayment}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {multiItemOrders.length > 0 && (
+              <div className="mt-4">
+                <div className="space-y-4">
+                  {sortOrders(multiItemOrders).map((order) => (
+                    <MultiItemOrder
+                      key={order._id}
+                      order={order}
+                      onDispatch={handleDispatch}
+                      onPayment={handlePayment}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 
   return (
     <div className="container mx-auto px-4 py-8 text-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">Sevoke Orders</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        {" "}
+        {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
+      </h1>
 
       {renderOrders(groupedOrders.current)}
 
