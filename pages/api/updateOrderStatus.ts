@@ -40,8 +40,8 @@ export default async function handler(
 
     const updateFields: UpdateFields = {};
     const now = new Date();
-    // now.setHours(now.getHours() + 5);
-    // now.setMinutes(now.getMinutes() + 30);
+    now.setHours(now.getHours() + 5);
+    now.setMinutes(now.getMinutes() + 30);
 
     if (type === "/dispatch") {
       updateFields.order = "dispatched";
