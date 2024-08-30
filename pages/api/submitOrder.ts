@@ -21,6 +21,7 @@ export default async function handler(
       appliedPromo,
       phoneNumber,
       customerName,
+      tableDeliveryCharge,
     } = req.body;
 
     // Check database for user name
@@ -37,7 +38,7 @@ export default async function handler(
     const now = new Date();
     now.setHours(now.getHours() + 5); // Add 5 hours for IST
     now.setMinutes(now.getMinutes() + 30); // Add 30 minutes for IST
-    
+
     const orderDocument = {
       items,
       selectedLocation,
@@ -46,9 +47,12 @@ export default async function handler(
       appliedPromo,
       phoneNumber,
       customerName,
+      tableDeliveryCharge: selectedLocation.includes("Sevoke Road")
+        ? tableDeliveryCharge
+        : undefined,
       status: "pending",
       order: "pending",
-      createdAt: now, // Store as Date object
+      createdAt: now,
       _id: new ObjectId(),
     };
 
@@ -60,6 +64,9 @@ export default async function handler(
       orderDate: now.toISOString(),
       phoneNumber,
       customerName,
+      tableDeliveryCharge: selectedLocation.includes("Sevoke Road")
+        ? tableDeliveryCharge
+        : undefined,
     });
   } catch (error) {
     console.error("Error submitting order:", error);

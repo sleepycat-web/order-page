@@ -18,6 +18,9 @@ interface CartProps {
   setTotal: (total: number) => void;
   onOrderSuccess: () => void;
   onResetCart: () => void;
+  tableDelivery: boolean; // Add this line
+  onTableDeliveryChange: (isChecked: boolean) => void;
+  
 }
 
 const Cart: React.FC<CartProps> = ({
@@ -35,14 +38,14 @@ const Cart: React.FC<CartProps> = ({
   total,
   setTotal,
   onResetCart,
-  
+  onTableDeliveryChange,
 }) => {
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [tableDelivery, setTableDelivery] = useState(false);
   const [ultraGrandTotal, setUltraGrandTotal] = useState(0);
-  
+  const [subtotal, setSubtotal] = useState(0);
 
   const handleApplyPromo = () => {
     const validPromo = validatePromo(promoCode);
@@ -55,37 +58,42 @@ const Cart: React.FC<CartProps> = ({
     }
   };
 
-   const handleCheckout = () => {
+  const handleCheckout = () => {
     setIsCheckoutOpen(true);
     onToggle(); // This will close the cart
   };
 
-    const handleCloseCheckout = () => {
-      setIsCheckoutOpen(false);
-      if (items.length > 0) {
-        onToggle(); // This will open the cart if it's closed
-      }
-    };
+  const handleCloseCheckout = () => {
+    setIsCheckoutOpen(false);
+    if (items.length > 0) {
+      onToggle(); // This will open the cart if it's closed
+    }
+  };
 
   const calculateTotal = () => {
-    const subtotal = items.reduce(
+    const newSubtotal = items.reduce(
       (total, item) => total + item.totalPrice * item.quantity,
       0
     );
-    const deliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
-    const discountableTotal = subtotal;
+    setSubtotal(newSubtotal);
+
+    const deliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
+    const discountableTotal = newSubtotal;
     const discount = appliedPromo
       ? discountableTotal * (appliedPromo.percentage / 100)
       : 0;
-    return subtotal - discount + deliveryCharge;
+
+    // Apply delivery charge after discount
+    return discountableTotal - discount + deliveryCharge;
   };
 
   useEffect(() => {
     const newTotal = calculateTotal();
     setUltraGrandTotal(newTotal);
     setTotal(newTotal);
-  }, [items, appliedPromo, tableDelivery, setTotal]);
+  }, [items, appliedPromo, tableDelivery, setTotal, selectedLocation]);
 
+  const deliveryCharge = subtotal * 0.05;
   return (
     <>
       {!isOpen && (
@@ -225,24 +233,24 @@ const Cart: React.FC<CartProps> = ({
                           {appliedPromo.percentage}% off)
                         </div>
                       )}
-
+                      {selectedLocation === "Sevoke Road" && (
+                        <label className="flex items-center justify-between w-full max-w-xs">
+                          <span className="label-text">
+                            Table Delivery (5% charge) - ₹
+                            {deliveryCharge.toFixed(2)}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={tableDelivery}
+                            onChange={(e) => setTableDelivery(e.target.checked)}
+                            className="checkbox checkbox-primary checkbox-sm"
+                          />
+                        </label>
+                      )}
                       <div className="text-xl font-bold text-left">
                         Total: ₹{ultraGrandTotal.toFixed(2)}
                       </div>
                     </div>
-
-                    {/* <label className="flex items-center justify-between w-full max-w-xs">
-                        <span className="label-text">
-                          Table Delivery (5% charge) - ₹
-                          {(subtotal * 0.05).toFixed(2)}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={tableDelivery}
-                          onChange={(e) => setTableDelivery(e.target.checked)}
-                          className="checkbox checkbox-primary checkbox-sm"
-                        />
-                      </label> */}
 
                     <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
                       <div className="container mx-auto max-w-lg">
@@ -277,6 +285,7 @@ const Cart: React.FC<CartProps> = ({
           appliedPromo={appliedPromo}
           onOrderSuccess={onOrderSuccess}
           onResetCart={onResetCart} // Pass this prop to Checkout
+          tableDelivery={tableDelivery}
         />
       )}
     </>

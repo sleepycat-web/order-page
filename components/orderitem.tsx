@@ -39,6 +39,8 @@ interface Order {
   status: string;
   createdAt: string;
   updatedAt?: string;
+  selectedLocation: string;
+  tableDeliveryCharge?: number;
 }
 
 interface OrderItemProps {
@@ -72,7 +74,7 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
         Qty: {item.quantity}
       </span>
     </div>
-    {/* <p className="text-lg font-semibold mb-3">₹{item.totalPrice}</p> */}
+    <p className=" font-semibold ">₹{item.totalPrice}</p>
     <div className="space-y-1">
       {Object.entries(item.selectedOptions).map(
         ([optionName, selectedValues]) => (
@@ -222,6 +224,12 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
         {order.appliedPromo.percentage}% off)
       </p>
     )}
+    {order.selectedLocation.includes("Sevoke Road") &&
+      order.tableDeliveryCharge && (
+        <p className="mt-1 text-blue-500 text-sm">
+          Delivery Charge: ₹{order.tableDeliveryCharge}
+        </p>
+      )}
   </div>
 );
 
@@ -257,6 +265,12 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
         {order.appliedPromo.percentage}% off)
       </p>
     )}
+    {order.selectedLocation.includes("Sevoke Road") &&
+      order.tableDeliveryCharge && (
+        <p className="mt-1 text-blue-500 text-sm">
+          Delivery Charge: ₹{order.tableDeliveryCharge}
+        </p>
+      )}
   </div>
 );
 

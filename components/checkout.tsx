@@ -15,6 +15,7 @@ interface CheckoutProps {
   appliedPromo: Promo | null;
   onOrderSuccess: () => void;
   onResetCart: () => void;
+  tableDelivery: boolean; // Add this line
 }
 
 interface UserData {
@@ -30,7 +31,8 @@ const Checkout: React.FC<CheckoutProps> = ({
   onOrderSuccess,
   total,
   appliedPromo,
-  onResetCart
+  onResetCart,
+   tableDelivery // Add this line
 }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
@@ -65,7 +67,14 @@ const Checkout: React.FC<CheckoutProps> = ({
       setOrderPlaced(false);
       setIsBanned(false);
       setPhoneError("");
-    };
+  };
+    const subtotal = items.reduce(
+      (sum, item) => sum + item.totalPrice * item.quantity,
+      0
+    );
+
+    // Calculate table delivery charge
+    const tableDeliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
   useEffect(() => {
     const handleUserBanned = () => {
       resetCheckoutState();
@@ -111,6 +120,7 @@ const handleClose = () => {
         appliedPromo,
         phoneNumber,
         customerName,
+        tableDeliveryCharge
       });
 
       if (response.status === 200) {
@@ -535,6 +545,14 @@ if (isLoading) {
                       Applied Promo: {appliedPromo.code} (
                       {appliedPromo.percentage}% off)
                     </div>
+                  )}
+                  {selectedLocation === "Sevoke Road" && (
+                    <label className="flex items-center justify-between w-full max-w-xs">
+                      <span className="label-text">
+                        Table Delivery (5% charge) - ₹
+                        {tableDeliveryCharge.toFixed(2)}
+                      </span>
+                    </label>
                   )}
                   <div className="text-xl font-bold">
                     Total: ₹{total.toFixed(2)}

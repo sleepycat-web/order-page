@@ -27,7 +27,13 @@ export default function Home() {
   const [appliedPromo, setAppliedPromo] = useState<Promo | null>(null);
   const [total, setTotal] = useState(0);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [tableDelivery, setTableDelivery] = useState(false);
 
+  // ... existing functions
+
+  const handleTableDeliveryChange = (isChecked: boolean) => {
+    setTableDelivery(isChecked);
+  };
 
  const handleLocationSelect = (location: string, cabin: string) => {
     setSelectedLocation(location);
@@ -167,6 +173,8 @@ const handleAddToCart = (
             setTotal={setTotal} // Add this line
             onOrderSuccess={handleOrderSuccess}
             onResetCart={handleOrderSuccess}
+            tableDelivery={tableDelivery}
+            onTableDeliveryChange={handleTableDeliveryChange}
           />
         </div>
 
@@ -215,6 +223,7 @@ const handleAddToCart = (
           appliedPromo={appliedPromo} // Pass the applied promo code
           onOrderSuccess={handleOrderSuccess}
           onResetCart={handleOrderSuccess}
+          tableDelivery={tableDelivery}
         />
       )}
     </div>
