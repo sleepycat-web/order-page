@@ -176,85 +176,85 @@ export default function OrderDagapur() {
     }
   );
 
-  const renderOrders = (orders: { [key: string]: Order[] }) => {
-    const orderEntries = Object.entries(orders);
+   const renderOrders = (orders: { [key: string]: Order[] }) => {
+     const orderEntries = Object.entries(orders);
 
-    return (
-      <div className="space-y-8">
-        {orderEntries.map(([phoneNumber, customerOrders]) => {
-          const singleItemOrders = customerOrders.filter(
-            (order) => order.items.length === 1
-          );
-          const multiItemOrders = customerOrders.filter(
-            (order) => order.items.length > 1
-          );
+     return (
+       <div className="space-y-8">
+         {orderEntries.map(([phoneNumber, customerOrders]) => {
+           const singleItemOrders = customerOrders.filter(
+             (order) => order.items.length === 1
+           );
+           const multiItemOrders = customerOrders.filter(
+             (order) => order.items.length > 1
+           );
 
-          return (
-            <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
-              <CompactOrderInfo
-                customerName={customerOrders[0].customerName}
-                phoneNumber={phoneNumber}
-                cabin={customerOrders[0].selectedCabin}
-                total={customerOrders.reduce(
-                  (sum, order) => sum + order.total,
-                  0
-                )}
-                orders={customerOrders.map((order) => ({
-                  _id: order._id,
-                  order: order.order,
-                  status: order.status,
-                }))}
-                onDispatchAll={handleDispatchAll}
-                onFulfillAll={handleFulfillAll}
-              />
+           return (
+             <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
+               <CompactOrderInfo
+                 customerName={customerOrders[0].customerName}
+                 phoneNumber={phoneNumber}
+                 cabin={customerOrders[0].selectedCabin}
+                 total={customerOrders.reduce(
+                   (sum, order) => sum + order.total,
+                   0
+                 )}
+                 orders={customerOrders.map((order) => ({
+                   _id: order._id,
+                   order: order.order,
+                   status: order.status,
+                 }))}
+                 onDispatchAll={handleDispatchAll}
+                 onFulfillAll={handleFulfillAll}
+               />
 
-              {singleItemOrders.length > 0 && (
-                <div className="mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {singleItemOrders
-                      .sort(
-                        (a, b) =>
-                          new Date(b.createdAt).getTime() -
-                          new Date(a.createdAt).getTime()
-                      )
-                      .map((order) => (
-                        <SingleItemOrder
-                          key={order._id}
-                          order={order}
-                          onDispatch={handleDispatch}
-                          onPayment={handlePayment}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
+               {singleItemOrders.length > 0 && (
+                 <div className="mt-4">
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                     {singleItemOrders
+                       .sort(
+                         (a, b) =>
+                           new Date(b.createdAt).getTime() -
+                           new Date(a.createdAt).getTime()
+                       )
+                       .map((order) => (
+                         <SingleItemOrder
+                           key={order._id}
+                           order={order}
+                           onDispatch={handleDispatch}
+                           onPayment={handlePayment}
+                         />
+                       ))}
+                   </div>
+                 </div>
+               )}
 
-              {multiItemOrders.length > 0 && (
-                <div className="mt-4">
-                  <div className="space-y-4">
-                    {multiItemOrders
-                      .sort(
-                        (a, b) =>
-                          new Date(b.createdAt).getTime() -
-                          new Date(a.createdAt).getTime()
-                      )
-                      .map((order) => (
-                        <MultiItemOrder
-                          key={order._id}
-                          order={order}
-                          onDispatch={handleDispatch}
-                          onPayment={handlePayment}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
+               {multiItemOrders.length > 0 && (
+                 <div className="mt-4">
+                   <div className="space-y-4">
+                     {multiItemOrders
+                       .sort(
+                         (a, b) =>
+                           new Date(b.createdAt).getTime() -
+                           new Date(a.createdAt).getTime()
+                       )
+                       .map((order) => (
+                         <MultiItemOrder
+                           key={order._id}
+                           order={order}
+                           onDispatch={handleDispatch}
+                           onPayment={handlePayment}
+                         />
+                       ))}
+                   </div>
+                 </div>
+               )}
+             </div>
+           );
+         })}
+       </div>
+     );
+   };
 
   return (
     <div className="container mx-auto px-4 py-8 text-white min-h-screen">
