@@ -51,28 +51,8 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPreviousOrders, setShowPreviousOrders] = useState(false);
-const sendConfirmation = async (order: Order) => {
-  try {
-    const response = await fetch("/api/sendConfirmation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        phoneNumber: order.phoneNumber,
-        customerName: order.customerName,
-      }),
-    });
 
-    if (!response.ok) {
-      throw new Error("Failed to send confirmation message");
-    }
 
-    console.log("Confirmation message sent successfully");
-  } catch (error) {
-    console.error("Error sending confirmation message:", error);
-  }
-};
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -92,9 +72,10 @@ const sendConfirmation = async (order: Order) => {
     const intervalId = setInterval(fetchOrders, 3000);
     return () => clearInterval(intervalId);
   }, []);
+
   const sendDispatchSms = async (phoneNumber: string, customerName: string) => {
     try {
-      const response = await fetch("/api/sendDispatchSms", {
+      const response = await fetch("/api/sendConfirmationplc", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,6 +92,7 @@ const sendConfirmation = async (order: Order) => {
       console.error("Error sending dispatch SMS:", error);
     }
   };
+
   const handleDispatch = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -138,36 +120,23 @@ const sendConfirmation = async (order: Order) => {
     }
   };
   
-  const handleDispatchSms = async (orderId: string) => {
-    try {
-      const response = await fetch("/api/updateOrderStatus", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId,
-          type: "/dispatch",
-        }),
-      });
+ const handleDispatchSms = async (orderId: string) => {
+   try {
+     await handleDispatch(orderId);
 
-      if (!response.ok) {
-        throw new Error("Failed to update order dispatch status");
-      }
-
-      setOrders((prevOrders) =>
-        prevOrders.map((order) => {
-          if (order._id === orderId) {
-            sendDispatchSms(order.phoneNumber, order.customerName);
-            return { ...order, order: "dispatched" };
-          }
-          return order;
-        })
-      );
-    } catch (error) {
-      console.error("Error updating order dispatch status:", error);
-    }
-  };
+     const updatedOrder = orders.find((o) => o._id === orderId);
+     if (updatedOrder) {
+       await sendDispatchSms(
+         updatedOrder.phoneNumber,
+         updatedOrder.customerName
+       );
+     }
+   } catch (error) {
+     console.error("Error dispatching order and sending SMS:", error);
+   }
+ };
+  
+  
   const handlePayment = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -195,27 +164,22 @@ const sendConfirmation = async (order: Order) => {
     }
   };
 
-  const handleDispatchAll = async (orderIds: string[]) => {
-    let phoneNumber = "";
-    let customerName = "";
+ const handleDispatchAll = async (orderIds: string[]) => {
+   try {
+     // Update all orders to dispatched status
+     for (const orderId of orderIds) {
+       await handleDispatch(orderId);
+     }
 
-    for (const orderId of orderIds) {
-      const order = orders.find((o) => o._id === orderId);
-      if (order) {
-        await handleDispatch(orderId);
-        // Store the phone number and customer name from the first order
-        if (!phoneNumber && !customerName) {
-          phoneNumber = order.phoneNumber;
-          customerName = order.customerName;
-        }
-      }
-    }
-
-    // Send dispatch SMS once after processing all orders
-    if (phoneNumber && customerName) {
-      await sendDispatchSms(phoneNumber, customerName);
-    }
-  };
+     // Send only one SMS for all dispatched orders
+     const firstOrder = orders.find((o) => orderIds.includes(o._id));
+     if (firstOrder) {
+       await sendDispatchSms(firstOrder.phoneNumber, firstOrder.customerName);
+     }
+   } catch (error) {
+     console.error("Error dispatching all orders:", error);
+   }
+ };
 
   const handleFulfillAll = async (orderIds: string[]) => {
     for (const orderId of orderIds) {

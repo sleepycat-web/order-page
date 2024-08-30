@@ -37,13 +37,19 @@ export default async function handler(
   sendSms.name = "CHMINE";
   sendSms.sender = "CHMINE";
   sendSms.recipient = formattedPhoneNumber;
-  sendSms.content = `Dear ${firstName}, your order has been dispatched and is on its way. Thank you for choosing Chai Mine!`;
+  sendSms.content = `Dear ${firstName}, your order has been dispatched. Thank you for choosing Chai Mine!`;
 
   try {
-    await sendSmsApi.sendTransacSms(sendSms);
-    res.status(200).json({ message: "Dispatch SMS sent successfully" });
+    const response = await sendSmsApi.sendTransacSms(sendSms);
+    console.log("SMS sent successfully:", response);
+    res
+      .status(200)
+      .json({ message: "Dispatch SMS sent successfully", response });
   } catch (error) {
     console.error("Error sending SMS:", error);
-    res.status(500).json({ message: "Failed to send dispatch SMS" });
+    res.status(500).json({
+      message: "Failed to send dispatch SMS",
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
