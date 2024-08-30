@@ -72,6 +72,26 @@ export default function OrderPage() {
     return () => clearInterval(intervalId);
   }, []);
 
+  const sendDispatchSms = async (phoneNumber: string, customerName: string) => {
+    try {
+      const response = await fetch("/api/sendConfirmationplc", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phoneNumber, customerName }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send dispatch SMS");
+      }
+
+      console.log("Dispatch SMS sent successfully");
+    } catch (error) {
+      console.error("Error sending dispatch SMS:", error);
+    }
+  };
+
   const handleDispatch = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -96,6 +116,22 @@ export default function OrderPage() {
       );
     } catch (error) {
       console.error("Error updating order dispatch status:", error);
+    }
+  };
+
+  const handleDispatchSms = async (orderId: string) => {
+    try {
+      await handleDispatch(orderId);
+
+      const updatedOrder = orders.find((o) => o._id === orderId);
+      if (updatedOrder) {
+        await sendDispatchSms(
+          updatedOrder.phoneNumber,
+          updatedOrder.customerName
+        );
+      }
+    } catch (error) {
+      console.error("Error dispatching order and sending SMS:", error);
     }
   };
 
@@ -127,8 +163,19 @@ export default function OrderPage() {
   };
 
   const handleDispatchAll = async (orderIds: string[]) => {
-    for (const orderId of orderIds) {
-      await handleDispatch(orderId);
+    try {
+      // Update all orders to dispatched status
+      for (const orderId of orderIds) {
+        await handleDispatch(orderId);
+      }
+
+      // Send only one SMS for all dispatched orders
+      const firstOrder = orders.find((o) => orderIds.includes(o._id));
+      if (firstOrder) {
+        await sendDispatchSms(firstOrder.phoneNumber, firstOrder.customerName);
+      }
+    } catch (error) {
+      console.error("Error dispatching all orders:", error);
     }
   };
 
@@ -178,6 +225,7 @@ export default function OrderPage() {
 
   const renderOrders = (orders: { [key: string]: Order[] }) => {
     // Sort the order groups based on the most recent order in each group
+
     const sortedOrderEntries = Object.entries(orders).sort((a, b) => {
       const latestOrderA = a[1].reduce((latest, current) =>
         new Date(current.createdAt) > new Date(latest.createdAt)
@@ -241,7 +289,7 @@ export default function OrderPage() {
                       <SingleItemOrder
                         key={order._id}
                         order={order}
-                        onDispatch={handleDispatch}
+                        onDispatch={handleDispatchSms}
                         onPayment={handlePayment}
                       />
                     ))}
@@ -256,7 +304,7 @@ export default function OrderPage() {
                       <MultiItemOrder
                         key={order._id}
                         order={order}
-                        onDispatch={handleDispatch}
+                        onDispatch={handleDispatchSms}
                         onPayment={handlePayment}
                       />
                     ))}
