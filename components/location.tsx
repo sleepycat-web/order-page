@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 interface Location {
@@ -38,7 +38,30 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   );
   const [showManualInputMessage, setShowManualInputMessage] = useState(false);
   const [isLocationPromptVisible, setIsLocationPromptVisible] = useState(false);
+const locationDropdownRef = useRef<HTMLDivElement>(null);
+  const cabinDropdownRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        locationDropdownRef.current &&
+        !locationDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+      if (
+        cabinDropdownRef.current &&
+        !cabinDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsCabinDropdownOpen(false);
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const detectLocation = () => {
     if ("geolocation" in navigator) {
       setIsLocationPromptVisible(true);
@@ -147,7 +170,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
         </p>
       )}
       <div className="flex flex-row space-x-4 mt-4 sm:mt-0">
-        <div className="relative">
+        <div className="relative" ref={locationDropdownRef}>
           <button
             className="btn text-left"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -182,7 +205,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           )}
         </div>
 
-        <div className="relative">
+        <div className="relative" ref={cabinDropdownRef}>
           <button
             className={`btn text-left disabled:text-neutral-200/40 ${
               !selectedLocation ? "btn-disabled" : ""

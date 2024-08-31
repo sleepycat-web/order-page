@@ -47,6 +47,18 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     setIsFulfilled(true);
   };
 
+  const getStatusColor = () => {
+    if (isFulfilled) return "bg-green-500";
+    if (isDispatched) return "bg-green-500";
+    return "bg-red-500";
+  };
+
+  const getStatusText = () => {
+    if (isFulfilled) return "Fulfilled";
+    if (isDispatched) return "Dispatched";
+    return "Pending";
+  };
+
   return (
     <div className="bg-neutral-800 py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
@@ -56,10 +68,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
               {customerName}
             </span>
             <span className="text-blue-400 text-sm sm:text-base">
-              <a
-                href={`tel:${phoneNumber}`}>
-                {phoneNumber}
-              </a>
+              <a href={`tel:${phoneNumber}`}>{phoneNumber}</a>
             </span>
             <span className="bg-blue-600 px-2 py-0.5 rounded text-xs sm:text-sm">
               {cabin}
@@ -67,12 +76,8 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
           </div>
           <div className="flex items-center gap-2 mt-1 sm:mt-0">
             <span className="text-sm">Status:</span>
-            <span
-              className={`px-1 py-1 rounded text-sm ${
-                isDispatched ? "bg-green-500" : "bg-red-500"
-              }`}
-            >
-              {isDispatched ? "Dispatched" : "Pending"}
+            <span className={`px-1 py-1 rounded text-sm ${getStatusColor()}`}>
+              {getStatusText()}
             </span>
             {!isDispatched && (
               <button
@@ -82,24 +87,13 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
                 Dispatch All
               </button>
             )}
-            {isDispatched && (
-              <>
-                <span
-                  className={`px-1 py-1 rounded text-sm  ${
-                    isFulfilled ? "bg-green-500" : "bg-red-500"
-                  }`}
-                >
-                  {isFulfilled ? "Fulfilled" : "Pending"}
-                </span>
-                {!isFulfilled && (
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={handleFulfillAll}
-                  >
-                    Fulfill All
-                  </button>
-                )}
-              </>
+            {isDispatched && !isFulfilled && (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleFulfillAll}
+              >
+                Fulfill All
+              </button>
             )}
           </div>
         </div>

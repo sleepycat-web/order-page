@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import CompactOrderInfo from "@/components/compactinfo";
 import { SingleItemOrder, MultiItemOrder } from "@/components/orderitem";
 
@@ -51,7 +51,13 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPreviousOrders, setShowPreviousOrders] = useState(false);
-
+  const [lastUpdatedOrderId, setLastUpdatedOrderId] = useState<string | null>(
+    null
+  );
+  const orderRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>(
+    {}
+  );
+  const [showActiveOrders, setShowActiveOrders] = useState(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -61,6 +67,25 @@ export default function OrderPage() {
           throw new Error("Failed to fetch orders");
         }
         const data = await response.json();
+
+        // Compare new orders with current orders to detect updates
+        if (orders.length > 0) {
+          const updatedOrderId = data.find((newOrder: Order) => {
+            const currentOrder = orders.find(
+              (order) => order._id === newOrder._id
+            );
+            return (
+              currentOrder &&
+              (currentOrder.status !== newOrder.status ||
+                currentOrder.order !== newOrder.order)
+            );
+          })?._id;
+
+          if (updatedOrderId) {
+            setLastUpdatedOrderId(updatedOrderId);
+          }
+        }
+
         setOrders(data);
         setLoading(false);
       } catch (err) {
@@ -71,8 +96,13 @@ export default function OrderPage() {
     fetchOrders();
     const intervalId = setInterval(fetchOrders, 3000);
     return () => clearInterval(intervalId);
-  }, []);
-
+  }, [orders]);
+  useEffect(() => {
+    if (lastUpdatedOrderId && orderRefs.current[lastUpdatedOrderId]) {
+      const ref = orderRefs.current[lastUpdatedOrderId];
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [lastUpdatedOrderId]);
   const sendDispatchSms = async (phoneNumber: string, customerName: string) => {
     try {
       const response = await fetch("/api/sendConfirmationplc", {
@@ -119,24 +149,23 @@ export default function OrderPage() {
       console.error("Error updating order dispatch status:", error);
     }
   };
-  
- const handleDispatchSms = async (orderId: string) => {
-   try {
-     await handleDispatch(orderId);
 
-     const updatedOrder = orders.find((o) => o._id === orderId);
-     if (updatedOrder) {
-       await sendDispatchSms(
-         updatedOrder.phoneNumber,
-         updatedOrder.customerName
-       );
-     }
-   } catch (error) {
-     console.error("Error dispatching order and sending SMS:", error);
-   }
- };
-  
-  
+  const handleDispatchSms = async (orderId: string) => {
+    try {
+      await handleDispatch(orderId);
+
+      const updatedOrder = orders.find((o) => o._id === orderId);
+      if (updatedOrder) {
+        await sendDispatchSms(
+          updatedOrder.phoneNumber,
+          updatedOrder.customerName
+        );
+      }
+    } catch (error) {
+      console.error("Error dispatching order and sending SMS:", error);
+    }
+  };
+
   const handlePayment = async (orderId: string) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -164,22 +193,22 @@ export default function OrderPage() {
     }
   };
 
- const handleDispatchAll = async (orderIds: string[]) => {
-   try {
-     // Update all orders to dispatched status
-     for (const orderId of orderIds) {
-       await handleDispatch(orderId);
-     }
+  const handleDispatchAll = async (orderIds: string[]) => {
+    try {
+      // Update all orders to dispatched status
+      for (const orderId of orderIds) {
+        await handleDispatch(orderId);
+      }
 
-     // Send only one SMS for all dispatched orders
-     const firstOrder = orders.find((o) => orderIds.includes(o._id));
-     if (firstOrder) {
-       await sendDispatchSms(firstOrder.phoneNumber, firstOrder.customerName);
-     }
-   } catch (error) {
-     console.error("Error dispatching all orders:", error);
-   }
- };
+      // Send only one SMS for all dispatched orders
+      const firstOrder = orders.find((o) => orderIds.includes(o._id));
+      if (firstOrder) {
+        await sendDispatchSms(firstOrder.phoneNumber, firstOrder.customerName);
+      }
+    } catch (error) {
+      console.error("Error dispatching all orders:", error);
+    }
+  };
 
   const handleFulfillAll = async (orderIds: string[]) => {
     for (const orderId of orderIds) {
@@ -207,10 +236,14 @@ export default function OrderPage() {
 
   const groupedOrders = orders.reduce(
     (acc, order) => {
-      const key =
-        order.status === "fulfilled" && order.order === "dispatched"
-          ? "previous"
-          : "current";
+      let key;
+      if (order.status === "fulfilled" && order.order === "dispatched") {
+        key = "previous";
+      } else if (order.order === "dispatched" && order.status !== "fulfilled") {
+        key = "active";
+      } else {
+        key = "current";
+      }
       if (!acc[key]) {
         acc[key] = {};
       }
@@ -220,116 +253,130 @@ export default function OrderPage() {
       acc[key][order.phoneNumber].push(order);
       return acc;
     },
-    { current: {}, previous: {} } as {
+    { current: {}, active: {}, previous: {} } as {
       [key: string]: { [key: string]: Order[] };
     }
   );
 
-const renderOrders = (orders: { [key: string]: Order[] }) => {
-  // Sort the order groups based on the most recent order in each group
-  
-  const sortedOrderEntries = Object.entries(orders).sort((a, b) => {
-    const latestOrderA = a[1].reduce((latest, current) =>
-      new Date(current.createdAt) > new Date(latest.createdAt)
-        ? current
-        : latest
-    );
-    const latestOrderB = b[1].reduce((latest, current) =>
-      new Date(current.createdAt) > new Date(latest.createdAt)
-        ? current
-        : latest
-    );
+  const renderOrders = (orders: { [key: string]: Order[] }) => {
+    // Sort the order groups based on the most recent order in each group
+
+    const sortedOrderEntries = Object.entries(orders).sort((a, b) => {
+      const latestOrderA = a[1].reduce((latest, current) =>
+        new Date(current.createdAt) > new Date(latest.createdAt)
+          ? current
+          : latest
+      );
+      const latestOrderB = b[1].reduce((latest, current) =>
+        new Date(current.createdAt) > new Date(latest.createdAt)
+          ? current
+          : latest
+      );
+      return (
+        new Date(latestOrderB.createdAt).getTime() -
+        new Date(latestOrderA.createdAt).getTime()
+      );
+    });
+
     return (
-      new Date(latestOrderB.createdAt).getTime() -
-      new Date(latestOrderA.createdAt).getTime()
-    );
-  });
-
-  return (
-    <div className="space-y-8">
-      {sortedOrderEntries.map(([phoneNumber, customerOrders]) => {
-        const singleItemOrders = customerOrders.filter(
-          (order) => order.items.length === 1
-        );
-        const multiItemOrders = customerOrders.filter(
-          (order) => order.items.length > 1
-        );
-        const sortOrders = (orders: Order[]) =>
-          orders.sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      <div className="space-y-8">
+        {sortedOrderEntries.map(([phoneNumber, customerOrders]) => {
+          const singleItemOrders = customerOrders.filter(
+            (order) => order.items.length === 1
           );
+          const multiItemOrders = customerOrders.filter(
+            (order) => order.items.length > 1
+          );
+          const sortOrders = (orders: Order[]) =>
+            orders.sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            );
 
-        // Sort customerOrders to get the newest order first
-        const sortedCustomerOrders = sortOrders(customerOrders);
-        const newestOrder = sortedCustomerOrders[0];
+          // Sort customerOrders to get the newest order first
+          const sortedCustomerOrders = sortOrders(customerOrders);
+          const newestOrder = sortedCustomerOrders[0];
 
-        return (
-          <div key={phoneNumber} className="bg-neutral-900 rounded-lg p-4">
-            <CompactOrderInfo
-              customerName={newestOrder.customerName}
-              phoneNumber={phoneNumber}
-              cabin={newestOrder.selectedCabin}
-              total={customerOrders.reduce(
-                (sum, order) => sum + order.total,
-                0
+          return (
+            <div
+              key={phoneNumber}
+              className="bg-neutral-900 rounded-lg p-4"
+              ref={(el) => {
+                if (el) {
+                  orderRefs.current[newestOrder._id] = { current: el };
+                }
+              }}
+            >
+              <CompactOrderInfo
+                customerName={newestOrder.customerName}
+                phoneNumber={phoneNumber}
+                cabin={newestOrder.selectedCabin}
+                total={customerOrders.reduce(
+                  (sum, order) => sum + order.total,
+                  0
+                )}
+                orders={sortedCustomerOrders.map((order) => ({
+                  _id: order._id,
+                  order: order.order,
+                  status: order.status,
+                }))}
+                onDispatchAll={handleDispatchAll}
+                onFulfillAll={handleFulfillAll}
+              />
+
+              {singleItemOrders.length > 0 && (
+                <div className="mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sortOrders(singleItemOrders).map((order) => (
+                      <SingleItemOrder
+                        key={order._id}
+                        order={order}
+                        onDispatch={handleDispatchSms}
+                        onPayment={handlePayment}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
-              orders={sortedCustomerOrders.map((order) => ({
-                _id: order._id,
-                order: order.order,
-                status: order.status,
-              }))}
-              onDispatchAll={handleDispatchAll}
-              onFulfillAll={handleFulfillAll}
-            />
 
-            {singleItemOrders.length > 0 && (
-              <div className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {sortOrders(singleItemOrders).map((order) => (
-                    <SingleItemOrder
-                      key={order._id}
-                      order={order}
-                      onDispatch={handleDispatchSms}
-                      onPayment={handlePayment}
-                    />
-                  ))}
+              {multiItemOrders.length > 0 && (
+                <div className="mt-4">
+                  <div className="space-y-4">
+                    {sortOrders(multiItemOrders).map((order) => (
+                      <MultiItemOrder
+                        key={order._id}
+                        order={order}
+                        onDispatch={handleDispatchSms}
+                        onPayment={handlePayment}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {multiItemOrders.length > 0 && (
-              <div className="mt-4">
-                <div className="space-y-4">
-                  {sortOrders(multiItemOrders).map((order) => (
-                    <MultiItemOrder
-                      key={order._id}
-                      order={order}
-                      onDispatch={handleDispatchSms}
-                      onPayment={handlePayment}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 text-white min-h-screen">
       <h1 className="text-3xl font-bold mb-6">
-        {" "}
         {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
       </h1>
 
+      <h2 className="text-2xl font-bold mb-4">Current Orders</h2>
       {renderOrders(groupedOrders.current)}
 
       <div className="mt-8">
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4"
+          onClick={() => setShowActiveOrders(!showActiveOrders)}
+        >
+          {showActiveOrders ? "Hide Active Orders" : "Show Active Orders"}
+        </button>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={() => setShowPreviousOrders(!showPreviousOrders)}
@@ -337,6 +384,13 @@ const renderOrders = (orders: { [key: string]: Order[] }) => {
           {showPreviousOrders ? "Hide Previous Orders" : "Show Previous Orders"}
         </button>
       </div>
+
+      {showActiveOrders && (
+        <div className="mt-4">
+          <h2 className="text-2xl font-bold my-6">Active Orders</h2>
+          {renderOrders(groupedOrders.active)}
+        </div>
+      )}
 
       {showPreviousOrders && (
         <div className="mt-4">
@@ -346,7 +400,7 @@ const renderOrders = (orders: { [key: string]: Order[] }) => {
               order.selectedLocation.includes("Sevoke Road")
             )
           ) && (
-            <div className="mb-4 ">
+            <div className="mb-4">
               <span className="bg-teal-600 p-2 rounded">
                 <span className="font-semibold">Total tips for the day: </span>
                 <span className="">
@@ -360,6 +414,7 @@ const renderOrders = (orders: { [key: string]: Order[] }) => {
       )}
 
       {Object.keys(groupedOrders.current).length === 0 &&
+        Object.keys(groupedOrders.active).length === 0 &&
         Object.keys(groupedOrders.previous).length === 0 && (
           <p className="text-center text-xl">No orders at the moment.</p>
         )}
