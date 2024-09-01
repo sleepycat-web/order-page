@@ -163,7 +163,22 @@ useEffect(() => {
 
 const handleAddToOrder = () => {
   if (validateSelection()) {
-    onAddToOrder(item, selectedOptions, quantity, specialRequests, totalPrice);
+    // Create a new orderedSelectedOptions object that follows the order of item.customizationOptions
+    const orderedSelectedOptions: Record<string, string[]> = {};
+
+    item.customizationOptions?.forEach((option) => {
+      if (selectedOptions[option.name]) {
+        orderedSelectedOptions[option.name] = selectedOptions[option.name];
+      }
+    });
+
+    onAddToOrder(
+      item,
+      orderedSelectedOptions,
+      quantity,
+      specialRequests,
+      totalPrice
+    );
     onClose();
   } else {
     setShowErrorHighlight(true);
@@ -210,6 +225,7 @@ const handleAddToOrder = () => {
     }
   }
 };
+
   const handleQuantityChange = (change: number) => {
     const newQuantity = Math.max(1, quantity + change);
     setQuantity(newQuantity);

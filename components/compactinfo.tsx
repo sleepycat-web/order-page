@@ -14,6 +14,7 @@ interface CompactInfoProps {
   onDispatchAll: (orderIds: string[]) => void;
   onFulfillAll: (orderIds: string[]) => void;
   onRejectAll: (orderIds: string[]) => Promise<void>;
+  activeTab: "new" | "active" | "previous"; // Add this line
 }
 
 const CompactInfo: React.FC<CompactInfoProps> = ({
@@ -25,6 +26,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   onDispatchAll,
   onFulfillAll,
   onRejectAll,
+  activeTab,
 }) => {
   const [isDispatched, setIsDispatched] = useState(
     orders.every((order) => order.order === "dispatched")
@@ -105,8 +107,8 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     }
   };
   return (
-    <div className="bg-neutral-800 py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+    <div className="bg-neutral-800 py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-4 flex flex-wrap lg:flex-nowrap lg:justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 w-full lg:w-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 w-full">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-base sm:text-lg">
@@ -161,7 +163,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
             {isDispatched && !isRejected && (
               <>
                 <span
-                  className={`px-1 py-1 rounded text-sm  ${
+                  className={`px-1 py-1 rounded text-sm ${
                     isFulfilled ? "bg-green-500" : "bg-yellow-500"
                   }`}
                 >
@@ -179,20 +181,23 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
             )}
           </div>
         </div>
+      </div>
+      <div className="resdiv w-full lg:w-auto mt-1 lg:mt-0 flex lg:justify-end items-center">
         <div className="flex items-center gap-2">
-          <button
-            className="btn btn-error text-white btn-sm"
-            onClick={handleRejectAll}
-            disabled={isRejected}
-          >
-            Reject
-          </button>
+          {activeTab === "new" && (
+            <button
+              className="btn btn-error text-white btn-sm"
+              onClick={handleRejectAll}
+              disabled={isRejected}
+            >
+              Reject
+            </button>
+          )}
           <div className="bg-rose-800 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-sm sm:text-base font-bold whitespace-nowrap">
             Total: ₹{total}
           </div>
         </div>
       </div>
-
       {/* Reject Confirmation Modal */}
       <input
         type="checkbox"

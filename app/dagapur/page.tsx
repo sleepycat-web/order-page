@@ -415,6 +415,7 @@ export default function OrderPage() {
                 onDispatchAll={handleDispatchAll}
                 onFulfillAll={handleFulfillAll}
                 onRejectAll={handleRejectAll}
+                activeTab={activeTab}
               />
 
               {singleItemOrders.length > 0 && (
@@ -462,7 +463,7 @@ export default function OrderPage() {
           }
         }
       `}</style>
-      <div className="container mx-auto px-4 py-8 text-white min-h-screen">
+      <div className="container mx-auto  px-4 py-8 text-white min-h-screen">
         <h1 className="text-3xl font-bold mb-6">
           {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
         </h1>

@@ -140,7 +140,7 @@ const Cart: React.FC<CartProps> = ({
                     <li key={index} className="border-b border-gray-700 pb-4">
                       <div className="flex justify-between items-start">
                         <div className="flex-grow space-y-2">
-                          <h3 className="font-semibold text-lg">
+                          <h3 className="font-semibold text-lg ">
                             {item.item.name}
                           </h3>
                           <div className="flex items-center mt-2">
@@ -199,7 +199,7 @@ const Cart: React.FC<CartProps> = ({
                         </div>
                         <button
                           onClick={() => onRemoveItem(index)}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-red-500 hover:text-red-700 "
                         >
                           Remove
                         </button>
