@@ -11,10 +11,9 @@ const formatDate = (dateString: string) => {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-
   };
   
-  return date.toLocaleString("en-US", options).replace(",", "");;
+  return date.toLocaleString("en-US", options).replace(",", "");
 };
 
 // Interfaces
@@ -46,6 +45,7 @@ interface Order {
   tableDeliveryCharge?: number;
   dispatchedAt?: string;
   fulfilledAt?: string;
+  rejectedAt?: string;
 }
 
 interface OrderItemProps {
@@ -67,27 +67,27 @@ interface OrderComponentProps {
 interface TimerProps {
   startTime: string;
   isDispatched: boolean;
+  isRejected: boolean;
 }
 
-// Components
 const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
   <div className="bg-neutral-700 p-3 rounded-lg flex flex-col h-full">
-    <div className="flex justify-between items-start mb-2">
-      <span className="bg-purple-700 px-2 py-1 rounded font-bold text-sm">
-        {item.name}
-      </span>
-      <span className="bg-orange-500 px-2 py-1 rounded-full text-xs font-semibold ml-2">
-        Qty: {item.quantity}
-      </span>
+    <div className="flex flex-col">
+      <div className="flex justify-between items-start mb-2">
+        <span className="bg-purple-700 px-2 py-1 rounded font-bold text-sm">
+          {item.name}
+        </span>
+        <span className="bg-orange-500 px-2 py-1 rounded-full text-xs font-semibold ml-2">
+          Qty: {item.quantity}
+        </span>
+      </div>
+      <p className="font-semibold mb-2">₹{item.totalPrice}</p>
     </div>
-    <p className=" font-semibold ">₹{item.totalPrice}</p>
-    <div className="space-y-1">
+    <div className="space-y-1 flex-grow">
       {Object.entries(item.selectedOptions).map(
         ([optionName, selectedValues]) => (
-          <div key={optionName} className="flex items-center">
-            <p className="font-bold text-sm mr-1">
-              {optionName}:
-            </p>
+          <div key={optionName} className="flex items-start ">
+            <p className="font-bold text-sm mr-1">{optionName}:</p>
             <div className="flex flex-wrap gap-1">
               {selectedValues.map((value, index) => (
                 <div
@@ -103,8 +103,8 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
       )}
     </div>
     {item.specialRequests && (
-      <div className="mt-3 flex items-center">
-        <p className="font-bold text-sm mr-2 min-w-[100px]">
+      <div className="mt-3 flex items-start">
+        <p className="font-bold text-sm mr-2 ">
           Special Requests:
         </p>
         <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded inline-block">
@@ -115,8 +115,7 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
   </div>
 );
 
-
-const Timer: React.FC<TimerProps> = ({ startTime, isDispatched }) => {
+const Timer: React.FC<TimerProps> = ({ startTime, isDispatched,isRejected }) => {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
@@ -137,15 +136,23 @@ const Timer: React.FC<TimerProps> = ({ startTime, isDispatched }) => {
 
   if (isDispatched && timeLeft !== null) {
     return (
-      <span className="bg-green-500 p-1 ml-1 text-sm rounded font-bold">
+     
+      <span className="bg-green-500 p-1 ml-1 text-sm rounded ">
         On Time
+      </span>
+    );
+  }
+  if (isRejected) {
+    return (
+      <span className="bg-red-500 p-1 ml-1 text-sm rounded ">
+        Rejected
       </span>
     );
   }
 
   if (timeLeft === null) {
     return (
-      <span className="bg-red-500 p-1 ml-1 text-sm rounded font-bold">
+      <span className="bg-red-500 p-1 ml-1 text-sm rounded ">
         Time up
       </span>
     );
@@ -162,12 +169,47 @@ const Timer: React.FC<TimerProps> = ({ startTime, isDispatched }) => {
   );
 };
 
-
 const OrderStatus: React.FC<OrderComponentProps> = ({
   order,
   onDispatch,
   onPayment,
 }) => {
+  const [dispatchCountdown, setDispatchCountdown] = useState<number | null>(
+    null
+  );
+  const [dispatchTimeoutId, setDispatchTimeoutId] =
+    useState<NodeJS.Timeout | null>(null);
+
+  const handleDispatchClick = () => {
+    setDispatchCountdown(5);
+    const timeoutId = setTimeout(() => {
+      onDispatch(order._id);
+      setDispatchCountdown(null);
+    }, 5000);
+    setDispatchTimeoutId(timeoutId);
+  };
+
+  const handleUndoDispatch = () => {
+    if (dispatchTimeoutId) {
+      clearTimeout(dispatchTimeoutId);
+      setDispatchTimeoutId(null);
+    }
+    setDispatchCountdown(null);
+  };
+
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (dispatchCountdown !== null && dispatchCountdown > 0) {
+      intervalId = setInterval(() => {
+        setDispatchCountdown((prev) => (prev !== null ? prev - 1 : null));
+      }, 1000);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [dispatchCountdown]);
+
   return (
     <div className="flex items-center mb-2">
       <p className="mr-2">Order Status:</p>
@@ -175,25 +217,47 @@ const OrderStatus: React.FC<OrderComponentProps> = ({
         <div className="flex items-center">
           <span
             className={`p-1 rounded text-sm ${
-              order.order === "dispatched" ? "bg-green-500" : "bg-red-500"
+              order.order === "rejected"
+                ? "bg-red-500"
+                : order.order === "dispatched"
+                ? "bg-green-500"
+                : "bg-yellow-500"
             }`}
           >
-            {order.order === "dispatched" ? "Dispatched" : "Pending"}
+            {order.order === "rejected"
+              ? "Rejected"
+              : order.order === "dispatched"
+              ? "Dispatched"
+              : "Pending"}
           </span>
-          {order.order !== "dispatched" && (
-            <button
-              className="btn btn-primary btn-sm ml-1"
-              onClick={() => onDispatch(order._id)}
-            >
-              Dispatch
-            </button>
+          {order.order !== "dispatched" && order.order !== "rejected" && (
+            <>
+              <button
+                className="btn btn-primary btn-sm ml-1"
+                onClick={handleDispatchClick}
+                disabled={dispatchCountdown !== null}
+              >
+                Dispatch
+              </button>
+              {dispatchCountdown !== null && (
+                <span className="ml-2 text-sm">
+                  Dispatching in {dispatchCountdown}s
+                  <button
+                    className="btn btn-secondary btn-sm ml-1"
+                    onClick={handleUndoDispatch}
+                  >
+                    Undo
+                  </button>
+                </span>
+              )}
+            </>
           )}
         </div>
         {order.order === "dispatched" && (
           <div className="flex items-center text-sm">
             <span
               className={`p-1 rounded ${
-                order.status === "fulfilled" ? "bg-green-500" : "bg-red-500"
+                order.status === "fulfilled" ? "bg-green-500" : "bg-yellow-500"
               }`}
             >
               {order.status === "fulfilled" ? "Fulfilled" : "Pending"}
@@ -208,7 +272,10 @@ const OrderStatus: React.FC<OrderComponentProps> = ({
             )}
           </div>
         )}
+        
       </div>
+      
+    
     </div>
   );
 };
@@ -225,6 +292,7 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
       <Timer
         startTime={order.updatedAt || order.createdAt}
         isDispatched={order.order === "dispatched"}
+        isRejected={order.order === "rejected" || order.status === "rejected"}
       />{" "}
     </p>
     <div className="mt-2">
@@ -261,6 +329,11 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
         Fulfilled at: {formatDate(order.fulfilledAt)}
       </p>
     )}
+    {order.rejectedAt && (
+      <p className="mt-1 text-sm text-red-500">
+        Rejected at: {formatDate(order.rejectedAt)}
+      </p>
+    )}
   </div>
 );
 
@@ -276,6 +349,7 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
       <Timer
         startTime={order.updatedAt || order.createdAt}
         isDispatched={order.order === "dispatched"}
+        isRejected={order.order === "rejected" || order.status === "rejected"}
       />{" "}
     </p>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
@@ -292,7 +366,7 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
         />
       ))}
     </div>
-    <p className="mt-4 font-semibold">Subtotal: ₹{order.total}</p>
+    <p className="mt-2 font-semibold">Subtotal: ₹{order.total}</p>
     {order.appliedPromo && (
       <p className="mt-1 text-green-500 text-sm">
         Promo Applied: {order.appliedPromo.code} (
@@ -300,11 +374,11 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
       </p>
     )}
     {order.selectedLocation.includes("Sevoke Road") &&
-      order.tableDeliveryCharge && (
-        <p className="mt-1 text-blue-500 text-sm">
-          Delivery Charge: ₹{order.tableDeliveryCharge}
-        </p>
-      )}
+    order.tableDeliveryCharge ? (
+      <p className="mt-1 text-blue-500 text-sm">
+        Delivery Charge: ₹{order.tableDeliveryCharge}
+      </p>
+    ) : null}
     {order.dispatchedAt && (
       <p className="mt-1 text-sm text-yellow-500">
         Dispatched at: {formatDate(order.dispatchedAt)}
@@ -315,6 +389,11 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
         Fulfilled at: {formatDate(order.fulfilledAt)}
       </p>
     )}
+    {order.rejectedAt && (
+      <p className="mt-1 text-sm text-red-500">
+        Rejected at: {formatDate(order.rejectedAt)}
+      </p>
+    )}
   </div>
 );
 
@@ -322,75 +401,64 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
 const OrderManagementPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
-  // Mock function to fetch orders
-  const fetchOrders = async () => {
-    // This would typically be an API call
-    const mockOrders: Order[] = [
-      // Add mock order data here
-    ];
-    setOrders(mockOrders);
+
+  const handleDispatch = async (orderId: string) => {
+    try {
+      const response = await axios.post("/api/updateOrderStatus", {
+        orderId,
+        type: "/dispatch",
+      });
+
+      if (response.status === 200) {
+        const { dispatchedAt } = response.data.updatedFields;
+        setOrders(
+          orders.map((order) =>
+            order._id === orderId
+              ? {
+                  ...order,
+                  order: "dispatched",
+                  dispatchedAt: dispatchedAt,
+                }
+              : order
+          )
+        );
+      } else {
+        console.error("Failed to update order status");
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  const handlePayment = async (orderId: string) => {
+    try {
+      const response = await axios.post("/api/updateOrderStatus", {
+        orderId,
+        type: "/payment",
+      });
 
- const handleDispatch = async (orderId: string) => {
-   try {
-     const response = await axios.post("/api/updateOrderStatus", {
-       orderId,
-       type: "/dispatch",
-     });
+      if (response.status === 200) {
+        const { fulfilledAt } = response.data.updatedFields;
+        setOrders(
+          orders.map((order) =>
+            order._id === orderId
+              ? {
+                  ...order,
+                  status: "fulfilled",
+                  fulfilledAt: fulfilledAt,
+                }
+              : order
+          )
+        );
+      } else {
+        console.error("Failed to update order status");
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
+  };
 
-     if (response.status === 200) {
-       const { dispatchedAt } = response.data.updatedFields;
-       setOrders(
-         orders.map((order) =>
-           order._id === orderId
-             ? {
-                 ...order,
-                 order: "dispatched",
-                 dispatchedAt: dispatchedAt,
-               }
-             : order
-         )
-       );
-     } else {
-       console.error("Failed to update order status");
-     }
-   } catch (error) {
-     console.error("Error updating order status:", error);
-   }
- };
-
- const handlePayment = async (orderId: string) => {
-   try {
-     const response = await axios.post("/api/updateOrderStatus", {
-       orderId,
-       type: "/payment",
-     });
-
-     if (response.status === 200) {
-       const { fulfilledAt } = response.data.updatedFields;
-       setOrders(
-         orders.map((order) =>
-           order._id === orderId
-             ? {
-                 ...order,
-                 status: "fulfilled",
-                 fulfilledAt: fulfilledAt,
-               }
-             : order
-         )
-       );
-     } else {
-       console.error("Failed to update order status");
-     }
-   } catch (error) {
-     console.error("Error updating order status:", error);
-   }
- };
-
+ 
 
   return (
     <div className="container mx-auto p-4">

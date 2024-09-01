@@ -28,8 +28,20 @@ export default function Home() {
   const [total, setTotal] = useState(0);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [tableDelivery, setTableDelivery] = useState(false);
+  const [showError, setShowError] = useState(false);
 
   // ... existing functions
+ useEffect(() => {
+   let timer: NodeJS.Timeout;
+   if (showError) {
+     timer = setTimeout(() => {
+       setShowError(false);
+     }, 5000);
+   }
+   return () => {
+     if (timer) clearTimeout(timer);
+   };
+ }, [showError]);
 
   const handleTableDeliveryChange = (isChecked: boolean) => {
     setTableDelivery(isChecked);
@@ -118,8 +130,13 @@ const handleAddToCart = (
   };
 
   const handleProceedToCheckout = () => {
-    setIsCartOpen(true);
+    if (!selectedLocation || !selectedCabin) {
+      setShowError(true);
+    } else {
+      setIsCartOpen(true);
+    }
   };
+
   const handleOrderSuccess = () => {
     setCartItems([]); // Reset cart items
     setAppliedPromo(null); // Reset applied promo
@@ -193,13 +210,24 @@ const handleAddToCart = (
         <Menu items={menuItems} onSelectItem={setSelectedItem} />
 
         {cartItems.length > 0 && (
-          <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
+          <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex flex-col items-center">
             <button
               className="btn btn-primary w-full max-w-lg"
               onClick={handleProceedToCheckout}
             >
               Proceed to Checkout
             </button>
+            {showError && (!selectedLocation || !selectedCabin) && (
+              <p className="text-red-500 text-center mt-2 w-full max-w-lg">
+                Please select{" "}
+                {!selectedLocation && !selectedCabin
+                  ? "location and cabin"
+                  : !selectedLocation
+                  ? "location"
+                  : "cabin"}{" "}
+                before checkout
+              </p>
+            )}
           </div>
         )}
       </main>

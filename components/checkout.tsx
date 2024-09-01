@@ -55,6 +55,8 @@ const Checkout: React.FC<CheckoutProps> = ({
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
     const resetCheckoutState = () => {
       setOtpVerified(false);
       setPhoneNumber("");
@@ -110,29 +112,36 @@ const handleClose = () => {
     return response.data;
   };
 
-  const handleConfirmOrder = async () => {
-    try {
-      const response = await axios.post("/api/submitOrder", {
-        items,
-        selectedLocation,
-        selectedCabin,
-        total,
-        appliedPromo,
-        phoneNumber,
-        customerName,
-        tableDeliveryCharge
-      });
+    const handleConfirmOrder = async () => {
+      if (isSubmitting) return; // Prevent double submission
 
-      if (response.status === 200) {
-        console.log("Order submitted:", response.data.orderId);
-        setOrderPlaced(true);
-        onOrderSuccess();
-        onResetCart(); // Add this line
+      try {
+        setIsSubmitting(true);
+        const response = await axios.post("/api/submitOrder", {
+          items,
+          selectedLocation,
+          selectedCabin,
+          total,
+          appliedPromo,
+          phoneNumber,
+          customerName,
+          tableDeliveryCharge,
+        });
+
+        if (response.status === 200) {
+          console.log("Order submitted:", response.data.orderId);
+          setOrderPlaced(true);
+          onOrderSuccess();
+          onResetCart();
+        }
+      } catch (error) {
+        console.error("Error submitting order:", error);
+      } finally {
+        setIsSubmitting(false);
       }
-    } catch (error) {
-      console.error("Error submitting order:", error);
-    }
-  };
+    };
+
+
 
   const addNewUser = async (
     phoneNumber: string,
@@ -507,7 +516,7 @@ if (isLoading) {
                       <p>Quantity: {item.quantity}</p>
                       <div className="mt-2 flex items-center">
                         <span className="mr-2">Price:</span>
-                        <div className="px-2 py- bg-blue-600 rounded text-white font-semibold">
+                        <div className="px-2 py-1 bg-blue-600 rounded text-white font-semibold">
                           ₹{(item.totalPrice * item.quantity).toFixed(2)}
                         </div>
                       </div>
@@ -515,7 +524,7 @@ if (isLoading) {
                         ([optionName, values]) => (
                           <div
                             key={optionName}
-                            className="flex flex-wrap items-center gap-1"
+                            className="flex flex-wrap items-center gap-1 "
                           >
                             <span className="text-sm py-2 text-gray-400">
                               {optionName}:{" "}
@@ -546,24 +555,28 @@ if (isLoading) {
                       {appliedPromo.percentage}% off)
                     </div>
                   )}
-                  {selectedLocation === "Sevoke Road" && (
-                    <label className="flex items-center justify-between w-full max-w-xs">
-                      <span className="label-text">
-                        Table Delivery (5% charge) - ₹
-                        {tableDeliveryCharge.toFixed(2)}
-                      </span>
-                    </label>
-                  )}
+                  {selectedLocation === "Sevoke Road" &&
+                    tableDeliveryCharge > 0 && (
+                      <label className="flex items-center justify-between w-full max-w-xs">
+                        <span className="label-text">
+                          Table Delivery (5% charge) - ₹
+                          {tableDeliveryCharge.toFixed(2)}
+                        </span>
+                      </label>
+                    )}
                   <div className="text-xl font-bold">
                     Total: ₹{total.toFixed(2)}
                   </div>
                 </div>
                 <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
                   <button
-                    className="btn btn-primary w-full max-w-lg"
+                    className={`btn btn-primary w-full max-w-lg ${
+                      isSubmitting ? "opacity-75 " : ""
+                    }`}
                     onClick={handleConfirmOrder}
+                    // disabled={isSubmitting}
                   >
-                    Confirm
+                    {isSubmitting ? "Confirm" : "Confirm"}
                   </button>
                 </div>
               </>

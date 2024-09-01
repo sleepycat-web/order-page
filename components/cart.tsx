@@ -236,7 +236,7 @@ const Cart: React.FC<CartProps> = ({
                       {selectedLocation === "Sevoke Road" && (
                         <label className="flex items-center justify-between w-full max-w-xs">
                           <span className="label-text">
-                            Table Delivery (5% charge) - ₹
+                            Select Table Delivery (5% charge) - ₹
                             {deliveryCharge.toFixed(2)}
                           </span>
                           <input
@@ -261,11 +261,15 @@ const Cart: React.FC<CartProps> = ({
                         >
                           Checkout
                         </button>
-                        {(!selectedLocation || !selectedCabin) && (
-                          <p className="text-red-500 text-center mt-2">
-                            Please select location and cabin before checkout
-                          </p>
-                        )}
+                        <p className="text-red-500 text-center mt-2 w-full max-w-lg">
+                          {!selectedLocation && !selectedCabin
+                            ? "Please select location and cabin before checkout"
+                            : !selectedLocation
+                            ? "Please select location before checkout"
+                            : !selectedCabin
+                            ? "Please select cabin before checkout"
+                            : ""}
+                        </p>
                       </div>
                     </div>
                   </div>

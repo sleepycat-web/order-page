@@ -1,7 +1,9 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import CompactOrderInfo from "@/components/compactinfo";
 import { SingleItemOrder, MultiItemOrder } from "@/components/orderitem";
+import OrderTabs from '@/components/tabview';  // Adjust the import path as needed
+import OrderSearch from '@/components/searchbox';  // Adjust the import path as needed
 
 interface OrderItem {
   item: {
@@ -50,14 +52,93 @@ export default function OrderPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPreviousOrders, setShowPreviousOrders] = useState(false);
   const [lastUpdatedOrderId, setLastUpdatedOrderId] = useState<string | null>(
     null
   );
+
+
   const orderRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>(
     {}
   );
-  const [showActiveOrders, setShowActiveOrders] = useState(true);
+
+ const [activeTab, setActiveTab] = useState<"new" | "active" | "previous">(
+   "new"
+ );
+  const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(
+    null
+  );
+
+const handleRejectAll = async (orderIds: string[]) => {
+  try {
+    const response = await fetch("/api/updateOrderStatus", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        orderIds,
+        type: "/reject",
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update order reject status");
+    }
+
+    // Update local state after successful API call
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        orderIds.includes(order._id)
+          ? { ...order, order: "rejected", status: "rejected" }
+          : order
+      )
+    );
+  } catch (error) {
+    console.error("Error updating order reject status:", error);
+    // Provide user feedback about the error
+  }
+};
+ useEffect(() => {
+   orders.forEach((order) => {
+     if (!orderRefs.current[order._id]) {
+       orderRefs.current[order._id] = React.createRef();
+     }
+   });
+ }, [orders]);
+
+   const scrollToOrder = useCallback((orderId: string) => {
+     const orderElement = orderRefs.current[orderId]?.current;
+     if (orderElement) {
+       orderElement.scrollIntoView({
+         behavior: "smooth",
+         block: "start",
+       });
+     }
+   }, []);
+     useEffect(() => {
+       if (highlightedOrderId) {
+         // Delay the scroll to ensure the component has re-rendered
+         setTimeout(() => {
+           scrollToOrder(highlightedOrderId);
+         }, 100);
+
+         // Remove the highlight after 5 seconds
+         const timer = setTimeout(() => {
+           setHighlightedOrderId(null);
+         }, 5000);
+
+         return () => clearTimeout(timer);
+       }
+     }, [highlightedOrderId, scrollToOrder]);
+
+     const getHighlightStyle = (orderId: string) => {
+       if (orderId === highlightedOrderId) {
+         return {
+           animation: "highlightAnimation 5s ease-out ",
+         };
+       }
+       return {};
+     };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -228,35 +309,50 @@ export default function OrderPage() {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen ">
         <span className="loading loading-spinner loading-lg"></span>
       </div>
     );
   if (error) return <div>{error}</div>;
 
-  const groupedOrders = orders.reduce(
-    (acc, order) => {
-      let key;
-      if (order.status === "fulfilled" && order.order === "dispatched") {
-        key = "previous";
-      } else if (order.order === "dispatched" && order.status !== "fulfilled") {
-        key = "active";
-      } else {
-        key = "current";
-      }
-      if (!acc[key]) {
-        acc[key] = {};
-      }
-      if (!acc[key][order.phoneNumber]) {
-        acc[key][order.phoneNumber] = [];
-      }
-      acc[key][order.phoneNumber].push(order);
-      return acc;
-    },
-    { current: {}, active: {}, previous: {} } as {
-      [key: string]: { [key: string]: Order[] };
-    }
-  );
+   const groupedOrders = orders.reduce(
+     (acc, order) => {
+       let key: "new" | "active" | "previous";
+       if (
+         order.status === "fulfilled" ||
+         order.status === "rejected" || // This line ensures all rejected orders go to "previous"
+         order.order === "rejected" // This line catches any order marked as rejected
+       ) {
+         key = "previous";
+       } else if (
+         order.order === "dispatched" &&
+         order.status !== "fulfilled"
+       ) {
+         key = "active";
+       } else {
+         key = "new";
+       }
+       if (!acc[key]) {
+         acc[key] = {};
+       }
+       if (!acc[key][order.phoneNumber]) {
+         acc[key][order.phoneNumber] = [];
+       }
+       acc[key][order.phoneNumber].push(order);
+       return acc;
+     },
+     { new: {}, active: {}, previous: {} } as {
+       [key in "new" | "active" | "previous"]: { [key: string]: Order[] };
+     }
+   );
+
+    const counts = {
+      new: Object.keys(groupedOrders.new).length,
+      active: Object.keys(groupedOrders.active).length,
+      previous: Object.keys(groupedOrders.previous).length,
+    };
+
+  
 
   const renderOrders = (orders: { [key: string]: Order[] }) => {
     // Sort the order groups based on the most recent order in each group
@@ -302,6 +398,7 @@ export default function OrderPage() {
             <div
               key={phoneNumber}
               className="bg-neutral-900 rounded-lg p-4"
+              style={getHighlightStyle(newestOrder._id)}
               ref={(el) => {
                 if (el) {
                   orderRefs.current[newestOrder._id] = { current: el };
@@ -323,6 +420,7 @@ export default function OrderPage() {
                 }))}
                 onDispatchAll={handleDispatchAll}
                 onFulfillAll={handleFulfillAll}
+                onRejectAll={handleRejectAll}
               />
 
               {singleItemOrders.length > 0 && (
@@ -362,62 +460,68 @@ export default function OrderPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 text-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">
-        {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
-      </h1>
+    <>
+      <style jsx global>{`
+        @keyframes highlightAnimation {
+          0% {
+            background-color: #ffd700;
+          }
+          
+        }
+      `}</style>
+      <div className="container mx-auto px-4 py-8 text-white min-h-screen">
+        <h1 className="text-3xl font-bold mb-6">
+          {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
+        </h1>
+        <OrderSearch
+          orders={orders}
+          setActiveTab={setActiveTab}
+          orderRefs={orderRefs}
+          setHighlightedOrderId={setHighlightedOrderId}
+        />
 
-      <h2 className="text-2xl font-bold mb-4">Current Orders</h2>
-      {renderOrders(groupedOrders.current)}
-
-      <div className="mt-8">
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4"
-          onClick={() => setShowActiveOrders(!showActiveOrders)}
-        >
-          {showActiveOrders ? "Hide Active Orders" : "Show Active Orders"}
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => setShowPreviousOrders(!showPreviousOrders)}
-        >
-          {showPreviousOrders ? "Hide Previous Orders" : "Show Previous Orders"}
-        </button>
-      </div>
-
-      {showActiveOrders && (
-        <div className="mt-4">
-          <h2 className="text-2xl font-bold my-6">Active Orders</h2>
-          {renderOrders(groupedOrders.active)}
+        <div className="mb-8">
+          <OrderTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            counts={counts}
+          />
         </div>
-      )}
 
-      {showPreviousOrders && (
-        <div className="mt-4">
-          <h2 className="text-2xl font-bold mb-4">Previous Orders</h2>
-          {Object.values(groupedOrders.previous).some((orders) =>
-            orders.some((order) =>
-              order.selectedLocation.includes("Sevoke Road")
-            )
-          ) && (
-            <div className="mb-4">
-              <span className="bg-teal-600 p-2 rounded">
-                <span className="font-semibold">Total tips for the day: </span>
-                <span className="">
-                  ₹{calculateTotalDeliveryCharges(groupedOrders.previous)}
+        {activeTab === "new" && (
+          <div className="mb-8">{renderOrders(groupedOrders.new)}</div>
+        )}
+
+        {activeTab === "active" && (
+          <div className="mb-8">{renderOrders(groupedOrders.active)}</div>
+        )}
+
+        {activeTab === "previous" && (
+          <div className="mb-8">
+            {Object.values(groupedOrders.previous).some((orders) =>
+              orders.some((order) =>
+                order.selectedLocation.includes("Sevoke Road")
+              )
+            ) && (
+              <div className="mb-4">
+                <span className="bg-teal-600 p-2 rounded">
+                  <span className="font-semibold">
+                    Total tips for the day:{" "}
+                  </span>
+                  <span className="">
+                    ₹{calculateTotalDeliveryCharges(groupedOrders.previous)}
+                  </span>
                 </span>
-              </span>
-            </div>
-          )}
-          {renderOrders(groupedOrders.previous)}
-        </div>
-      )}
+              </div>
+            )}
+            {renderOrders(groupedOrders.previous)}
+          </div>
+        )}
 
-      {Object.keys(groupedOrders.current).length === 0 &&
-        Object.keys(groupedOrders.active).length === 0 &&
-        Object.keys(groupedOrders.previous).length === 0 && (
+        {counts.new === 0 && counts.active === 0 && counts.previous === 0 && (
           <p className="text-center text-xl">No orders at the moment.</p>
         )}
-    </div>
+      </div>
+    </>
   );
 }
