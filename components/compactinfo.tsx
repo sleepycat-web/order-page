@@ -10,6 +10,7 @@ interface CompactInfoProps {
     _id: string;
     order: string;
     status: string;
+    price: number;
   }[];
   onDispatchAll: (orderIds: string[]) => void;
   onFulfillAll: (orderIds: string[]) => void;
@@ -59,7 +60,9 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     }, 5000);
     setDispatchTimeoutId(timeoutId);
   };
-
+  const nonRejectedTotal = orders
+    .filter((order) => order.status !== "rejected")
+    .reduce((sum, order) => sum + order.price, 0);
   const handleUndoDispatchAll = () => {
     if (dispatchTimeoutId) {
       clearTimeout(dispatchTimeoutId);
@@ -194,7 +197,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
             </button>
           )}
           <div className="bg-rose-800 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-sm sm:text-base font-bold whitespace-nowrap">
-            Total: ₹{total}
+            Total: ₹{nonRejectedTotal}
           </div>
         </div>
       </div>

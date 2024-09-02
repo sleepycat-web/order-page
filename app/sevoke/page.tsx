@@ -296,6 +296,14 @@ const handleRejectAll = async (orderIds: string[]) => {
       await handlePayment(orderId);
     }
   };
+const calculateTotalSales = (orders: { [key: string]: Order[] }) => {
+  return Object.values(orders)
+    .flat()
+    .filter(
+      (order) => order.order !== "rejected" && order.status !== "rejected"
+    )
+    .reduce((total, order) => total + order.total, 0);
+};
 
   const calculateTotalDeliveryCharges = (orders: {
     [key: string]: Order[];
@@ -417,6 +425,7 @@ const handleRejectAll = async (orderIds: string[]) => {
                   _id: order._id,
                   order: order.order,
                   status: order.status,
+                  price: order.total,
                 }))}
                 onDispatchAll={handleDispatchAll}
                 onFulfillAll={handleFulfillAll}
@@ -467,7 +476,6 @@ const handleRejectAll = async (orderIds: string[]) => {
           0% {
             background-color: #ffd700;
           }
-          
         }
       `}</style>
       <div className="container mx-auto  px-4 py-8 text-white min-h-screen">
@@ -515,6 +523,17 @@ const handleRejectAll = async (orderIds: string[]) => {
                 </span>
               </div>
             )}
+
+            {/* Total Sales */}
+            <div className="mb-4">
+              <span className="bg-lime-600 p-2 rounded">
+                <span className="font-semibold">Total sales for the day: </span>
+                <span className="">
+                  ₹{calculateTotalSales(groupedOrders.previous)}
+                </span>
+              </span>
+            </div>
+
             {renderOrders(groupedOrders.previous)}
           </div>
         )}

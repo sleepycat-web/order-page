@@ -118,7 +118,7 @@ const Cart: React.FC<CartProps> = ({
 
       {isOpen && (
         <div className="fixed inset-0 bg-neutral-900 z-40 overflow-y-auto">
-          <div className="container mx-auto px-4 py-8 pb-16 md:pb-12">
+          <div className="container mx-auto px-4 py-8 pb-24 md:pb-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Cart</h2>
               <button onClick={onToggle} className="text-3xl">
