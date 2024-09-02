@@ -200,7 +200,7 @@ const Cart: React.FC<CartProps> = ({
                         </div>
                         <button
                           onClick={() => onRemoveItem(index)}
-                          className="text-red-500 hover:text-red-700  pr-4"
+                          className="text-red-500 hover:text-red-700 pr-16 md:pr-0"
                         >
                           Remove
                         </button>
