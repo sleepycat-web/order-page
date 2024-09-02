@@ -302,7 +302,15 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
   onDispatch,
   onPayment,
 }) => (
-  <div className="bg-neutral-800 rounded-lg p-4">
+  <div
+    className={`rounded-lg p-4 ${
+      order.selectedLocation.includes("Sevoke Road") &&
+      order.tableDeliveryCharge
+        ? "bg-slate-800"
+        : "bg-neutral-800"
+    }`}
+  >
+    {" "}
     <OrderStatus order={order} onDispatch={onDispatch} onPayment={onPayment} />
     <p className="mb-2 ">
       Date: {formatDate(order.createdAt)}{" "}
@@ -359,7 +367,15 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
   onDispatch,
   onPayment,
 }) => (
-  <div className="bg-neutral-800 rounded-lg p-4">
+  <div
+    className={`rounded-lg p-4 ${
+      order.selectedLocation.includes("Sevoke Road") &&
+      order.tableDeliveryCharge
+        ? "bg-slate-800"
+        : "bg-neutral-800"
+    }`}
+  >
+    {" "}
     <OrderStatus order={order} onDispatch={onDispatch} onPayment={onPayment} />
     <p className="mb-2">
       Date: {formatDate(order.createdAt)}{" "}
