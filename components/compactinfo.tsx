@@ -36,8 +36,8 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     orders.every((order) => order.status === "fulfilled")
   );
   const [isRejected, setIsRejected] = useState(
-    orders.every(
-      (order) => order.order === "rejected" && order.status === "rejected"
+    orders.some(
+      (order) => order.order === "rejected" || order.status === "rejected"
     )
   );
   const [dispatchCountdown, setDispatchCountdown] = useState<number | null>(
