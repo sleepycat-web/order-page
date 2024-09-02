@@ -1,4 +1,5 @@
 "use client";
+import CallListDropdown from "@/components/listcall";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import CompactOrderInfo from "@/components/compactinfo";
 import { SingleItemOrder, MultiItemOrder } from "@/components/orderitem";
@@ -462,6 +463,23 @@ export default function OrderPage() {
       </div>
     );
   };
+  const capitalizeFirstLetter = (string: string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  const combinedOrders = (orders: Order[]) => {
+    return orders.reduce((acc, order) => {
+      const phoneNumber = order.phoneNumber; // Use phone number as the key
+      if (!acc[phoneNumber]) {
+        acc[phoneNumber] = [];
+      }
+      acc[phoneNumber].push({
+        ...order,
+        status: capitalizeFirstLetter(order.order), // Capitalize the status
+      });
+      return acc;
+    }, {} as { [key: string]: Order[] });
+  };
 
   return (
     <>
@@ -482,7 +500,16 @@ export default function OrderPage() {
           orderRefs={orderRefs}
           setHighlightedOrderId={setHighlightedOrderId}
         />
-
+        {(activeTab === "new" || activeTab === "active") && (
+          <div className="">
+            <CallListDropdown
+              orders={combinedOrders([
+                ...Object.values(groupedOrders.new).flat(),
+                ...Object.values(groupedOrders.active).flat(),
+              ])} // Pass the grouped orders as an object
+            />
+          </div>
+        )}
         <div className="mb-8">
           <OrderTabs
             activeTab={activeTab}
@@ -501,33 +528,7 @@ export default function OrderPage() {
 
         {activeTab === "previous" && (
           <div className="mb-8">
-            {Object.values(groupedOrders.previous).some((orders) =>
-              orders.some((order) =>
-                order.selectedLocation.includes("Sevoke Road")
-              )
-            ) && (
-              <div className="mb-4">
-                <span className="bg-teal-600 p-2 rounded">
-                  <span className="font-semibold">
-                    Total tips for the day:{" "}
-                  </span>
-                  <span className="">
-                    ₹{calculateTotalDeliveryCharges(groupedOrders.previous)}
-                  </span>
-                </span>
-              </div>
-            )}
-
-            {/* Total Sales */}
-            <div className="mb-4">
-              <span className="bg-lime-600 p-2 rounded">
-                <span className="font-semibold">Total sales for the day: </span>
-                <span className="">
-                  ₹{calculateTotalSales(groupedOrders.previous)}
-                </span>
-              </span>
-            </div>
-
+            {/* Existing JSX... */}
             {renderOrders(groupedOrders.previous)}
           </div>
         )}
