@@ -115,15 +115,27 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
   </div>
 );
 
-const Timer: React.FC<TimerProps> = ({ startTime, isDispatched,isRejected }) => {
+const Timer: React.FC<TimerProps> = ({
+  startTime,
+  isDispatched,
+  isRejected,
+}) => {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isCountingUp, setIsCountingUp] = useState<boolean>(false);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
       const start = new Date(startTime).getTime();
       const now = new Date().getTime();
       const difference = start + 15 * 60 * 1000 - now;
-      return difference > 0 ? Math.floor(difference / 1000) : null;
+
+      if (difference > 0) {
+        setIsCountingUp(false);
+        return Math.floor(difference / 1000); // Initial countdown (15 mins to 0)
+      } else {
+        setIsCountingUp(true);
+        return Math.floor((now - start - 15 * 60 * 1000) / 1000); // Count-up timer after 15 mins
+      }
     };
 
     setTimeLeft(calculateTimeLeft());
@@ -134,28 +146,32 @@ const Timer: React.FC<TimerProps> = ({ startTime, isDispatched,isRejected }) => 
     return () => clearInterval(timer);
   }, [startTime]);
 
-  if (isDispatched && timeLeft !== null) {
+  if (isDispatched && !isCountingUp) {
     return (
-     
-      <span className="bg-green-500 p-1 ml-1 text-sm rounded ">
-        On Time
-      </span>
+      <span className="bg-green-500 p-1 ml-1 text-sm rounded">On Time</span>
     );
   }
+
   if (isRejected) {
     return (
-      <span className="bg-red-500 p-1 ml-1 text-sm rounded ">
-        Rejected
+      <span className="bg-red-500 p-1 ml-1 text-sm rounded">Rejected</span>
+    );
+  }
+
+  if (isCountingUp && timeLeft !== null && timeLeft <= 15 * 60) {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+
+    return (
+      <span className="bg-orange-500 p-1 rounded ml-1 text-sm font-bold">
+        -{minutes.toString().padStart(2, "0")}:
+        {seconds.toString().padStart(2, "0")}
       </span>
     );
   }
 
-  if (timeLeft === null) {
-    return (
-      <span className="bg-red-500 p-1 ml-1 text-sm rounded ">
-        Time up
-      </span>
-    );
+  if (timeLeft === null || (isCountingUp && timeLeft > 15 * 60)) {
+    return <span className="bg-red-500 p-1 ml-1 text-sm rounded">Time up</span>;
   }
 
   const minutes = Math.floor(timeLeft / 60);
@@ -168,6 +184,7 @@ const Timer: React.FC<TimerProps> = ({ startTime, isDispatched,isRejected }) => 
     </span>
   );
 };
+
 
 const OrderStatus: React.FC<OrderComponentProps> = ({
   order,

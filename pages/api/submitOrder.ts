@@ -37,7 +37,7 @@ export default async function handler(
     // Get current date and time
     const now = new Date();
     // now.setHours(now.getHours() + 5); // Add 5 hours for IST
-    // now.setMinutes(now.getMinutes() + 30); // Add 30 minutes for IST
+    now.setMinutes(now.getMinutes() - 14); // Add 30 minutes for IST
 
     const orderDocument = {
       items,
