@@ -15,7 +15,8 @@ interface CompactInfoProps {
   onDispatchAll: (orderIds: string[]) => void;
   onFulfillAll: (orderIds: string[]) => void;
   onRejectAll: (orderIds: string[]) => Promise<void>;
-  activeTab: "new" | "active" | "previous"; // Add this line
+  activeTab: "new" | "active" | "previous"; // Add this line    
+  onToggle: (isExpanded: boolean) => void;
 }
 
 const CompactInfo: React.FC<CompactInfoProps> = ({
@@ -25,10 +26,12 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   total,
   orders,
   onDispatchAll,
+  onToggle,
   onFulfillAll,
   onRejectAll,
   activeTab,
 }) => {
+  
   const [isDispatched, setIsDispatched] = useState(
     orders.every((order) => order.order === "dispatched")
   );
@@ -46,6 +49,13 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   const [dispatchTimeoutId, setDispatchTimeoutId] =
     useState<NodeJS.Timeout | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+ const [isExpanded, setIsExpanded] = useState(false);
+
+ const handleToggle = () => {
+   const newExpandedState = !isExpanded;
+   setIsExpanded(newExpandedState);
+   onToggle(newExpandedState);
+ };
 
   const handleDispatchAll = () => {
     const orderIds = orders
@@ -94,7 +104,19 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   const handleRejectAll = () => {
     setIsRejectModalOpen(true);
   };
-
+  const handleContainerClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    // Prevent toggling if the click is on a button or interactive element
+    if (
+      event.target instanceof HTMLElement &&
+      (event.target.tagName === "BUTTON" ||
+        event.target.tagName === "A" ||
+        event.target.closest("button") ||
+        event.target.closest("a"))
+    ) {
+      return;
+    }
+    handleToggle();
+  };
   const confirmReject = async () => {
     const orderIds = orders.map((order) => order._id);
     try {
@@ -110,7 +132,10 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     }
   };
   return (
-    <div className="bg-neutral-800 py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-4 flex flex-wrap lg:flex-nowrap lg:justify-between">
+    <div
+      onClick={handleContainerClick}
+      className="bg-neutral-800 py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-4 flex flex-wrap lg:flex-nowrap lg:justify-between"
+    >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 w-full lg:w-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 w-full">
           <div className="flex items-center gap-2">
@@ -200,6 +225,20 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
             Total: ₹{nonRejectedTotal}
           </div>
         </div>
+        <button onClick={handleToggle} className="ml-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 320 512"
+            className={`w-4 h-4 transition-transform duration-300 ${
+              isExpanded ? "rotate-180" : ""
+            }`}
+          >
+            <path
+              fill="currentColor"
+              d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"
+            />
+          </svg>
+        </button>
       </div>
       {/* Reject Confirmation Modal */}
       <input

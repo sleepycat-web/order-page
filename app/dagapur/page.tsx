@@ -67,7 +67,16 @@ export default function OrderPage() {
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(
     null
   );
+  const [expandedOrders, setExpandedOrders] = useState<{
+    [key: string]: boolean;
+  }>({});
 
+  const handleOrderToggle = (phoneNumber: string, isExpanded: boolean) => {
+    setExpandedOrders((prev) => ({
+      ...prev,
+      [phoneNumber]: isExpanded,
+    }));
+  };
   const handleRejectAll = async (orderIds: string[]) => {
     try {
       const response = await fetch("/api/updateOrderStatus", {
@@ -426,36 +435,43 @@ export default function OrderPage() {
                 onFulfillAll={handleFulfillAll}
                 onRejectAll={handleRejectAll}
                 activeTab={activeTab}
+                onToggle={(isExpanded) =>
+                  handleOrderToggle(phoneNumber, isExpanded)
+                }
               />
 
-              {singleItemOrders.length > 0 && (
-                <div className="mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {sortOrders(singleItemOrders).map((order) => (
-                      <SingleItemOrder
-                        key={order._id}
-                        order={order}
-                        onDispatch={handleDispatchSms}
-                        onPayment={handlePayment}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              {expandedOrders[phoneNumber] && (
+                <>
+                  {singleItemOrders.length > 0 && (
+                    <div className="mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {sortOrders(singleItemOrders).map((order) => (
+                          <SingleItemOrder
+                            key={order._id}
+                            order={order}
+                            onDispatch={handleDispatchSms}
+                            onPayment={handlePayment}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {multiItemOrders.length > 0 && (
-                <div className="mt-4">
-                  <div className="space-y-4">
-                    {sortOrders(multiItemOrders).map((order) => (
-                      <MultiItemOrder
-                        key={order._id}
-                        order={order}
-                        onDispatch={handleDispatchSms}
-                        onPayment={handlePayment}
-                      />
-                    ))}
-                  </div>
-                </div>
+                  {multiItemOrders.length > 0 && (
+                    <div className="mt-4">
+                      <div className="space-y-4">
+                        {sortOrders(multiItemOrders).map((order) => (
+                          <MultiItemOrder
+                            key={order._id}
+                            order={order}
+                            onDispatch={handleDispatchSms}
+                            onPayment={handlePayment}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );

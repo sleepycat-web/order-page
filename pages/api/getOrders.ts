@@ -37,7 +37,7 @@ export default async function handler(
     // Get the current date in IST
     const now = new Date();
     // now.setHours(now.getHours() + 5); // Add 5 hours for IST
-    // now.setMinutes(now.getMinutes() + 30); // Add 30 minutes for IST
+    now.setMinutes(now.getMinutes() - 30); // Add 30 minutes for IST
 
     // Set the start of the day (midnight) in IST
     const startOfDay = new Date(now);
