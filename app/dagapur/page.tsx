@@ -56,7 +56,6 @@ export default function OrderPage() {
   const [lastUpdatedOrderId, setLastUpdatedOrderId] = useState<string | null>(
     null
   );
-
   const orderRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>(
     {}
   );
@@ -70,7 +69,32 @@ export default function OrderPage() {
   const [expandedOrders, setExpandedOrders] = useState<{
     [key: string]: boolean;
   }>({});
+  const [isNewTabFirstOpen, setIsNewTabFirstOpen] = useState(true);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>("default");
 
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission().then((permission) => {
+        setNotificationPermission(permission);
+      });
+    }
+  }, []);
+  const sendNotification = useCallback(
+    (title: string, body: string) => {
+      if (notificationPermission === "granted") {
+        new Notification(title, { body });
+      }
+    },
+    [notificationPermission]
+  );
+
+  const handleTabChange = (tab: "new" | "active" | "previous") => {
+    setActiveTab(tab);
+    if (tab !== "new") {
+      setIsNewTabFirstOpen(false);
+    }
+  };
   const handleOrderToggle = (phoneNumber: string, isExpanded: boolean) => {
     setExpandedOrders((prev) => ({
       ...prev,
@@ -160,6 +184,20 @@ export default function OrderPage() {
 
         // Compare new orders with current orders to detect updates
         if (orders.length > 0) {
+          const newOrders = data.filter(
+            (newOrder: Order) =>
+              !orders.some(
+                (existingOrder) => existingOrder._id === newOrder._id
+              )
+          );
+
+          if (newOrders.length > 0) {
+            sendNotification(
+              "New Order Received",
+              `${newOrders.length} new order have been placed.`
+            );
+          }
+
           const updatedOrderId = data.find((newOrder: Order) => {
             const currentOrder = orders.find(
               (order) => order._id === newOrder._id
@@ -173,6 +211,10 @@ export default function OrderPage() {
 
           if (updatedOrderId) {
             setLastUpdatedOrderId(updatedOrderId);
+            // sendNotification(
+            //   "Order Updated",
+            //   `Order ${updatedOrderId} has been updated.`
+            // );
           }
         }
 
@@ -186,7 +228,8 @@ export default function OrderPage() {
     fetchOrders();
     const intervalId = setInterval(fetchOrders, 3000);
     return () => clearInterval(intervalId);
-  }, [orders]);
+  }, [orders, sendNotification, slug]);
+
   useEffect(() => {
     if (lastUpdatedOrderId && orderRefs.current[lastUpdatedOrderId]) {
       const ref = orderRefs.current[lastUpdatedOrderId];
@@ -337,8 +380,8 @@ export default function OrderPage() {
       let key: "new" | "active" | "previous";
       if (
         order.status === "fulfilled" ||
-        order.status === "rejected" || // This line ensures all rejected orders go to "previous"
-        order.order === "rejected" // This line catches any order marked as rejected
+        order.status === "rejected" ||
+        order.order === "rejected"
       ) {
         key = "previous";
       } else if (order.order === "dispatched" && order.status !== "fulfilled") {
@@ -347,29 +390,32 @@ export default function OrderPage() {
         key = "new";
       }
       if (!acc[key]) {
-        acc[key] = {};
+        acc[key] = [];
       }
-      if (!acc[key][order.phoneNumber]) {
-        acc[key][order.phoneNumber] = [];
-      }
-      acc[key][order.phoneNumber].push(order);
+      acc[key].push(order);
       return acc;
     },
-    { new: {}, active: {}, previous: {} } as {
-      [key in "new" | "active" | "previous"]: { [key: string]: Order[] };
+    { new: [], active: [], previous: [] } as {
+      [key in "new" | "active" | "previous"]: Order[];
     }
   );
 
   const counts = {
-    new: Object.keys(groupedOrders.new).length,
-    active: Object.keys(groupedOrders.active).length,
-    previous: Object.keys(groupedOrders.previous).length,
+    new: groupedOrders.new.length,
+    active: groupedOrders.active.length,
+    previous: groupedOrders.previous.length,
   };
 
-  const renderOrders = (orders: { [key: string]: Order[] }) => {
-    // Sort the order groups based on the most recent order in each group
+  const renderOrders = (orders: Order[]) => {
+    const groupedByPhone = orders.reduce((acc, order) => {
+      if (!acc[order.phoneNumber]) {
+        acc[order.phoneNumber] = [];
+      }
+      acc[order.phoneNumber].push(order);
+      return acc;
+    }, {} as { [key: string]: Order[] });
 
-    const sortedOrderEntries = Object.entries(orders).sort((a, b) => {
+    const sortedOrderEntries = Object.entries(groupedByPhone).sort((a, b) => {
       const latestOrderA = a[1].reduce((latest, current) =>
         new Date(current.createdAt) > new Date(latest.createdAt)
           ? current
@@ -438,6 +484,7 @@ export default function OrderPage() {
                 onToggle={(isExpanded) =>
                   handleOrderToggle(phoneNumber, isExpanded)
                 }
+                isNewTabFirstOpen={isNewTabFirstOpen}
               />
 
               {expandedOrders[phoneNumber] && (
@@ -529,7 +576,7 @@ export default function OrderPage() {
         <div className="mb-8">
           <OrderTabs
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleTabChange}
             counts={counts}
           />
         </div>

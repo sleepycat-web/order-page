@@ -15,8 +15,9 @@ interface CompactInfoProps {
   onDispatchAll: (orderIds: string[]) => void;
   onFulfillAll: (orderIds: string[]) => void;
   onRejectAll: (orderIds: string[]) => Promise<void>;
-  activeTab: "new" | "active" | "previous"; // Add this line    
+  activeTab: "new" | "active" | "previous"; // Add this line
   onToggle: (isExpanded: boolean) => void;
+  isNewTabFirstOpen: boolean; // Add this prop
 }
 
 const CompactInfo: React.FC<CompactInfoProps> = ({
@@ -30,8 +31,8 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   onFulfillAll,
   onRejectAll,
   activeTab,
+  isNewTabFirstOpen,
 }) => {
-  
   const [isDispatched, setIsDispatched] = useState(
     orders.every((order) => order.order === "dispatched")
   );
@@ -49,13 +50,22 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   const [dispatchTimeoutId, setDispatchTimeoutId] =
     useState<NodeJS.Timeout | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
- const [isExpanded, setIsExpanded] = useState(false);
+const [isExpanded, setIsExpanded] = useState(
+  isNewTabFirstOpen && activeTab === "new"
+);
 
- const handleToggle = () => {
-   const newExpandedState = !isExpanded;
-   setIsExpanded(newExpandedState);
-   onToggle(newExpandedState);
- };
+useEffect(() => {
+  if (isNewTabFirstOpen && activeTab === "new") {
+    setIsExpanded(true);
+    onToggle(true);
+  }
+}, [isNewTabFirstOpen, activeTab, onToggle]);
+
+const handleToggle = () => {
+  const newExpandedState = !isExpanded;
+  setIsExpanded(newExpandedState);
+  onToggle(newExpandedState);
+};
 
   const handleDispatchAll = () => {
     const orderIds = orders
