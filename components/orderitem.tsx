@@ -46,7 +46,10 @@ interface Order {
   dispatchedAt?: string;
   fulfilledAt?: string;
   rejectedAt?: string;
+  phoneNumber: string; // Add this line
+  customerName: string; // Add this line
 }
+
 
 interface OrderItemProps {
   item: {
@@ -66,7 +69,9 @@ interface OrderComponentProps {
 
 interface TimerProps {
   startTime: string;
+  dispatchTime?: string; // Optional, since it might not be available initially
   isDispatched: boolean;
+  isFulfilled: boolean;
   isRejected: boolean;
 }
 
@@ -115,42 +120,41 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
   </div>
 );
 
-const Timer: React.FC<TimerProps> = ({
-  startTime,
-  isDispatched,
-  isRejected,
-}) => {
+const Timer: React.FC<{
+  startTime: string;
+  isDispatched: boolean;
+  isRejected: boolean;
+  isFulfilled: boolean;
+}> = ({ startTime, isDispatched, isRejected, isFulfilled }) => {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [isCountingUp, setIsCountingUp] = useState<boolean>(false);
+  const [isCountingUp, setIsCountingUp] = useState(false);
 
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const start = new Date(startTime).getTime();
-      const now = new Date().getTime();
-      const difference = start + 15 * 60 * 1000 - now;
+    const startTimestamp = new Date(startTime).getTime();
+    const duration = 15 * 60 * 1000; // 15 minutes
 
-      if (difference > 0) {
-        setIsCountingUp(false);
-        return Math.floor(difference / 1000); // Initial countdown (15 mins to 0)
-      } else {
-        setIsCountingUp(true);
-        return Math.floor((now - start - 15 * 60 * 1000) / 1000); // Count-up timer after 15 mins
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const elapsedTime = now - startTimestamp;
+
+      if (elapsedTime < duration && !isDispatched) {
+        // Counting down
+        return Math.max(0, duration - elapsedTime);
+      } else if (isDispatched) {
+        // Counting up (negative values represent time past dispatch)
+        return elapsedTime - duration;
       }
+      return 0;
     };
 
-    setTimeLeft(calculateTimeLeft());
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
+      const newTimeLeft = calculateTimeLeft();
+      setTimeLeft(newTimeLeft);
+      setIsCountingUp(newTimeLeft > 0 && isDispatched);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [startTime]);
-
-  if (isDispatched && !isCountingUp) {
-    return (
-      <span className="bg-green-500 p-1 ml-1 text-sm rounded">On Time</span>
-    );
-  }
+  }, [startTime, isDispatched]);
 
   if (isRejected) {
     return (
@@ -158,32 +162,28 @@ const Timer: React.FC<TimerProps> = ({
     );
   }
 
-  if (isCountingUp && timeLeft !== null && timeLeft <= 15 * 60) {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-
-    return (
-      <span className="bg-orange-500 p-1 rounded ml-1 text-sm font-bold">
-        -{minutes.toString().padStart(2, "0")}:
-        {seconds.toString().padStart(2, "0")}
-      </span>
-    );
+  if (isFulfilled || timeLeft === null) {
+    return null;
   }
 
-  if (timeLeft === null || (isCountingUp && timeLeft > 15 * 60)) {
-    return <span className="bg-red-500 p-1 ml-1 text-sm rounded">Time up</span>;
-  }
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
+  const minutes = Math.floor(Math.abs(timeLeft) / (60 * 1000));
+  const seconds = Math.floor((Math.abs(timeLeft) % (60 * 1000)) / 1000);
 
   return (
-    <span className="bg-yellow-500 p-1 rounded ml-1 text-sm font-bold">
+    <span
+      className={`p-1 rounded ml-1 text-sm font-bold ${
+        isCountingUp ? "bg-orange-500" : "bg-yellow-500"
+      }`}
+    >
+      {isCountingUp ? "-" : ""}
       {minutes.toString().padStart(2, "0")}:
       {seconds.toString().padStart(2, "0")}
     </span>
   );
 };
+ 
+
+
 
 
 const OrderStatus: React.FC<OrderComponentProps> = ({
@@ -317,6 +317,7 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
       <Timer
         startTime={order.updatedAt || order.createdAt}
         isDispatched={order.order === "dispatched"}
+        isFulfilled={order.status === "fulfilled"}
         isRejected={order.order === "rejected" || order.status === "rejected"}
       />{" "}
     </p>
@@ -383,6 +384,7 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
         startTime={order.updatedAt || order.createdAt}
         isDispatched={order.order === "dispatched"}
         isRejected={order.order === "rejected" || order.status === "rejected"}
+        isFulfilled={order.order === "fulfilled"}
       />{" "}
     </p>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
@@ -435,33 +437,61 @@ const OrderManagementPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
 
-  const handleDispatch = async (orderId: string) => {
-    try {
-      const response = await axios.post("/api/updateOrderStatus", {
-        orderId,
-        type: "/dispatch",
+const handleDispatch = async (orderId: string) => {
+  try {
+    const order = orders.find((o) => o._id === orderId);
+
+    if (!order) return; // Early return if order not found
+
+    // Check if the order contains only disallowed items
+    const disallowedItems = order.items.every(
+      (item) =>
+        (item.item.name === "Beverages" &&
+          item.selectedOptions["Select Beverage"]?.includes("Water")) ||
+        (item.item.name === "Others" &&
+          item.selectedOptions["Cigarette"]?.length > 0)
+    );
+
+    // Update order status first
+    const response = await axios.post("/api/updateOrderStatus", {
+      orderId,
+      type: "/dispatch",
+    });
+
+    if (response.status === 200) {
+      const { dispatchedAt } = response.data.updatedFields;
+      setOrders(
+        orders.map((order) =>
+          order._id === orderId
+            ? {
+                ...order,
+                order: "dispatched",
+                dispatchedAt: dispatchedAt,
+              }
+            : order
+        )
+      );
+
+      // Send SMS confirmation
+      const { phoneNumber, customerName } = order; // Make sure these properties exist on your order
+      const smsResponse = await axios.post("/api/sendConfirmationSms", {
+        phoneNumber,
+        customerName,
       });
 
-      if (response.status === 200) {
-        const { dispatchedAt } = response.data.updatedFields;
-        setOrders(
-          orders.map((order) =>
-            order._id === orderId
-              ? {
-                  ...order,
-                  order: "dispatched",
-                  dispatchedAt: dispatchedAt,
-                }
-              : order
-          )
-        );
+      if (smsResponse.status === 200) {
+        console.log("Confirmation SMS sent successfully.");
       } else {
-        console.error("Failed to update order status");
+        console.error("Failed to send confirmation SMS.");
       }
-    } catch (error) {
-      console.error("Error updating order status:", error);
+    } else {
+      console.error("Failed to update order status");
     }
-  };
+  } catch (error) {
+    console.error("Error updating order status:", error);
+  }
+};
+
 
   const handlePayment = async (orderId: string) => {
     try {

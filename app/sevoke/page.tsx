@@ -5,49 +5,8 @@ import CompactOrderInfo from "@/components/compactinfo";
 import { SingleItemOrder, MultiItemOrder } from "@/components/orderitem";
 import OrderTabs from "@/components/tabview"; // Adjust the import path as needed
 import OrderSearch from "@/components/searchbox"; // Adjust the import path as needed
+import { Order } from "@/scripts/interface";
 
-
-interface OrderItem {
-  item: {
-    name: string;
-    price: string;
-    customizationOptions: Array<{
-      name: string;
-      type: string;
-      options: Array<{
-        label: string;
-        price: string;
-      }>;
-    }>;
-  };
-  selectedOptions: {
-    [key: string]: string[];
-  };
-  quantity: number;
-  specialRequests: string;
-  totalPrice: number;
-}
-
-interface Order {
-  _id: string;
-  items: OrderItem[];
-  selectedLocation: string;
-  selectedCabin: string;
-  total: number;
-  appliedPromo?: {
-    code: string;
-    percentage: number;
-  };
-  phoneNumber: string;
-  customerName: string;
-  status: string;
-  order: string;
-  createdAt: string;
-  updatedAt?: string;
-  dispatchedAt?: string;
-  fulfilledAt?: string;
-  tableDeliveryCharge?: number;
-}
 
 export default function OrderPage() {
   const slug = "sevoke";
@@ -326,22 +285,36 @@ const sendNotification = useCallback(
     }
   };
 
-  const handleDispatchAll = async (orderIds: string[]) => {
-    try {
-      // Update all orders to dispatched status
-      for (const orderId of orderIds) {
-        await handleDispatch(orderId);
-      }
+const handleDispatchAll = async (orderIds: string[]) => {
+  try {
+    for (const orderId of orderIds) {
+      const order = orders.find((o) => o._id === orderId);
 
-      // Send only one SMS for all dispatched orders
-      const firstOrder = orders.find((o) => orderIds.includes(o._id));
-      if (firstOrder) {
-        await sendDispatchSms(firstOrder.phoneNumber, firstOrder.customerName);
+      if (order) {
+        // Check if the order contains only disallowed items
+        const disallowedItems = order.items.every(
+          (item) =>
+            (item.item.name === "Beverages" &&
+              item.selectedOptions["Select Beverage"]?.includes("Water")) ||
+            (item.item.name === "Others" &&
+              item.selectedOptions["Cigarette"]?.length > 0)
+        );
+
+        // If there are items that are not disallowed, proceed with dispatch and send OTP
+        if (!disallowedItems) {
+          await handleDispatch(orderId);
+          await sendDispatchSms(order.phoneNumber, order.customerName);
+        }
+        else {
+                    await handleDispatch(orderId);
+
+        }
       }
-    } catch (error) {
-      console.error("Error dispatching all orders:", error);
     }
-  };
+  } catch (error) {
+    console.error("Error dispatching all orders:", error);
+  }
+};
 
   const handleFulfillAll = async (orderIds: string[]) => {
     for (const orderId of orderIds) {

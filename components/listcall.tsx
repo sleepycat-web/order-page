@@ -1,45 +1,6 @@
 import React, { useState } from "react";
-interface OrderItem {
-  item: {
-    name: string;
-    price: string;
-    customizationOptions: Array<{
-      name: string;
-      type: string;
-      options: Array<{
-        label: string;
-        price: string;
-      }>;
-    }>;
-  };
-  selectedOptions: {
-    [key: string]: string[];
-  };
-  quantity: number;
-  specialRequests: string;
-  totalPrice: number;
-}
+import { Order,OrderItem } from "@/scripts/interface";
 
-interface Order {
-  _id: string;
-  items: OrderItem[];
-  selectedLocation: string;
-  selectedCabin: string;
-  total: number;
-  appliedPromo?: {
-    code: string;
-    percentage: number;
-  };
-  phoneNumber: string;
-  customerName: string;
-  status: string;
-  order: string;
-  createdAt: string;
-  updatedAt?: string;
-  dispatchedAt?: string;
-  fulfilledAt?: string;
-  tableDeliveryCharge?: number;
-}
 
 interface CallListDropdownProps {
   orders: { [key: string]: Order[] };

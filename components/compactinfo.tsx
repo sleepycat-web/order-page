@@ -1,24 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 
-interface CompactInfoProps {
-  customerName: string;
-  phoneNumber: string;
-  cabin: string;
-  total: number;
-  orders: {
-    _id: string;
-    order: string;
-    status: string;
-    price: number;
-  }[];
-  onDispatchAll: (orderIds: string[]) => void;
-  onFulfillAll: (orderIds: string[]) => void;
-  onRejectAll: (orderIds: string[]) => Promise<void>;
-  activeTab: "new" | "active" | "previous"; // Add this line
-  onToggle: (isExpanded: boolean) => void;
-  isNewTabFirstOpen: boolean; // Add this prop
-}
+import { CompactInfoProps } from "@/scripts/interface";
 
 const CompactInfo: React.FC<CompactInfoProps> = ({
   customerName,

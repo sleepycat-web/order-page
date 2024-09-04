@@ -1,13 +1,7 @@
 import React, { useState, Dispatch, SetStateAction } from 'react';
+import { Order } from "@/scripts/interface";
 
-interface Order {
-  _id: string;
-  customerName: string;
-  phoneNumber: string;
-  status: string;
-  order: string;
-  // Add any other properties that your Order type has
-}
+
 
 interface OrderSearchProps {
   orders: Order[];
