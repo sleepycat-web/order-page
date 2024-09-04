@@ -59,7 +59,7 @@ export default function OrderPage() {
   const orderRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>(
     {}
   );
-
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [activeTab, setActiveTab] = useState<"new" | "active" | "previous">(
     "new"
   );
@@ -194,8 +194,13 @@ export default function OrderPage() {
           if (newOrders.length > 0) {
             sendNotification(
               "New Order Received",
-              `${newOrders.length} new order have been placed.`
+              `${newOrders.length} new order has been placed.`
             );
+            if (audioRef.current) {
+              audioRef.current.play().catch((error) => {
+                console.error("Audio playback failed:", error);
+              });
+            }
           }
 
           const updatedOrderId = data.find((newOrder: Order) => {
@@ -236,6 +241,8 @@ export default function OrderPage() {
       ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [lastUpdatedOrderId]);
+
+  
   const sendDispatchSms = async (phoneNumber: string, customerName: string) => {
     try {
       const response = await fetch("/api/sendConfirmationplc", {
@@ -486,7 +493,7 @@ export default function OrderPage() {
                 }
                 isNewTabFirstOpen={isNewTabFirstOpen}
               />
-
+              <audio ref={audioRef} src="/alarm.mp3" />
               {expandedOrders[phoneNumber] && (
                 <>
                   {singleItemOrders.length > 0 && (

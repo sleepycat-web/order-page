@@ -56,7 +56,7 @@ export default function OrderPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdatedOrderId, setLastUpdatedOrderId] = useState<string | null>(  null );
   const orderRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>(  {} );
-
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [activeTab, setActiveTab] = useState<"new" | "active" | "previous">(  "new" );
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(  null);
   const [expandedOrders, setExpandedOrders] = useState<{   [key: string]: boolean;}>({});
@@ -185,8 +185,13 @@ const sendNotification = useCallback(
           if (newOrders.length > 0) {
             sendNotification(
               "New Order Received",
-              `${newOrders.length} new order have been placed.`
+              `${newOrders.length} new order has been placed.`
             );
+            if (audioRef.current) {
+              audioRef.current.play().catch((error) => {
+                console.error("Audio playback failed:", error);
+              });
+            }
           }
 
           const updatedOrderId = data.find((newOrder: Order) => {
@@ -229,9 +234,11 @@ const sendNotification = useCallback(
       ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [lastUpdatedOrderId]);
+
+  
   const sendDispatchSms = async (phoneNumber: string, customerName: string) => {
     try {
-      const response = await fetch("/api/sendConfirmationplc", {
+      const response = await fetch("/api/sendConfirmation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -482,7 +489,7 @@ const sendNotification = useCallback(
                }
                isNewTabFirstOpen={isNewTabFirstOpen}
              />
-
+             <audio ref={audioRef} src="/alarm.mp3" />
              {expandedOrders[phoneNumber] && (
                <>
                  {singleItemOrders.length > 0 && (
