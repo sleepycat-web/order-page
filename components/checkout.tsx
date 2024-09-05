@@ -332,11 +332,8 @@ const handleGetOtp = async () => {
         setCustomerName(userData.name.split(" ")[0]);
         setShowUserModal(false);
 
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        setGeneratedOtp(otp);
         setIsOtpSent(true);
         setTimer(30);
-        setOtpMessage(`Your OTP is: ${otp}`);
       } catch (error) {
         console.error("Error adding new user:", error);
         setOtpMessage("An error occurred. Please try again.");
@@ -457,7 +454,7 @@ if (isLoading) {
             {isOtpLoading ? (
               <div className="flex items-center justify-center">
                 <div className="text-white text-2xl">
-                  <span className="loading loading-spinner loading-lg"></span>
+                  <span className="loading loading-spinner loading-lg mt-1"></span>
                 </div>
               </div>
             ) : isOtpSent ? (

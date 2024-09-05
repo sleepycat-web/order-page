@@ -37,7 +37,7 @@ export default async function handler(
   sendSms.name = "CHMINE";
   sendSms.sender = "CHMINE";
   sendSms.recipient = formattedPhoneNumber;
-  sendSms.content = `Dear ${firstName}, your order has been dispatched. Thank you for choosing Chai Mine!`;
+  sendSms.content = `Dear ${firstName}, your order has been dispatched. Enjoy your meal!`;
 
   try {
     const response = await sendSmsApi.sendTransacSms(sendSms);
