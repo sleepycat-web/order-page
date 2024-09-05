@@ -56,6 +56,7 @@ const Checkout: React.FC<CheckoutProps> = ({
     useRef<HTMLInputElement>(null),
   ];
   const [isSubmitting, setIsSubmitting] = useState(false);
+const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
 
     const resetCheckoutState = () => {
       setOtpVerified(false);
@@ -274,58 +275,55 @@ const handleClose = () => {
    const validStartDigits = ["9", "8", "7", "6"];
    return number.length === 10 && validStartDigits.includes(number[0]);
  };
- const handleGetOtp = async () => {
-   if (!validatePhoneNumber(phoneNumber)) {
-     setPhoneError("Please enter a valid phone number");
-     setTimeout(() => setPhoneError(""), 5000);
-     return;
-   }
+const handleGetOtp = async () => {
+  if (!validatePhoneNumber(phoneNumber)) {
+    setPhoneError("Please enter a valid phone number");
+    setTimeout(() => setPhoneError(""), 5000);
+    return;
+  }
 
-   setIsOtpLoading(true);
+  setIsOtpLoading(true);
 
-   try {
-     // Parallel API calls
-     const [userExistsResponse, otpResponse] = await Promise.all([
-       checkUserExists(phoneNumber),
-       generateOtp(),
-     ]);
+  try {
+    // First, check if the user exists and their ban status
+    const { exists, banStatus } = await checkUserExists(phoneNumber);
 
-     const { exists, banStatus } = userExistsResponse;
+    if (banStatus) {
+      setIsBanned(true);
+      setShowUserModal(true);
+      return;
+    }
 
-     if (banStatus) {
-       setIsBanned(true);
-       setShowUserModal(true);
-       return;
-     }
+    if (!exists) {
+      setShowUserModal(true);
+      return;
+    }
 
-     if (exists) {
-       const fetchedUserData = await getUserData(phoneNumber);
-       setCustomerName(fetchedUserData.name.split(" ")[0]);
-     } else {
-       setShowUserModal(true);
-       return;
-     }
+    // If the user exists and is not banned, fetch user data
+    const fetchedUserData = await getUserData(phoneNumber);
+    setCustomerName(fetchedUserData.name.split(" ")[0]);
 
-     const otp = otpResponse.otp;
-     setGeneratedOtp(otp);
-     setIsOtpSent(true);
-     setTimer(30);
-     setOtpMessage(`Your OTP is: ${otp}`);
-   } catch (error) {
-     console.error("Error checking user or generating OTP:", error);
-     setOtpMessage("An error occurred. Please try again.");
-   } finally {
-     setIsOtpLoading(false);
-   }
- };
+    // Now, send the OTP
+    const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
 
- // Separate function for OTP generation
- const generateOtp = async () => {
-   const otp = Math.floor(1000 + Math.random() * 9000).toString();
-   // Simulate API call for OTP generation
-   await new Promise((resolve) => setTimeout(resolve, 100));
-   return { otp };
- };
+    if (otpResponse.status === 200) {
+      const { otp } = otpResponse.data;
+      setGeneratedOtp(otp);
+      setIsOtpSent(true);
+      setTimer(30);
+      setOtpMessage(`OTP sent successfully to ${phoneNumber}`);
+    } else {
+      setOtpMessage("Failed to send OTP. Please try again.");
+    }
+  } catch (error) {
+    console.error("Error checking user or sending OTP:", error);
+    setOtpMessage("An error occurred. Please try again.");
+  } finally {
+    setIsOtpLoading(false);
+  }
+};
+
+
 
   const handleUserDataSubmit = async () => {
     if (userData.name) {
@@ -431,13 +429,24 @@ if (isLoading) {
               />
               <button
                 className={`btn btn-primary rounded-l-none ${
-                  isGetOtpDisabled ? " cursor-not-allowed" : ""
+                  isGetOtpDisabled ? "cursor-not-allowed" : ""
                 }`}
                 onClick={handleGetOtp}
-                disabled={isGetOtpDisabled}
+                disabled={isGetOtpDisabled || !isCheckboxChecked}
               >
                 Get OTP
               </button>
+            </div>
+            <div className="flex items-center mt-1">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-sm"
+                checked={isCheckboxChecked}
+                onChange={(e) => setIsCheckboxChecked(e.target.checked)}
+              />
+              <span className="text-sm ml-2">
+                I agree to receive messages from Chai Mine
+              </span>
             </div>{" "}
             {phoneError && (
               <p className="text-red-500 text-sm mt-2">{phoneError}</p>
