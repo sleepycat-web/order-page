@@ -524,7 +524,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                       <p>Quantity: {item.quantity}</p>
                       <div className="mt-2 flex items-center">
                         <span className="mr-2">Price:</span>
-                        <div className="px-2 py-1 mb-0.5 bg-blue-600 rounded text-white font-semibold">
+                        <div className="px-2  mb-0.5  bg-blue-600 rounded text-white font-semibold">
                           ₹{(item.totalPrice * item.quantity).toFixed(2)}
                         </div>
                       </div>
