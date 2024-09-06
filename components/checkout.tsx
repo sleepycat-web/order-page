@@ -524,7 +524,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                       <p>Quantity: {item.quantity}</p>
                       <div className="mt-2 flex items-center">
                         <span className="mr-2">Price:</span>
-                        <div className="px-2 py-1 bg-blue-600 rounded text-white font-semibold">
+                        <div className="px-2 py-1 mb-0.5 bg-blue-600 rounded text-white font-semibold">
                           ₹{(item.totalPrice * item.quantity).toFixed(2)}
                         </div>
                       </div>
@@ -534,13 +534,13 @@ const Checkout: React.FC<CheckoutProps> = ({
                             key={optionName}
                             className="flex flex-wrap items-center gap-1 "
                           >
-                            <span className="text-sm py-2 text-gray-400">
+                            <span className="text-sm py-1 text-gray-400">
                               {optionName}:{" "}
                             </span>
                             {values.map((value) => (
                               <span
                                 key={value}
-                                className="text-sm px-2 py-0.5 rounded bg-blue-600 text-white"
+                                className="text-sm px-2 py-0.5  rounded bg-blue-600 text-white"
                               >
                                 {value}
                               </span>
@@ -549,8 +549,14 @@ const Checkout: React.FC<CheckoutProps> = ({
                         )
                       )}
                       {item.specialRequests && (
-                        <p className="text-sm text-gray-400 ">
-                          Special: {item.specialRequests}
+                        <p className="text-sm text-gray-400 mt-1 ">
+                          Special:
+                          <span
+                            key={item.specialRequests}
+                            className=" ml-1  text-sm px-2 py-1  rounded bg-blue-600 text-white"
+                          >
+                            {item.specialRequests}
+                          </span>
                         </p>
                       )}
                     </li>
