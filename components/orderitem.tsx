@@ -158,7 +158,7 @@ const Timer: React.FC<{
 
   if (isRejected) {
     return (
-      <span className="bg-red-500 p-1 ml-1 text-sm rounded">Rejected</span>
+      null
     );
   }
 
