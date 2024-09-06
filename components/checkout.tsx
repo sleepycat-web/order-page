@@ -32,7 +32,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   total,
   appliedPromo,
   onResetCart,
-   tableDelivery // Add this line
+  tableDelivery, // Add this line
 }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
@@ -56,28 +56,28 @@ const Checkout: React.FC<CheckoutProps> = ({
     useRef<HTMLInputElement>(null),
   ];
   const [isSubmitting, setIsSubmitting] = useState(false);
-const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
+  const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
 
-    const resetCheckoutState = () => {
-      setOtpVerified(false);
-      setPhoneNumber("");
-      setIsOtpSent(false);
-      setCustomerName("");
-      setOtpInputs(["", "", "", ""]);
-      setOtpMessage("");
-      setTimer(0);
-      setShowUserModal(false);
-      setOrderPlaced(false);
-      setIsBanned(false);
-      setPhoneError("");
+  const resetCheckoutState = () => {
+    setOtpVerified(false);
+    setPhoneNumber("");
+    setIsOtpSent(false);
+    setCustomerName("");
+    setOtpInputs(["", "", "", ""]);
+    setOtpMessage("");
+    setTimer(0);
+    setShowUserModal(false);
+    setOrderPlaced(false);
+    setIsBanned(false);
+    setPhoneError("");
   };
-    const subtotal = items.reduce(
-      (sum, item) => sum + item.totalPrice * item.quantity,
-      0
-    );
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.totalPrice * item.quantity,
+    0
+  );
 
-    // Calculate table delivery charge
-    const tableDeliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
+  // Calculate table delivery charge
+  const tableDeliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
   useEffect(() => {
     const handleUserBanned = () => {
       resetCheckoutState();
@@ -92,16 +92,16 @@ const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
     };
   }, []);
 
-const handleClose = () => {
-  if (orderPlaced) {
-    // If order is placed, reset everything and go to homepage
-    onResetCart();
-    onClose();
-  } else {
-    // If order is not placed, go back to cart
-    onClose();
-  }
-};
+  const handleClose = () => {
+    if (orderPlaced) {
+      // If order is placed, reset everything and go to homepage
+      onResetCart();
+      onClose();
+    } else {
+      // If order is not placed, go back to cart
+      onClose();
+    }
+  };
 
   const checkUserExists = async (
     phoneNumber: string
@@ -113,36 +113,34 @@ const handleClose = () => {
     return response.data;
   };
 
-    const handleConfirmOrder = async () => {
-      if (isSubmitting) return; // Prevent double submission
+  const handleConfirmOrder = async () => {
+    if (isSubmitting) return; // Prevent double submission
 
-      try {
-        setIsSubmitting(true);
-        const response = await axios.post("/api/submitOrder", {
-          items,
-          selectedLocation,
-          selectedCabin,
-          total,
-          appliedPromo,
-          phoneNumber,
-          customerName,
-          tableDeliveryCharge,
-        });
+    try {
+      setIsSubmitting(true);
+      const response = await axios.post("/api/submitOrder", {
+        items,
+        selectedLocation,
+        selectedCabin,
+        total,
+        appliedPromo,
+        phoneNumber,
+        customerName,
+        tableDeliveryCharge,
+      });
 
-        if (response.status === 200) {
-          console.log("Order submitted:", response.data.orderId);
-          setOrderPlaced(true);
-          onOrderSuccess();
-          onResetCart();
-        }
-      } catch (error) {
-        console.error("Error submitting order:", error);
-      } finally {
-        setIsSubmitting(false);
+      if (response.status === 200) {
+        console.log("Order submitted:", response.data.orderId);
+        setOrderPlaced(true);
+        onOrderSuccess();
+        onResetCart();
       }
-    };
-
-
+    } catch (error) {
+      console.error("Error submitting order:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const addNewUser = async (
     phoneNumber: string,
@@ -191,65 +189,64 @@ const handleClose = () => {
 
     return false;
   };
- useEffect(() => {
-   const checkVerificationAndBanStatus = async () => {
-     setIsLoading(true);
+  useEffect(() => {
+    const checkVerificationAndBanStatus = async () => {
+      setIsLoading(true);
 
-     if (shouldSkipOtp()) {
-       setOtpVerified(true);
-       setIsLoading(false);
-       return;
-     }
+      if (shouldSkipOtp()) {
+        setOtpVerified(true);
+        setIsLoading(false);
+        return;
+      }
 
-     const cachedVerification = localStorage.getItem("otpVerified");
-     if (cachedVerification) {
-       const {
-         verified,
-         expiry,
-         phoneNumber: cachedPhoneNumber,
-       } = JSON.parse(cachedVerification);
-       if (verified && new Date().getTime() < expiry) {
-         try {
-           const response = await axios.get(
-             `/api/banValidate?phoneNumber=${encodeURIComponent(
-               cachedPhoneNumber
-             )}`
-           );
-           if (response.data.isBanned) {
-             resetCheckoutState();
-             localStorage.removeItem("otpVerified");
-             localStorage.removeItem("userName");
-           } else {
-             setOtpVerified(true);
-             setIsOtpSent(true);
-             setPhoneNumber(cachedPhoneNumber);
-             const cachedName = localStorage.getItem("userName");
-             if (cachedName) {
-               setCustomerName(cachedName);
-             } else {
-               const userData = await getUserData(cachedPhoneNumber);
-               setCustomerName(userData.name.split(" ")[0]);
-             }
-           }
-         } catch (error) {
-           console.error("Error checking ban status:", error);
-           resetCheckoutState();
-         }
-       } else {
-         localStorage.removeItem("otpVerified");
-         localStorage.removeItem("userName");
-         resetCheckoutState();
-       }
-     } else {
-       resetCheckoutState();
-     }
+      const cachedVerification = localStorage.getItem("otpVerified");
+      if (cachedVerification) {
+        const {
+          verified,
+          expiry,
+          phoneNumber: cachedPhoneNumber,
+        } = JSON.parse(cachedVerification);
+        if (verified && new Date().getTime() < expiry) {
+          try {
+            const response = await axios.get(
+              `/api/banValidate?phoneNumber=${encodeURIComponent(
+                cachedPhoneNumber
+              )}`
+            );
+            if (response.data.isBanned) {
+              resetCheckoutState();
+              localStorage.removeItem("otpVerified");
+              localStorage.removeItem("userName");
+            } else {
+              setOtpVerified(true);
+              setIsOtpSent(true);
+              setPhoneNumber(cachedPhoneNumber);
+              const cachedName = localStorage.getItem("userName");
+              if (cachedName) {
+                setCustomerName(cachedName);
+              } else {
+                const userData = await getUserData(cachedPhoneNumber);
+                setCustomerName(userData.name.split(" ")[0]);
+              }
+            }
+          } catch (error) {
+            console.error("Error checking ban status:", error);
+            resetCheckoutState();
+          }
+        } else {
+          localStorage.removeItem("otpVerified");
+          localStorage.removeItem("userName");
+          resetCheckoutState();
+        }
+      } else {
+        resetCheckoutState();
+      }
 
-     setIsLoading(false);
-   };
+      setIsLoading(false);
+    };
 
-   checkVerificationAndBanStatus();
- }, [items]);
-
+    checkVerificationAndBanStatus();
+  }, [items]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -271,59 +268,62 @@ const handleClose = () => {
   const closeUserModal = () => {
     setShowUserModal(false);
   };
- const validatePhoneNumber = (number: string): boolean => {
-   const validStartDigits = ["9", "8", "7", "6"];
-   return number.length === 10 && validStartDigits.includes(number[0]);
- };
-const handleGetOtp = async () => {
-  if (!validatePhoneNumber(phoneNumber)) {
-    setPhoneError("Please enter a valid phone number");
-    setTimeout(() => setPhoneError(""), 5000);
-    return;
-  }
-
-  setIsOtpLoading(true);
-
-  try {
-    // First, check if the user exists and their ban status
-    const { exists, banStatus } = await checkUserExists(phoneNumber);
-
-    if (banStatus) {
-      setIsBanned(true);
-      setShowUserModal(true);
+  const validatePhoneNumber = (number: string): boolean => {
+    const validStartDigits = ["9", "8", "7", "6"];
+    return number.length === 10 && validStartDigits.includes(number[0]);
+  };
+  const handleGetOtp = async () => {
+    if (!validatePhoneNumber(phoneNumber)) {
+      setPhoneError("Please enter a valid phone number");
+      setTimeout(() => setPhoneError(""), 5000);
       return;
     }
 
-    if (!exists) {
-      setShowUserModal(true);
-      return;
-    }
+    setIsOtpLoading(true);
 
-    // If the user exists and is not banned, fetch user data
-    const fetchedUserData = await getUserData(phoneNumber);
-    setCustomerName(fetchedUserData.name.split(" ")[0]);
+    try {
+      // Parallel API calls
+      const [userExistsResponse, otpResponse] = await Promise.all([
+        checkUserExists(phoneNumber),
+        generateOtp(),
+      ]);
 
-    // Now, send the OTP
-    const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
+      const { exists, banStatus } = userExistsResponse;
 
-    if (otpResponse.status === 200) {
-      const { otp } = otpResponse.data;
+      if (banStatus) {
+        setIsBanned(true);
+        setShowUserModal(true);
+        return;
+      }
+
+      if (exists) {
+        const fetchedUserData = await getUserData(phoneNumber);
+        setCustomerName(fetchedUserData.name.split(" ")[0]);
+      } else {
+        setShowUserModal(true);
+        return;
+      }
+
+      const otp = otpResponse.otp;
       setGeneratedOtp(otp);
       setIsOtpSent(true);
       setTimer(30);
-      setOtpMessage(`OTP sent successfully to ${phoneNumber}`);
-    } else {
-      setOtpMessage("Failed to send OTP. Please try again.");
+      setOtpMessage(`Your OTP is: ${otp}`);
+    } catch (error) {
+      console.error("Error checking user or generating OTP:", error);
+      setOtpMessage("An error occurred. Please try again.");
+    } finally {
+      setIsOtpLoading(false);
     }
-  } catch (error) {
-    console.error("Error checking user or sending OTP:", error);
-    setOtpMessage("An error occurred. Please try again.");
-  } finally {
-    setIsOtpLoading(false);
-  }
-};
+  };
 
-
+  // Separate function for OTP generation
+  const generateOtp = async () => {
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    // Simulate API call for OTP generation
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    return { otp };
+  };
 
   const handleUserDataSubmit = async () => {
     if (userData.name) {
@@ -332,8 +332,11 @@ const handleGetOtp = async () => {
         setCustomerName(userData.name.split(" ")[0]);
         setShowUserModal(false);
 
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        setGeneratedOtp(otp);
         setIsOtpSent(true);
         setTimer(30);
+        setOtpMessage(`Your OTP is: ${otp}`);
       } catch (error) {
         console.error("Error adding new user:", error);
         setOtpMessage("An error occurred. Please try again.");
@@ -361,7 +364,6 @@ const handleGetOtp = async () => {
     }
   };
 
- 
   const handleVerifyOtp = async () => {
     const enteredOtp = otpInputs.join("");
     if (enteredOtp === generatedOtp) {
@@ -393,15 +395,15 @@ const handleGetOtp = async () => {
   };
 
   const isGetOtpDisabled = phoneNumber.length !== 10 || timer > 0;
-if (isLoading) {
-  return (
-    <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50">
-      <div className="text-white text-2xl">
-        <span className="loading loading-spinner loading-lg"></span>
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50">
+        <div className="text-white text-2xl">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
   return (
     <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50 overflow-y-auto">
       <div className="container bg-neutral-900 rounded-lg px-4 py-8 pb-16 md:pb-12  w-full h-full relative">
@@ -454,7 +456,7 @@ if (isLoading) {
             {isOtpLoading ? (
               <div className="flex items-center justify-center">
                 <div className="text-white text-2xl">
-                  <span className="loading loading-spinner loading-lg mt-1"></span>
+                  <span className="loading loading-spinner loading-lg"></span>
                 </div>
               </div>
             ) : isOtpSent ? (
