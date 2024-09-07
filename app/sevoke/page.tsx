@@ -9,17 +9,31 @@ import { Order } from "@/scripts/interface";
 
 
 export default function OrderPage() {
-  const slug = "sevoke";
-  const [orders, setOrders] = useState<Order[]>([]);
+const [slug, setSlug] = useState<string>("");  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdatedOrderId, setLastUpdatedOrderId] = useState<string | null>(  null );
-  const orderRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>(  {} );
+  const [lastUpdatedOrderId, setLastUpdatedOrderId] = useState<string | null>(
+    null
+  );
+  const orderRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>(
+    {}
+  );
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [activeTab, setActiveTab] = useState<"new" | "active" | "previous">(  "new" );
-  const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(  null);
-  const [expandedOrders, setExpandedOrders] = useState<{   [key: string]: boolean;}>({});
-  const [isNewTabFirstOpen, setIsNewTabFirstOpen] = useState(true);
+  const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(
+    null
+  );
+  const [activeTab, setActiveTab] = useState<"new" | "active" | "previous">(
+    "new"
+  );
+  const [expandedOrders, setExpandedOrders] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [tabInitialStates, setTabInitialStates] = useState({
+    new: true,
+    active: false,
+    previous: false,
+  });
+
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
 
@@ -30,20 +44,24 @@ export default function OrderPage() {
       });
     }
   }, []);
-const sendNotification = useCallback(
-  (title: string, body: string) => {
-    if (notificationPermission === "granted") {
-      new Notification(title, { body });
-    }
-  },
-  [notificationPermission]
-);
+   useEffect(() => {
+     if (typeof window !== "undefined") {
+       const pathSegments = window.location.pathname.split("/");
+       const urlSlug = pathSegments[pathSegments.length - 1];
+       setSlug(urlSlug || "default"); // Use 'default' or any fallback value if the slug is empty
+     }
+   }, []);
+  const sendNotification = useCallback(
+    (title: string, body: string) => {
+      if (notificationPermission === "granted") {
+        new Notification(title, { body });
+      }
+    },
+    [notificationPermission]
+  );
 
   const handleTabChange = (tab: "new" | "active" | "previous") => {
     setActiveTab(tab);
-    if (tab !== "new") {
-      setIsNewTabFirstOpen(false);
-    }
   };
   const handleOrderToggle = (phoneNumber: string, isExpanded: boolean) => {
     setExpandedOrders((prev) => ({
@@ -124,6 +142,7 @@ const sendNotification = useCallback(
   };
 
   useEffect(() => {
+     if (!slug) return;
     const fetchOrders = async () => {
       try {
         const response = await fetch(`/api/getOrders?slug=${slug}`);
@@ -185,8 +204,6 @@ const sendNotification = useCallback(
     return () => clearInterval(intervalId);
   }, [orders, sendNotification, slug]);
 
-
-  
   useEffect(() => {
     if (lastUpdatedOrderId && orderRefs.current[lastUpdatedOrderId]) {
       const ref = orderRefs.current[lastUpdatedOrderId];
@@ -194,7 +211,6 @@ const sendNotification = useCallback(
     }
   }, [lastUpdatedOrderId]);
 
-  
   const sendDispatchSms = async (phoneNumber: string, customerName: string) => {
     try {
       const response = await fetch("/api/sendConfirmation", {
@@ -285,61 +301,53 @@ const sendNotification = useCallback(
     }
   };
 
-const handleDispatchAll = async (orderIds: string[]) => {
-  try {
-    for (const orderId of orderIds) {
-      const order = orders.find((o) => o._id === orderId);
+  const handleDispatchAll = async (orderIds: string[]) => {
+    try {
+      for (const orderId of orderIds) {
+        const order = orders.find((o) => o._id === orderId);
 
-      if (order) {
-        // Check if the order contains only disallowed items
-        const disallowedItems = order.items.every(
-          (item) =>
-            (item.item.name === "Beverages" &&
-              item.selectedOptions["Select Beverage"]?.includes("Water")) ||
-            (item.item.name === "Others" &&
-              item.selectedOptions["Cigarette"]?.length > 0)
-        );
+        if (order) {
+          // Check if the order contains only disallowed items
+          const disallowedItems = order.items.every(
+            (item) =>
+              (item.item.name === "Beverages" &&
+                item.selectedOptions["Select Beverage"]?.includes("Water")) ||
+              (item.item.name === "Others" &&
+                item.selectedOptions["Cigarette"]?.length > 0)
+          );
 
-        // If there are items that are not disallowed, proceed with dispatch and send OTP
-        if (!disallowedItems) {
-          await handleDispatch(orderId);
-          await sendDispatchSms(order.phoneNumber, order.customerName);
-        }
-        else {
-                    await handleDispatch(orderId);
-
+          // If there are items that are not disallowed, proceed with dispatch and send OTP
+          if (!disallowedItems) {
+            await handleDispatch(orderId);
+            await sendDispatchSms(order.phoneNumber, order.customerName);
+          } else {
+            await handleDispatch(orderId);
+          }
         }
       }
+    } catch (error) {
+      console.error("Error dispatching all orders:", error);
     }
-  } catch (error) {
-    console.error("Error dispatching all orders:", error);
-  }
-};
+  };
 
   const handleFulfillAll = async (orderIds: string[]) => {
     for (const orderId of orderIds) {
       await handlePayment(orderId);
     }
   };
-  const calculateTotalSales = (orders: { [key: string]: Order[] }) => {
-    return Object.values(orders)
-      .flat()
-      .filter(
-        (order) => order.order !== "rejected" && order.status !== "rejected"
-      )
-      .reduce((total, order) => total + order.total, 0);
-  };
+   const calculateTotalSales = (orders: Order[]) => {
+     return orders
+       .filter(
+         (order) => order.order !== "rejected" && order.status !== "rejected"
+       )
+       .reduce((total, order) => total + order.total, 0);
+   };
 
-  const calculateTotalDeliveryCharges = (orders: {
-    [key: string]: Order[];
-  }) => {
-    return Object.values(orders)
-      .flat()
-      .reduce((total, order) => {
-        return total + (order.tableDeliveryCharge || 0);
-      }, 0);
-  };
-
+   const calculateTotalDeliveryCharges = (orders: Order[]) => {
+     return orders.reduce((total, order) => {
+       return total + (order.tableDeliveryCharge || 0);
+     }, 0);
+   };
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen ">
@@ -348,34 +356,30 @@ const handleDispatchAll = async (orderIds: string[]) => {
     );
   if (error) return <div>{error}</div>;
 
-    const groupedOrders = orders.reduce(
-      (acc, order) => {
-        let key: "new" | "active" | "previous";
-        if (
-          order.status === "fulfilled" ||
-          order.status === "rejected" ||
-          order.order === "rejected"
-        ) {
-          key = "previous";
-        } else if (
-          order.order === "dispatched" &&
-          order.status !== "fulfilled"
-        ) {
-          key = "active";
-        } else {
-          key = "new";
-        }
-        if (!acc[key]) {
-          acc[key] = [];
-        }
-        acc[key].push(order);
-        return acc;
-      },
-      { new: [], active: [], previous: [] } as {
-        [key in "new" | "active" | "previous"]: Order[];
+  const groupedOrders = orders.reduce(
+    (acc, order) => {
+      let key: "new" | "active" | "previous";
+      if (
+        order.status === "fulfilled" ||
+        order.status === "rejected" ||
+        order.order === "rejected"
+      ) {
+        key = "previous";
+      } else if (order.order === "dispatched" && order.status !== "fulfilled") {
+        key = "active";
+      } else {
+        key = "new";
       }
-    );
-
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(order);
+      return acc;
+    },
+    { new: [], active: [], previous: [] } as {
+      [key in "new" | "active" | "previous"]: Order[];
+    }
+  );
 
   const counts = {
     new: groupedOrders.new.length,
@@ -383,125 +387,126 @@ const handleDispatchAll = async (orderIds: string[]) => {
     previous: groupedOrders.previous.length,
   };
 
- const renderOrders = (orders: Order[]) => {
-   const groupedByPhone = orders.reduce((acc, order) => {
-     if (!acc[order.phoneNumber]) {
-       acc[order.phoneNumber] = [];
-     }
-     acc[order.phoneNumber].push(order);
-     return acc;
-   }, {} as { [key: string]: Order[] });
+  const renderOrders = (orders: Order[]) => {
+    const groupedByPhone = orders.reduce((acc, order) => {
+      if (!acc[order.phoneNumber]) {
+        acc[order.phoneNumber] = [];
+      }
+      acc[order.phoneNumber].push(order);
+      return acc;
+    }, {} as { [key: string]: Order[] });
 
-   const sortedOrderEntries = Object.entries(groupedByPhone).sort((a, b) => {
-     const latestOrderA = a[1].reduce((latest, current) =>
-       new Date(current.createdAt) > new Date(latest.createdAt)
-         ? current
-         : latest
-     );
-     const latestOrderB = b[1].reduce((latest, current) =>
-       new Date(current.createdAt) > new Date(latest.createdAt)
-         ? current
-         : latest
-     );
-     return (
-       new Date(latestOrderB.createdAt).getTime() -
-       new Date(latestOrderA.createdAt).getTime()
-     );
-   });
+    const sortedOrderEntries = Object.entries(groupedByPhone).sort((a, b) => {
+      const latestOrderA = a[1].reduce((latest, current) =>
+        new Date(current.createdAt) > new Date(latest.createdAt)
+          ? current
+          : latest
+      );
+      const latestOrderB = b[1].reduce((latest, current) =>
+        new Date(current.createdAt) > new Date(latest.createdAt)
+          ? current
+          : latest
+      );
+      return (
+        new Date(latestOrderB.createdAt).getTime() -
+        new Date(latestOrderA.createdAt).getTime()
+      );
+    });
 
-   return (
-     <div className="space-y-8">
-       {sortedOrderEntries.map(([phoneNumber, customerOrders]) => {
-         const singleItemOrders = customerOrders.filter(
-           (order) => order.items.length === 1
-         );
-         const multiItemOrders = customerOrders.filter(
-           (order) => order.items.length > 1
-         );
-         const sortOrders = (orders: Order[]) =>
-           orders.sort(
-             (a, b) =>
-               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-           );
+    return (
+      <div className="space-y-8">
+        {sortedOrderEntries.map(([phoneNumber, customerOrders]) => {
+          const singleItemOrders = customerOrders.filter(
+            (order) => order.items.length === 1
+          );
+          const multiItemOrders = customerOrders.filter(
+            (order) => order.items.length > 1
+          );
+          const sortOrders = (orders: Order[]) =>
+            orders.sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            );
+          const initialExpanded = tabInitialStates[activeTab];
+          // Sort customerOrders to get the newest order first
+          const sortedCustomerOrders = sortOrders(customerOrders);
+          const newestOrder = sortedCustomerOrders[0];
 
-         // Sort customerOrders to get the newest order first
-         const sortedCustomerOrders = sortOrders(customerOrders);
-         const newestOrder = sortedCustomerOrders[0];
+          return (
+            <div
+              key={phoneNumber}
+              className="bg-neutral-900 rounded-lg p-4"
+              style={getHighlightStyle(newestOrder._id)}
+              ref={(el) => {
+                if (el) {
+                  orderRefs.current[newestOrder._id] = { current: el };
+                }
+              }}
+            >
+              <CompactOrderInfo
+                customerName={newestOrder.customerName}
+                phoneNumber={phoneNumber}
+                cabin={newestOrder.selectedCabin}
+                total={customerOrders.reduce(
+                  (sum, order) => sum + order.total,
+                  0
+                )}
+                orders={sortedCustomerOrders.map((order) => ({
+                  _id: order._id,
+                  order: order.order,
+                  status: order.status,
+                  price: order.total,
+                }))}
+                onDispatchAll={handleDispatchAll}
+                onFulfillAll={handleFulfillAll}
+                onRejectAll={handleRejectAll}
+                activeTab={activeTab}
+                onToggle={(isExpanded) =>
+                  handleOrderToggle(phoneNumber, isExpanded)
+                }
+                initialExpanded={initialExpanded}
+              />
+              <audio ref={audioRef} src="/alarm.mp3" />
+              {expandedOrders[phoneNumber] && (
+                <>
+                  {singleItemOrders.length > 0 && (
+                    <div className="mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {sortOrders(singleItemOrders).map((order) => (
+                          <SingleItemOrder
+                            key={order._id}
+                            order={order}
+                            onDispatch={handleDispatchSms}
+                            onPayment={handlePayment}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-         return (
-           <div
-             key={phoneNumber}
-             className="bg-neutral-900 rounded-lg p-4"
-             style={getHighlightStyle(newestOrder._id)}
-             ref={(el) => {
-               if (el) {
-                 orderRefs.current[newestOrder._id] = { current: el };
-               }
-             }}
-           >
-             <CompactOrderInfo
-               customerName={newestOrder.customerName}
-               phoneNumber={phoneNumber}
-               cabin={newestOrder.selectedCabin}
-               total={customerOrders.reduce(
-                 (sum, order) => sum + order.total,
-                 0
-               )}
-               orders={sortedCustomerOrders.map((order) => ({
-                 _id: order._id,
-                 order: order.order,
-                 status: order.status,
-                 price: order.total,
-               }))}
-               onDispatchAll={handleDispatchAll}
-               onFulfillAll={handleFulfillAll}
-               onRejectAll={handleRejectAll}
-               activeTab={activeTab}
-               onToggle={(isExpanded) =>
-                 handleOrderToggle(phoneNumber, isExpanded)
-               }
-               isNewTabFirstOpen={isNewTabFirstOpen}
-             />
-             <audio ref={audioRef} src="/alarm.mp3" />
-             {expandedOrders[phoneNumber] && (
-               <>
-                 {singleItemOrders.length > 0 && (
-                   <div className="mt-4">
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                       {sortOrders(singleItemOrders).map((order) => (
-                         <SingleItemOrder
-                           key={order._id}
-                           order={order}
-                           onDispatch={handleDispatchSms}
-                           onPayment={handlePayment}
-                         />
-                       ))}
-                     </div>
-                   </div>
-                 )}
-
-                 {multiItemOrders.length > 0 && (
-                   <div className="mt-4">
-                     <div className="space-y-4">
-                       {sortOrders(multiItemOrders).map((order) => (
-                         <MultiItemOrder
-                           key={order._id}
-                           order={order}
-                           onDispatch={handleDispatchSms}
-                           onPayment={handlePayment}
-                         />
-                       ))}
-                     </div>
-                   </div>
-                 )}
-               </>
-             )}
-           </div>
-         );
-       })}
-     </div>
-   );
- };
+                  {multiItemOrders.length > 0 && (
+                    <div className="mt-4">
+                      <div className="space-y-4">
+                        {sortOrders(multiItemOrders).map((order) => (
+                          <MultiItemOrder
+                            key={order._id}
+                            order={order}
+                            onDispatch={handleDispatchSms}
+                            onPayment={handlePayment}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
   const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
@@ -556,7 +561,6 @@ const handleDispatchAll = async (orderIds: string[]) => {
             counts={counts}
           />
         </div>
-
         {activeTab === "new" && (
           <div className="mb-8">{renderOrders(groupedOrders.new)}</div>
         )}
@@ -567,7 +571,30 @@ const handleDispatchAll = async (orderIds: string[]) => {
 
         {activeTab === "previous" && (
           <div className="mb-8">
-            {/* Existing JSX... */}
+            {/* Total Sales */}
+            <div className="mb-4">
+              <span className="bg-lime-600 p-2 rounded">
+                <span className="font-semibold">Total sales for the day: </span>
+                <span className="">
+                  ₹{calculateTotalSales(groupedOrders.previous)}
+                </span>
+              </span>
+            </div>
+            {groupedOrders.previous.some((order) =>
+              order.selectedLocation.includes("Sevoke Road")
+            ) && (
+              <div className="mb-4">
+                <span className="bg-teal-600 p-2 rounded">
+                  <span className="font-semibold">
+                    Total tips for the day:{" "}
+                  </span>
+                  <span className="">
+                    ₹{calculateTotalDeliveryCharges(groupedOrders.previous)}
+                  </span>
+                </span>
+              </div>
+            )}
+
             {renderOrders(groupedOrders.previous)}
           </div>
         )}

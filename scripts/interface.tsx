@@ -57,7 +57,7 @@ export interface CompactInfoProps {
   onRejectAll: (orderIds: string[]) => Promise<void>;
   activeTab: "new" | "active" | "previous"; // Add this line
   onToggle: (isExpanded: boolean) => void;
-  isNewTabFirstOpen: boolean; // Add this prop
+  initialExpanded: boolean; // Add this prop
 }
 
 export interface OrderItemProps {

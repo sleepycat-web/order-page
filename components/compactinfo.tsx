@@ -14,7 +14,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   onFulfillAll,
   onRejectAll,
   activeTab,
-  isNewTabFirstOpen,
+  initialExpanded,
 }) => {
   const [isDispatched, setIsDispatched] = useState(
     orders.every((order) => order.order === "dispatched")
@@ -33,22 +33,18 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   const [dispatchTimeoutId, setDispatchTimeoutId] =
     useState<NodeJS.Timeout | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-const [isExpanded, setIsExpanded] = useState(
-  isNewTabFirstOpen && activeTab === "new"
-);
+  const [isExpanded, setIsExpanded] = useState(initialExpanded);
 
-useEffect(() => {
-  if (isNewTabFirstOpen && activeTab === "new") {
-    setIsExpanded(true);
-    onToggle(true);
-  }
-}, [isNewTabFirstOpen, activeTab, onToggle]);
+  useEffect(() => {
+    // This effect now only runs once when the component mounts
+    onToggle(isExpanded);
+  }, []);
 
-const handleToggle = () => {
-  const newExpandedState = !isExpanded;
-  setIsExpanded(newExpandedState);
-  onToggle(newExpandedState);
-};
+  const handleToggle = () => {
+    const newExpandedState = !isExpanded;
+    setIsExpanded(newExpandedState);
+    onToggle(newExpandedState);
+  };
 
   const handleDispatchAll = () => {
     const orderIds = orders

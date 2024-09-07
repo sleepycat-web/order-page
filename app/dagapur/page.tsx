@@ -8,7 +8,7 @@ import OrderSearch from "@/components/searchbox"; // Adjust the import path as n
 import { Order } from "@/scripts/interface";
 
 export default function OrderPage() {
-  const slug = "dagapur";
+  const [slug, setSlug] = useState<string>("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,16 +19,21 @@ export default function OrderPage() {
     {}
   );
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [activeTab, setActiveTab] = useState<"new" | "active" | "previous">(
-    "new"
-  );
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(
     null
+  );
+  const [activeTab, setActiveTab] = useState<"new" | "active" | "previous">(
+    "new"
   );
   const [expandedOrders, setExpandedOrders] = useState<{
     [key: string]: boolean;
   }>({});
-  const [isNewTabFirstOpen, setIsNewTabFirstOpen] = useState(true);
+  const [tabInitialStates, setTabInitialStates] = useState({
+    new: true,
+    active: false,
+    previous: false,
+  });
+
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
 
@@ -37,6 +42,13 @@ export default function OrderPage() {
       Notification.requestPermission().then((permission) => {
         setNotificationPermission(permission);
       });
+    }
+  }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const pathSegments = window.location.pathname.split("/");
+      const urlSlug = pathSegments[pathSegments.length - 1];
+      setSlug(urlSlug || "default"); // Use 'default' or any fallback value if the slug is empty
     }
   }, []);
   const sendNotification = useCallback(
@@ -50,9 +62,6 @@ export default function OrderPage() {
 
   const handleTabChange = (tab: "new" | "active" | "previous") => {
     setActiveTab(tab);
-    if (tab !== "new") {
-      setIsNewTabFirstOpen(false);
-    }
   };
   const handleOrderToggle = (phoneNumber: string, isExpanded: boolean) => {
     setExpandedOrders((prev) => ({
@@ -133,6 +142,7 @@ export default function OrderPage() {
   };
 
   useEffect(() => {
+    if (!slug) return;
     const fetchOrders = async () => {
       try {
         const response = await fetch(`/api/getOrders?slug=${slug}`);
@@ -325,25 +335,19 @@ export default function OrderPage() {
       await handlePayment(orderId);
     }
   };
-  const calculateTotalSales = (orders: { [key: string]: Order[] }) => {
-    return Object.values(orders)
-      .flat()
+  const calculateTotalSales = (orders: Order[]) => {
+    return orders
       .filter(
         (order) => order.order !== "rejected" && order.status !== "rejected"
       )
       .reduce((total, order) => total + order.total, 0);
   };
 
-  const calculateTotalDeliveryCharges = (orders: {
-    [key: string]: Order[];
-  }) => {
-    return Object.values(orders)
-      .flat()
-      .reduce((total, order) => {
-        return total + (order.tableDeliveryCharge || 0);
-      }, 0);
+  const calculateTotalDeliveryCharges = (orders: Order[]) => {
+    return orders.reduce((total, order) => {
+      return total + (order.tableDeliveryCharge || 0);
+    }, 0);
   };
-
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen ">
@@ -424,7 +428,7 @@ export default function OrderPage() {
                 new Date(b.createdAt).getTime() -
                 new Date(a.createdAt).getTime()
             );
-
+          const initialExpanded = tabInitialStates[activeTab];
           // Sort customerOrders to get the newest order first
           const sortedCustomerOrders = sortOrders(customerOrders);
           const newestOrder = sortedCustomerOrders[0];
@@ -461,7 +465,7 @@ export default function OrderPage() {
                 onToggle={(isExpanded) =>
                   handleOrderToggle(phoneNumber, isExpanded)
                 }
-                isNewTabFirstOpen={isNewTabFirstOpen}
+                initialExpanded={initialExpanded}
               />
               <audio ref={audioRef} src="/alarm.mp3" />
               {expandedOrders[phoneNumber] && (
@@ -557,7 +561,6 @@ export default function OrderPage() {
             counts={counts}
           />
         </div>
-
         {activeTab === "new" && (
           <div className="mb-8">{renderOrders(groupedOrders.new)}</div>
         )}
@@ -568,7 +571,30 @@ export default function OrderPage() {
 
         {activeTab === "previous" && (
           <div className="mb-8">
-            {/* Existing JSX... */}
+            {/* Total Sales */}
+            <div className="mb-4">
+              <span className="bg-lime-600 p-2 rounded">
+                <span className="font-semibold">Total sales for the day: </span>
+                <span className="">
+                  ₹{calculateTotalSales(groupedOrders.previous)}
+                </span>
+              </span>
+            </div>
+            {groupedOrders.previous.some((order) =>
+              order.selectedLocation.includes("Sevoke Road")
+            ) && (
+              <div className="mb-4">
+                <span className="bg-teal-600 p-2 rounded">
+                  <span className="font-semibold">
+                    Total tips for the day:{" "}
+                  </span>
+                  <span className="">
+                    ₹{calculateTotalDeliveryCharges(groupedOrders.previous)}
+                  </span>
+                </span>
+              </div>
+            )}
+
             {renderOrders(groupedOrders.previous)}
           </div>
         )}
