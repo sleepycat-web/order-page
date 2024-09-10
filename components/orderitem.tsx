@@ -443,14 +443,7 @@ const handleDispatch = async (orderId: string) => {
 
     if (!order) return; // Early return if order not found
 
-    // Check if the order contains only disallowed items
-    const disallowedItems = order.items.every(
-      (item) =>
-        (item.item.name === "Beverages" &&
-          item.selectedOptions["Select Beverage"]?.includes("Water")) ||
-        (item.item.name === "Others" &&
-          item.selectedOptions["Cigarette"]?.length > 0)
-    );
+    
 
     // Update order status first
     const response = await axios.post("/api/updateOrderStatus", {

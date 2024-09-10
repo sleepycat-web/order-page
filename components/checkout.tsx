@@ -170,41 +170,12 @@ const Checkout: React.FC<CheckoutProps> = ({
     return response.data;
   };
 
-  const shouldSkipOtp = () => {
-    const allowedItems = items.every(
-      (item) =>
-        (item.item.name === "Beverages" &&
-          item.selectedOptions["Select Beverage"]?.includes("Water")) ||
-        (item.item.name === "Others" &&
-          item.selectedOptions["Cigarette"]?.length > 0)
-    );
 
-    if (allowedItems) {
-      const cachedVerification = localStorage.getItem("otpVerified");
-      const cachedName = localStorage.getItem("userName");
 
-      if (cachedVerification && cachedName) {
-        const { phoneNumber: cachedPhoneNumber } =
-          JSON.parse(cachedVerification);
-        setPhoneNumber(cachedPhoneNumber);
-        setCustomerName(cachedName);
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  
   useEffect(() => {
     const checkVerificationAndBanStatus = async () => {
       setIsLoading(true);
 
-      if (shouldSkipOtp()) {
-        setOtpVerified(true);
-        setIsLoading(false);
-        return;
-      }
 
       const cachedVerification = localStorage.getItem("otpVerified");
       if (cachedVerification) {

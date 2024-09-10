@@ -301,34 +301,20 @@ const [slug, setSlug] = useState<string>("");  const [orders, setOrders] = useSt
     }
   };
 
-  const handleDispatchAll = async (orderIds: string[]) => {
-    try {
-      for (const orderId of orderIds) {
-        const order = orders.find((o) => o._id === orderId);
+const handleDispatchAll = async (orderIds: string[]) => {
+  try {
+    for (const orderId of orderIds) {
+      const order = orders.find((o) => o._id === orderId);
 
-        if (order) {
-          // Check if the order contains only disallowed items
-          const disallowedItems = order.items.every(
-            (item) =>
-              (item.item.name === "Beverages" &&
-                item.selectedOptions["Select Beverage"]?.includes("Water")) ||
-              (item.item.name === "Others" &&
-                item.selectedOptions["Cigarette"]?.length > 0)
-          );
-
-          // If there are items that are not disallowed, proceed with dispatch and send OTP
-          if (!disallowedItems) {
-            await handleDispatch(orderId);
-            await sendDispatchSms(order.phoneNumber, order.customerName);
-          } else {
-            await handleDispatch(orderId);
-          }
-        }
+      if (order) {
+        await handleDispatch(orderId);
+        await sendDispatchSms(order.phoneNumber, order.customerName);
       }
-    } catch (error) {
-      console.error("Error dispatching all orders:", error);
     }
-  };
+  } catch (error) {
+    console.error("Error dispatching all orders:", error);
+  }
+};
 
   const handleFulfillAll = async (orderIds: string[]) => {
     for (const orderId of orderIds) {
