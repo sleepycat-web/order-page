@@ -76,6 +76,11 @@ const Checkout: React.FC<CheckoutProps> = ({
     0
   );
 
+  const handleClick = () => {
+    setIsCheckboxChecked(!isCheckboxChecked);
+  };
+
+
   // Calculate table delivery charge
   const tableDeliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
   useEffect(() => {
@@ -189,6 +194,8 @@ const Checkout: React.FC<CheckoutProps> = ({
 
     return false;
   };
+
+  
   useEffect(() => {
     const checkVerificationAndBanStatus = async () => {
       setIsLoading(true);
@@ -282,13 +289,8 @@ const Checkout: React.FC<CheckoutProps> = ({
     setIsOtpLoading(true);
 
     try {
-      // Parallel API calls
-      const [userExistsResponse, otpResponse] = await Promise.all([
-        checkUserExists(phoneNumber),
-        generateOtp(),
-      ]);
-
-      const { exists, banStatus } = userExistsResponse;
+      // First, check if the user exists and their ban status
+      const { exists, banStatus } = await checkUserExists(phoneNumber);
 
       if (banStatus) {
         setIsBanned(true);
@@ -296,33 +298,33 @@ const Checkout: React.FC<CheckoutProps> = ({
         return;
       }
 
-      if (exists) {
-        const fetchedUserData = await getUserData(phoneNumber);
-        setCustomerName(fetchedUserData.name.split(" ")[0]);
-      } else {
+      if (!exists) {
         setShowUserModal(true);
         return;
       }
 
-      const otp = otpResponse.otp;
-      setGeneratedOtp(otp);
-      setIsOtpSent(true);
-      setTimer(30);
-      setOtpMessage(`Your OTP is: ${otp}`);
+      // If the user exists and is not banned, fetch user data
+      const fetchedUserData = await getUserData(phoneNumber);
+      setCustomerName(fetchedUserData.name.split(" ")[0]);
+
+      // Now, send the OTP
+      const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
+
+      if (otpResponse.status === 200) {
+        const { otp } = otpResponse.data;
+        setGeneratedOtp(otp);
+        setIsOtpSent(true);
+        setTimer(30);
+        // setOtpMessage(`OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`);
+      } else {
+        setOtpMessage("Failed to send OTP. Please try again.");
+      }
     } catch (error) {
-      console.error("Error checking user or generating OTP:", error);
+      console.error("Error checking user or sending OTP:", error);
       setOtpMessage("An error occurred. Please try again.");
     } finally {
       setIsOtpLoading(false);
     }
-  };
-
-  // Separate function for OTP generation
-  const generateOtp = async () => {
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    // Simulate API call for OTP generation
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    return { otp };
   };
 
   const handleUserDataSubmit = async () => {
@@ -427,31 +429,36 @@ const Checkout: React.FC<CheckoutProps> = ({
                 required
               />
               <button
-                className={`btn btn-primary rounded-l-none ${
-                  isGetOtpDisabled ? "cursor-not-allowed" : ""
-                }`}
+                className={`
+    btn btn-primary rounded-l-none
+    w-32
+    flex justify-center items-left 
+    ${isGetOtpDisabled ? "cursor-not-allowed " : ""}
+  `}
                 onClick={handleGetOtp}
                 disabled={isGetOtpDisabled || !isCheckboxChecked}
               >
-                Get OTP
+                <span className="text-sm whitespace-nowrap">
+                  {timer > 0 ? `Resend in ${timer}s` : "Get OTP"}
+                </span>{" "}
               </button>
             </div>
-            <div className="flex items-center mt-1">
+            <div
+              className="flex items-center cursor-pointer"
+              onClick={handleClick}
+            >
               <input
                 type="checkbox"
                 className="checkbox checkbox-sm"
                 checked={isCheckboxChecked}
-                onChange={(e) => setIsCheckboxChecked(e.target.checked)}
+                onChange={() => {}} // Empty onChange to avoid React warning
               />
               <span className="text-sm ml-2">
                 I agree to receive messages from Chai Mine
               </span>
-            </div>{" "}
+            </div>
             {phoneError && (
               <p className="text-red-500 text-sm mt-2">{phoneError}</p>
-            )}
-            {timer > 0 && (
-              <p className="text-sm mt-2">Resend OTP in {timer}s</p>
             )}
             {isOtpLoading ? (
               <div className="flex items-center justify-center">

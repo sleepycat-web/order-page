@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
-// @ts-ignore
-import SibApiV3Sdk from "sib-api-v3-sdk";
+import fetch from "node-fetch";
 
-// Configure API key authorization
-const defaultClient = SibApiV3Sdk.ApiClient.instance;
-const apiKey = defaultClient.authentications["api-key"];
-apiKey.apiKey = process.env.BREVO_API_KEY;
-
+interface Fast2SMSResponse {
+  return: boolean;
+  request_id: string;
+  message: string;
+  // Add any other fields that might be in the response
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,25 +22,47 @@ export default async function handler(
     return res.status(400).json({ message: "Phone number is required" });
   }
 
-  // Ensure the phone number includes the '+91' country code
-  const formattedPhoneNumber = phoneNumber.startsWith("+91")
-    ? phoneNumber
-    : `+91${phoneNumber}`;
-
   // Generate a random 4-digit OTP
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-  const sendSmsApi = new SibApiV3Sdk.TransactionalSMSApi();
-  const sendSms = new SibApiV3Sdk.SendSms();
+  const apiKey = process.env.FAST2SMS_API_KEY;
 
-    sendSms.name = "CHMINE";
-  sendSms.sender = "CHMINE";
-  sendSms.recipient = formattedPhoneNumber;
-  sendSms.content = `The OTP for your order is: ${otp}. Thank you for choosing Chai Mine!`;
+  if (!apiKey) {
+    return res.status(500).json({ message: "API key is not configured" });
+  }
+
+  const url = "https://www.fast2sms.com/dev/bulkV2";
+
+  const headers = {
+    authorization: apiKey,
+    "Content-Type": "application/json",
+  };
+
+  const body = {
+    route: "dlt",
+    sender_id: "CHMINE",
+    message: "173215",
+    variables_values: otp,
+    flash: 0,
+    numbers: phoneNumber,
+  };
 
   try {
-    await sendSmsApi.sendTransacSms(sendSms);
-    res.status(200).json({ message: "OTP sent successfully", otp });
+    const response = await fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = (await response.json()) as Fast2SMSResponse;
+
+    if (data.return === true) {
+      res.status(200).json({ message: "OTP sent successfully", otp });
+    } else {
+      res
+        .status(500)
+        .json({ message: "Failed to send OTP", error: data.message });
+    }
   } catch (error) {
     console.error("Error sending SMS:", error);
     res.status(500).json({ message: "Failed to send OTP" });
