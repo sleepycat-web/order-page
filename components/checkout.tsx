@@ -473,7 +473,7 @@ const Checkout: React.FC<CheckoutProps> = ({
             {orderPlaced ? (
               <div className="text-center">
                 <p className="text-xl font-bold mb-4">
-                  Order Placed Successfully!
+                  Order Placed Successfully! Check your SMS for updates.
                 </p>
                 <p>
                   <a className="underline" href="https://www.chaimine.com">
@@ -481,6 +481,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                     Go to Home Page
                   </a>
                 </p>
+                
               </div>
             ) : (
               <>

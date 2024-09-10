@@ -307,22 +307,8 @@ export default function OrderPage() {
         const order = orders.find((o) => o._id === orderId);
 
         if (order) {
-          // Check if the order contains only disallowed items
-          const disallowedItems = order.items.every(
-            (item) =>
-              (item.item.name === "Beverages" &&
-                item.selectedOptions["Select Beverage"]?.includes("Water")) ||
-              (item.item.name === "Others" &&
-                item.selectedOptions["Cigarette"]?.length > 0)
-          );
-
-          // If there are items that are not disallowed, proceed with dispatch and send OTP
-          if (!disallowedItems) {
-            await handleDispatch(orderId);
-            await sendDispatchSms(order.phoneNumber, order.customerName);
-          } else {
-            await handleDispatch(orderId);
-          }
+          await handleDispatch(orderId);
+          await sendDispatchSms(order.phoneNumber, order.customerName);
         }
       }
     } catch (error) {
