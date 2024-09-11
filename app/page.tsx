@@ -7,7 +7,8 @@ import Popup from "@/components/popup";
 import Cart from "@/components/cart";
 import { Promo, validatePromo } from "../scripts/promo"; // Make sure to create this file
 import Checkout from "@/components/checkout";
-
+import BillSection from "@/components/bill";
+ 
 export interface CartItem {
   item: MenuItem;
   selectedOptions: Record<string, string[]>;
@@ -29,9 +30,20 @@ export default function Home() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [tableDelivery, setTableDelivery] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [isBillSectionOpen, setIsBillSectionOpen] = useState(false); // New state for BillSection visibility
 
-  // ... existing functions
- useEffect(() => {
+ 
+  const toggleBillSection = () => {
+    setIsBillSectionOpen((prev) => {
+      if (prev) {
+        // If the bill section is being closed, scroll to the top
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      return !prev;
+    });
+  };
+
+  useEffect(() => {
    let timer: NodeJS.Timeout;
    if (showError) {
      timer = setTimeout(() => {
@@ -162,96 +174,112 @@ const handleAddToCart = (
   };
 
   return (
-    <div className="relative">
-      {selectedItem && (
-        <div className="fixed inset-0 bg-black opacity-50 z-40"></div>
-      )}
-
-      <main className="p-4 relative z-30">
-        <LocationSelector
-          onLocationSelect={handleLocationSelect}
-          selectedLocation={selectedLocation}
-          selectedCabin={selectedCabin}
-        />
-
-        <div className="fixed top-4 right-4 z-50 w-1/2">
-          <Cart
-            items={cartItems}
-            onRemoveItem={handleRemoveFromCart}
-            onUpdateQuantity={handleUpdateQuantity}
-            onToggle={toggleCart}
-            isOpen={isCartOpen}
-            onCheckout={handleOpenCheckout}
+    <div>
+      <div className="relative min-h-screen flex flex-col">
+        {" "}
+        {selectedItem && (
+          <div className="fixed inset-0 bg-black opacity-50 z-40"></div>
+        )}
+<main className="p-4 relative z-30 flex-grow pb-28"> {/* Add pb-20 for bottom padding */}          {" "}
+          <LocationSelector
+            onLocationSelect={handleLocationSelect}
             selectedLocation={selectedLocation}
             selectedCabin={selectedCabin}
-            onApplyPromo={handleApplyPromo}
-            appliedPromo={appliedPromo}
-            total={calculateTotal()}
-            setTotal={setTotal} // Add this line
+          />
+          <div className="fixed top-4 right-4 z-50 w-1/2">
+            <Cart
+              items={cartItems}
+              onRemoveItem={handleRemoveFromCart}
+              onUpdateQuantity={handleUpdateQuantity}
+              onToggle={toggleCart}
+              isOpen={isCartOpen}
+              onCheckout={handleOpenCheckout}
+              selectedLocation={selectedLocation}
+              selectedCabin={selectedCabin}
+              onApplyPromo={handleApplyPromo}
+              appliedPromo={appliedPromo}
+              total={calculateTotal()}
+              setTotal={setTotal} // Add this line
+              onOrderSuccess={handleOrderSuccess}
+              onResetCart={handleOrderSuccess}
+              tableDelivery={tableDelivery}
+              onTableDeliveryChange={handleTableDeliveryChange}
+            />
+          </div>
+          {orderStatus && (
+            <p
+              className={`mt-4 ${
+                orderStatus.includes("successfully")
+                  ? "text-green-500"
+                  : "text-red-500"
+              }`}
+            >
+              {orderStatus}
+            </p>
+          )}
+          <Menu items={menuItems} onSelectItem={setSelectedItem} />
+          {cartItems.length > 0 && (
+            <div className="absolute bottom-8 md:bottom-4 left-4 right-4">
+              <div className="max-w-lg mx-auto">
+                <button
+                  className="btn btn-primary w-full"
+                  onClick={handleProceedToCheckout}
+                >
+                  Proceed to Checkout
+                </button>
+                {showError && (!selectedLocation || !selectedCabin) && (
+                  <p className="text-red-500 text-center mt-2">
+                    Please select{" "}
+                    {!selectedLocation && !selectedCabin
+                      ? "location and cabin"
+                      : !selectedLocation
+                      ? "location"
+                      : "cabin"}{" "}
+                    before checkout
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </main>
+        {selectedItem && (
+          <div className="relative z-50">
+            <Popup
+              item={selectedItem}
+              onClose={() => setSelectedItem(null)}
+              onAddToOrder={handleAddToCart}
+            />
+          </div>
+        )}
+        {isCheckoutOpen && (
+          <Checkout
+            items={cartItems}
+            selectedLocation={selectedLocation}
+            selectedCabin={selectedCabin}
+            onClose={handleCloseCheckout}
+            total={total} // Pass the total amount
+            appliedPromo={appliedPromo} // Pass the applied promo code
             onOrderSuccess={handleOrderSuccess}
             onResetCart={handleOrderSuccess}
             tableDelivery={tableDelivery}
-            onTableDeliveryChange={handleTableDeliveryChange}
           />
-        </div>
-
-        {orderStatus && (
-          <p
-            className={`mt-4 ${
-              orderStatus.includes("successfully")
-                ? "text-green-500"
-                : "text-red-500"
-            }`}
-          >
-            {orderStatus}
-          </p>
         )}
+      </div>
+      <footer className=" footer grid grid-flow-col bg-neutral-950 p-6 py-8 gap-4 text-neutral-content">
+        <aside>
+          <span className="cursor-pointer w-auto" onClick={toggleBillSection}>
+            Check Bill
+          </span>
+        </aside>
+      </footer>
 
-        <Menu items={menuItems} onSelectItem={setSelectedItem} />
-
-        {cartItems.length > 0 && (
-          <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex flex-col items-center">
-            <button
-              className="btn btn-primary w-full max-w-lg"
-              onClick={handleProceedToCheckout}
-            >
-              Proceed to Checkout
-            </button>
-            {showError && (!selectedLocation || !selectedCabin) && (
-              <p className="text-red-500 text-center mt-2 w-full max-w-lg">
-                Please select{" "}
-                {!selectedLocation && !selectedCabin
-                  ? "location and cabin"
-                  : !selectedLocation
-                  ? "location"
-                  : "cabin"}{" "}
-                before checkout
-              </p>
-            )}
-          </div>
-        )}
-      </main>
-
-      {selectedItem && (
-        <div className="relative z-50">
-          <Popup
-            item={selectedItem}
-            onClose={() => setSelectedItem(null)}
-            onAddToOrder={handleAddToCart}
-          />
-        </div>
-      )}
-      {isCheckoutOpen && (
-        <Checkout
+      {/* BillSection component */}
+      {isBillSectionOpen && (
+        <BillSection
           items={cartItems}
-          selectedLocation={selectedLocation}
-          selectedCabin={selectedCabin}
-          onClose={handleCloseCheckout}
-          total={total} // Pass the total amount
-          appliedPromo={appliedPromo} // Pass the applied promo code
-          onOrderSuccess={handleOrderSuccess}
-          onResetCart={handleOrderSuccess}
-          tableDelivery={tableDelivery}
+          total={calculateTotal()}
+          appliedPromo={appliedPromo}
+          onClose={toggleBillSection}
         />
       )}
     </div>

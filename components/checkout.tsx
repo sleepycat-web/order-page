@@ -49,6 +49,9 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [phoneError, setPhoneError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isOtpLoading, setIsOtpLoading] = useState(false);
+
+  const [otpState, setOtpState] = useState<"idle" | "loading" | "sent">("idle");
+
   const otpRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -57,6 +60,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   ];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
+  const [isOtpRequestInProgress, setIsOtpRequestInProgress] = useState(false);
 
   const resetCheckoutState = () => {
     setOtpVerified(false);
@@ -250,53 +254,61 @@ const Checkout: React.FC<CheckoutProps> = ({
     const validStartDigits = ["9", "8", "7", "6"];
     return number.length === 10 && validStartDigits.includes(number[0]);
   };
-  const handleGetOtp = async () => {
-    if (!validatePhoneNumber(phoneNumber)) {
-      setPhoneError("Please enter a valid phone number");
-      setTimeout(() => setPhoneError(""), 5000);
-      return;
-    }
-
-    setIsOtpLoading(true);
-
-    try {
-      // First, check if the user exists and their ban status
-      const { exists, banStatus } = await checkUserExists(phoneNumber);
-
-      if (banStatus) {
-        setIsBanned(true);
-        setShowUserModal(true);
+    const handleGetOtp = async () => {
+      if (!validatePhoneNumber(phoneNumber)) {
+        setPhoneError("Please enter a valid phone number");
+        setTimeout(() => setPhoneError(""), 5000);
         return;
       }
 
-      if (!exists) {
-        setShowUserModal(true);
-        return;
+      if (isOtpRequestInProgress) return;
+
+      setIsOtpRequestInProgress(true);
+      setOtpState("loading");
+
+      try {
+        // First, check if the user exists and their ban status
+        const { exists, banStatus } = await checkUserExists(phoneNumber);
+
+        if (banStatus) {
+          setIsBanned(true);
+          setShowUserModal(true);
+          setOtpState("idle");
+          return;
+        }
+
+        if (!exists) {
+          setShowUserModal(true);
+          setOtpState("idle");
+          return;
+        }
+
+        // If the user exists and is not banned, fetch user data
+        const fetchedUserData = await getUserData(phoneNumber);
+        setCustomerName(fetchedUserData.name.split(" ")[0]);
+
+        // Now, send the OTP
+        const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
+
+        if (otpResponse.status === 200) {
+          const { otp } = otpResponse.data;
+          setGeneratedOtp(otp);
+          setOtpState("sent");
+          setTimer(30);
+          // setOtpMessage(`OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`);
+        } else {
+          setOtpMessage("Failed to send OTP. Please try again.");
+          setOtpState("idle");
+        }
+      } catch (error) {
+        console.error("Error checking user or sending OTP:", error);
+        setOtpMessage("An error occurred. Please try again.");
+        setOtpState("idle");
+      } finally {
+        setIsOtpLoading(false);
+        setTimeout(() => setIsOtpRequestInProgress(false), 5000); // Allow new requests after 5 seconds
       }
-
-      // If the user exists and is not banned, fetch user data
-      const fetchedUserData = await getUserData(phoneNumber);
-      setCustomerName(fetchedUserData.name.split(" ")[0]);
-
-      // Now, send the OTP
-      const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
-
-      if (otpResponse.status === 200) {
-        const { otp } = otpResponse.data;
-        setGeneratedOtp(otp);
-        setIsOtpSent(true);
-        setTimer(30);
-        // setOtpMessage(`OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`);
-      } else {
-        setOtpMessage("Failed to send OTP. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error checking user or sending OTP:", error);
-      setOtpMessage("An error occurred. Please try again.");
-    } finally {
-      setIsOtpLoading(false);
-    }
-  };
+    };
 
   const handleUserDataSubmit = async () => {
     if (userData.name) {
@@ -401,17 +413,26 @@ const Checkout: React.FC<CheckoutProps> = ({
               />
               <button
                 className={`
-    btn btn-primary rounded-l-none
-    w-32
-    flex justify-center items-left 
-    ${isGetOtpDisabled ? "cursor-not-allowed " : ""}
-  `}
+                btn btn-primary rounded-l-none
+                w-32
+                flex justify-center items-center 
+                ${isGetOtpDisabled ? "cursor-not-allowed " : ""}
+              `}
                 onClick={handleGetOtp}
-                disabled={isGetOtpDisabled || !isCheckboxChecked}
+                disabled={
+                  isGetOtpDisabled ||
+                  !isCheckboxChecked 
+                }
               >
-                <span className="text-sm whitespace-nowrap">
-                  {timer > 0 ? `Resend in ${timer}s` : "Get OTP"}
-                </span>{" "}
+                {otpState === "loading" ? (
+                  <span className="loading loading-spinner loading-sm"></span>
+                ) : otpState === "sent" && timer > 0 ? (
+                  <span className="text-sm whitespace-nowrap">
+                    Resend in {timer}s
+                  </span>
+                ) : (
+                  <span className="text-sm whitespace-nowrap">Get OTP</span>
+                )}
               </button>
             </div>
             <div
@@ -432,11 +453,7 @@ const Checkout: React.FC<CheckoutProps> = ({
               <p className="text-red-500 text-sm mt-2">{phoneError}</p>
             )}
             {isOtpLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="text-white text-2xl">
-                  <span className="loading loading-spinner loading-lg"></span>
-                </div>
-              </div>
+              <div></div>
             ) : isOtpSent ? (
               <div className="flex flex-col items-center mt-4">
                 <p className="text-sm mb-2">{otpMessage}</p>
