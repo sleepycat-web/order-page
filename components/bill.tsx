@@ -252,8 +252,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, customerName }) => {
   return (
     <div className="bg-neutral-800 rounded-lg p-4 h-full shadow-md">
       <h3 className="text-xl font-semibold mb-2 text-white">{customerName}</h3>
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        <p className="text-neutral-300">
+      <div className="grid grid-cols-6 gap-2 mb-4">
+        <p className="text-neutral-300 col-span-2">
           Status:{" "}
           <span className="text-white">
             {order.order === "pending" && "Pending"}
@@ -263,13 +263,13 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, customerName }) => {
             {order.status === "fulfilled" && "Fulfilled"}
           </span>
         </p>
-        <p className="text-neutral-300">
+        <p className="text-neutral-300 col-span-4">
           Location: <span className="text-white">{order.selectedLocation}</span>
         </p>
-        <p className="text-neutral-300">
+        <p className="text-neutral-300 col-span-2">
           Cabin: <span className="text-white">{order.selectedCabin}</span>
         </p>
-        <p className="text-neutral-300">
+        <p className="text-neutral-300 col-span-4">
           Date:{" "}
           <span className="text-white">{formatDate(order.createdAt)}</span>
         </p>
