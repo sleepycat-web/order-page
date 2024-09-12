@@ -37,7 +37,8 @@ export default function Home() {
      isBillSectionOpen ||
      isCheckoutOpen ||
      isCartOpen ||
-     selectedItem !== null 
+     selectedItem !== null ||
+     cartItems.length > 0 
    );
  };
   const toggleBillSection = () => {
