@@ -33,26 +33,15 @@ export default function Home() {
   const [isBillSectionOpen, setIsBillSectionOpen] = useState(false); // New state for BillSection visibility
   const [isHomepage, setIsHomepage] = useState(true);
   
-const shouldHideFooter = () => {
-  if (isHomepage) {
-    return (
-      isBillSectionOpen || isCheckoutOpen || isCartOpen || selectedItem !== null
-    );
-  } else {
-    return (
-      isBillSectionOpen ||
-      isCheckoutOpen ||
-      isCartOpen ||
-      selectedItem !== null ||
-      cartItems.length > 0
-    );
-  }
-};useEffect(() => {
-  setIsHomepage(true);
-  return () => {
-    setIsHomepage(false);
-  };
-}, []);
+ const shouldHideFooter = () => {
+   return (
+     isBillSectionOpen ||
+     isCheckoutOpen ||
+     isCartOpen ||
+     selectedItem !== null ||
+     cartItems.length > 0 
+   );
+ };
   const toggleBillSection = () => {
     setIsBillSectionOpen((prev) => {
       if (prev) {
