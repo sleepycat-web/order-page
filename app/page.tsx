@@ -32,7 +32,11 @@ export default function Home() {
   const [showError, setShowError] = useState(false);
   const [isBillSectionOpen, setIsBillSectionOpen] = useState(false); // New state for BillSection visibility
 
- 
+ const shouldHideFooter = () => {
+   return (
+     isBillSectionOpen || isCheckoutOpen || isCartOpen || selectedItem !== null
+   );
+ };
   const toggleBillSection = () => {
     setIsBillSectionOpen((prev) => {
       if (prev) {
@@ -180,7 +184,9 @@ const handleAddToCart = (
         {selectedItem && (
           <div className="fixed inset-0 bg-black opacity-50 z-40"></div>
         )}
-<main className="p-4 relative z-30 flex-grow pb-28"> {/* Add pb-20 for bottom padding */}          {" "}
+        <main className="p-4 relative z-30 flex-grow pb-28">
+          {" "}
+          {/* Add pb-20 for bottom padding */}{" "}
           <LocationSelector
             onLocationSelect={handleLocationSelect}
             selectedLocation={selectedLocation}
@@ -265,20 +271,17 @@ const handleAddToCart = (
           />
         )}
       </div>
-      <footer className=" footer grid grid-flow-col bg-neutral-950 p-6 py-8 gap-4 text-neutral-content">
-        <aside>
-          <span className="cursor-pointer w-auto" onClick={toggleBillSection}>
-            Check Bill
-          </span>
-        </aside>
-      </footer>
-
-      {/* BillSection component */}
-      {isBillSectionOpen && (
-        <BillSection
-          onClose={toggleBillSection}
-        />
+      {!shouldHideFooter() && (
+        <footer className="footer grid grid-flow-col bg-neutral-950 p-6 py-8 gap-4 text-neutral-content">
+          <aside>
+            <span className="cursor-pointer w-auto" onClick={toggleBillSection}>
+              Check Bill
+            </span>
+          </aside>
+        </footer>
       )}
+      {/* BillSection component */}
+      {isBillSectionOpen && <BillSection onClose={toggleBillSection} />}
     </div>
   );
 }
