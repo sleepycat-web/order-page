@@ -31,16 +31,28 @@ export default function Home() {
   const [tableDelivery, setTableDelivery] = useState(false);
   const [showError, setShowError] = useState(false);
   const [isBillSectionOpen, setIsBillSectionOpen] = useState(false); // New state for BillSection visibility
-
- const shouldHideFooter = () => {
-   return (
-     isBillSectionOpen ||
-     isCheckoutOpen ||
-     isCartOpen ||
-     selectedItem !== null ||
-     cartItems.length > 0 
-   );
- };
+  const [isHomepage, setIsHomepage] = useState(true);
+  
+const shouldHideFooter = () => {
+  if (isHomepage) {
+    return (
+      isBillSectionOpen || isCheckoutOpen || isCartOpen || selectedItem !== null
+    );
+  } else {
+    return (
+      isBillSectionOpen ||
+      isCheckoutOpen ||
+      isCartOpen ||
+      selectedItem !== null ||
+      cartItems.length > 0
+    );
+  }
+};useEffect(() => {
+  setIsHomepage(true);
+  return () => {
+    setIsHomepage(false);
+  };
+}, []);
   const toggleBillSection = () => {
     setIsBillSectionOpen((prev) => {
       if (prev) {
