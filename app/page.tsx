@@ -34,7 +34,11 @@ export default function Home() {
 
  const shouldHideFooter = () => {
    return (
-     isBillSectionOpen || isCheckoutOpen || isCartOpen || selectedItem !== null
+     isBillSectionOpen ||
+     isCheckoutOpen ||
+     isCartOpen ||
+     selectedItem !== null ||
+     cartItems.length > 0
    );
  };
   const toggleBillSection = () => {
