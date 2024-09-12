@@ -154,7 +154,7 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
         {orders.length > 0 && (
           <>
             <OrderTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-            <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
+            <div className="overflow-y-auto overflow-x-hidden max-h-[calc(100vh-300px)]">
               {hasOrders ? (
                 <div className="flex flex-wrap -mx-2">
                   {Object.entries(filteredOrders).flatMap(
