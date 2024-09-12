@@ -423,10 +423,7 @@ const handleClick = () => {
                 ${isGetOtpDisabled ? "cursor-not-allowed " : ""}
               `}
                 onClick={handleGetOtp}
-                disabled={
-                  isGetOtpDisabled ||
-                  !isCheckboxChecked 
-                }
+                disabled={isGetOtpDisabled || !isCheckboxChecked}
               >
                 {otpState === "loading" ? (
                   <span className="loading loading-spinner loading-sm"></span>
@@ -458,7 +455,7 @@ const handleClick = () => {
             )}
             {isOtpLoading ? (
               <div></div>
-            ) : (otpState=="sent") ? (
+            ) : otpState == "sent" ? (
               <div className="flex flex-col items-center mt-4">
                 <p className="text-sm mb-2">{otpMessage}</p>
                 <div className="flex space-x-2">
@@ -493,15 +490,21 @@ const handleClick = () => {
           <div className="orderitems pb-16">
             {orderPlaced ? (
               <div className="text-center">
-                <p className="hidden md:block text-xl font-bold mb-4">
+                <p className="hidden md:block text-xl font-bold ">
                   Order Placed Successfully! Check your SMS for updates.
+                </p>
+                <p className="hidden md:block text-xl font-bold mb-4">
+                  Please pay while collecting the order.
                 </p>
                 <div className="block md:hidden">
                   <p className="text-xl font-bold ">
                     Order Placed Successfully!
                   </p>
-                  <p className="text-xl font-bold mb-4">
+                  <p className="text-xl font-bold ">
                     Check your SMS for updates.
+                  </p>
+                  <p className="text-xl font-bold mb-4">
+                    Please pay while collecting the order
                   </p>
                 </div>
 
