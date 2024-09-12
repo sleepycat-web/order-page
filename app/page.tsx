@@ -276,7 +276,7 @@ const handleAddToCart = (
         )}
       </div>
       {!shouldHideFooter() && (
-        <footer className="footer grid grid-flow-col bg-neutral-950 p-6 pt-8 pb-12 gap-4 text-neutral-content">
+        <footer className="footer grid grid-flow-col bg-neutral-950 p-6 pt-10 pb-10 gap-4 text-neutral-content">
           <aside>
             <span className="cursor-pointer w-auto" onClick={toggleBillSection}>
               Check Bill
