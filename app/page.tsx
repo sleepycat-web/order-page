@@ -276,9 +276,6 @@ const handleAddToCart = (
       {/* BillSection component */}
       {isBillSectionOpen && (
         <BillSection
-          items={cartItems}
-          total={calculateTotal()}
-          appliedPromo={appliedPromo}
           onClose={toggleBillSection}
         />
       )}

@@ -454,7 +454,7 @@ const Checkout: React.FC<CheckoutProps> = ({
             )}
             {isOtpLoading ? (
               <div></div>
-            ) : isOtpSent ? (
+            ) : (otpState=="sent") ? (
               <div className="flex flex-col items-center mt-4">
                 <p className="text-sm mb-2">{otpMessage}</p>
                 <div className="flex space-x-2">
