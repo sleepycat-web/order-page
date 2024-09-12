@@ -51,7 +51,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [isOtpLoading, setIsOtpLoading] = useState(false);
 
   const [otpState, setOtpState] = useState<"idle" | "loading" | "sent">("idle");
-
+const [isOtpRequested, setIsOtpRequested] = useState(false);
   const otpRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -80,9 +80,13 @@ const Checkout: React.FC<CheckoutProps> = ({
     0
   );
 
-  const handleClick = () => {
+const handleClick = () => {
+  if (!isOtpRequested) {
     setIsCheckboxChecked(!isCheckboxChecked);
-  };
+  } else if (!isCheckboxChecked) {
+    setIsCheckboxChecked(true);
+  }
+};
 
 
   // Calculate table delivery charge
@@ -265,7 +269,7 @@ const Checkout: React.FC<CheckoutProps> = ({
 
       setIsOtpRequestInProgress(true);
       setOtpState("loading");
-
+      setIsOtpRequested(true); // Set this to true when OTP is requested
       try {
         // First, check if the user exists and their ban status
         const { exists, banStatus } = await checkUserExists(phoneNumber);
