@@ -194,99 +194,109 @@ const handleAddToCart = (
   };
 
   return (
-    <div>
-      <div className="relative min-h-svh flex flex-col">
-        {" "}
-        {selectedItem && (
-          <div className="fixed inset-0 bg-black opacity-50 z-40"></div>
-        )}
-        <main className="p-4 relative z-30 flex-grow pb-28">
-          {" "}
-          {/* Add pb-20 for bottom padding */}{" "}
-          <LocationSelector
-            onLocationSelect={handleLocationSelect}
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-grow relative">
+        <LocationSelector
+          onLocationSelect={handleLocationSelect}
+          selectedLocation={selectedLocation}
+          selectedCabin={selectedCabin}
+        />
+        <div className="fixed top-4 right-4 z-50 w-1/2 max-h-[calc(100vh-2rem)] overflow-y-auto">
+          <Cart
+            items={cartItems}
+            onRemoveItem={handleRemoveFromCart}
+            onUpdateQuantity={handleUpdateQuantity}
+            onToggle={toggleCart}
+            isOpen={isCartOpen}
+            onCheckout={handleOpenCheckout}
             selectedLocation={selectedLocation}
             selectedCabin={selectedCabin}
+            onApplyPromo={handleApplyPromo}
+            appliedPromo={appliedPromo}
+            total={calculateTotal()}
+            setTotal={setTotal}
+            onOrderSuccess={handleOrderSuccess}
+            onResetCart={handleOrderSuccess}
+            tableDelivery={tableDelivery}
+            onTableDeliveryChange={handleTableDeliveryChange}
           />
-          <div className="fixed top-4 right-4 z-50 w-1/2">
-            <Cart
-              items={cartItems}
-              onRemoveItem={handleRemoveFromCart}
-              onUpdateQuantity={handleUpdateQuantity}
-              onToggle={toggleCart}
-              isOpen={isCartOpen}
-              onCheckout={handleOpenCheckout}
-              selectedLocation={selectedLocation}
-              selectedCabin={selectedCabin}
-              onApplyPromo={handleApplyPromo}
-              appliedPromo={appliedPromo}
-              total={calculateTotal()}
-              setTotal={setTotal} // Add this line
-              onOrderSuccess={handleOrderSuccess}
-              onResetCart={handleOrderSuccess}
-              tableDelivery={tableDelivery}
-              onTableDeliveryChange={handleTableDeliveryChange}
-            />
-          </div>
-          {orderStatus && (
-            <p
-              className={`mt-4 ${
-                orderStatus.includes("successfully")
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
-            >
-              {orderStatus}
-            </p>
-          )}
-          <Menu items={menuItems} onSelectItem={setSelectedItem} />
-          {cartItems.length > 0 && (
-            <div className="absolute bottom-8 md:bottom-4 left-4 right-4">
-              <div className="max-w-lg mx-auto">
-                <button
-                  className="btn btn-primary w-full"
-                  onClick={handleProceedToCheckout}
-                >
-                  Proceed to Checkout
-                </button>
-                {showError && (!selectedLocation || !selectedCabin) && (
-                  <p className="text-red-500 text-center mt-2">
-                    Please select{" "}
-                    {!selectedLocation && !selectedCabin
-                      ? "location and cabin"
-                      : !selectedLocation
-                      ? "location"
-                      : "cabin"}{" "}
-                    before checkout
-                  </p>
-                )}
-              </div>
+        </div>
+        {orderStatus && (
+          <p
+            className={`mt-4 ${
+              orderStatus.includes("successfully")
+                ? "text-green-500"
+                : "text-red-500"
+            }`}
+          >
+            {orderStatus}
+          </p>
+        )}
+        <Menu items={menuItems} onSelectItem={setSelectedItem} />
+        {cartItems.length > 0 && (
+          <div className="fixed bottom-8 md:bottom-4 left-4 right-4 z-40">
+            <div className="max-w-lg mx-auto">
+              <button
+                className="btn btn-primary w-full"
+                onClick={handleProceedToCheckout}
+              >
+                Proceed to Checkout
+              </button>
+              {showError && (!selectedLocation || !selectedCabin) && (
+                <p className="text-red-500 text-center mt-2">
+                  Please select{" "}
+                  {!selectedLocation && !selectedCabin
+                    ? "location and cabin"
+                    : !selectedLocation
+                    ? "location"
+                    : "cabin"}{" "}
+                  before checkout
+                </p>
+              )}
             </div>
-          )}
-        </main>
-        {selectedItem && (
-          <div className="relative z-50">
+          </div>
+        )}
+      </main>
+      {selectedItem && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
             <Popup
               item={selectedItem}
               onClose={() => setSelectedItem(null)}
               onAddToOrder={handleAddToCart}
             />
           </div>
-        )}
-        {isCheckoutOpen && (
-          <Checkout
-            items={cartItems}
-            selectedLocation={selectedLocation}
-            selectedCabin={selectedCabin}
-            onClose={handleCloseCheckout}
-            total={total} // Pass the total amount
-            appliedPromo={appliedPromo} // Pass the applied promo code
-            onOrderSuccess={handleOrderSuccess}
-            onResetCart={handleOrderSuccess}
-            tableDelivery={tableDelivery}
-          />
-        )}
-      </div>
+        </div>
+      )}
+      {isCheckoutOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <Checkout
+              items={cartItems}
+              selectedLocation={selectedLocation}
+              selectedCabin={selectedCabin}
+              onClose={handleCloseCheckout}
+              total={total}
+              appliedPromo={appliedPromo}
+              onOrderSuccess={handleOrderSuccess}
+              onResetCart={handleOrderSuccess}
+              tableDelivery={tableDelivery}
+            />
+          </div>
+        </div>
+      )}
       {!shouldHideFooter() && (
         <footer className="footer grid grid-flow-col bg-neutral-950 p-6 pt-10 pb-10 gap-4 text-neutral-content">
           <aside>
@@ -296,7 +306,6 @@ const handleAddToCart = (
           </aside>
         </footer>
       )}
-      {/* BillSection component */}
       {isBillSectionOpen && <BillSection onClose={toggleBillSection} />}
     </div>
   );
