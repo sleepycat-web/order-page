@@ -6,7 +6,7 @@ import { SingleItemOrder, MultiItemOrder } from "@/components/orderitem";
 import OrderTabs from "@/components/tabview"; // Adjust the import path as needed
 import OrderSearch from "@/components/searchbox"; // Adjust the import path as needed
 import { Order } from "@/scripts/interface";
-
+import Expense from "@/components/expense";
 
 export default function OrderPage() {
 const [slug, setSlug] = useState<string>("");  const [orders, setOrders] = useState<Order[]>([]);
@@ -33,7 +33,18 @@ const [slug, setSlug] = useState<string>("");  const [orders, setOrders] = useSt
     active: false,
     previous: false,
   });
+  const [isExpensesExpanded, setIsExpensesExpanded] = useState(false);
 
+   
+
+  const toggleExpenses = () => {
+    setIsExpensesExpanded(!isExpensesExpanded);
+    isExpensesExpanded ?? setIsExpensesExpanded(isExpensesExpanded);
+
+  };
+  const closeExpenses = () => {
+    setIsExpensesExpanded(false);
+  };
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
 
@@ -579,8 +590,22 @@ const handleDispatchAll = async (orderIds: string[]) => {
                   </span>
                 </span>
               </div>
-            )}
-
+            )}{" "}
+            <div className="mb-4">
+              <span
+                className="bg-amber-600 p-2 rounded cursor-pointer"
+                onClick={toggleExpenses}
+              >
+                {" "}
+                <span className="font-semibold ">Expenses: </span>
+                <span className="">
+                  ₹{calculateTotalSales(groupedOrders.previous)}
+                </span>
+              </span>
+              {isExpensesExpanded && (
+                <Expense slug={slug} closeExpenses={closeExpenses} />
+              )}
+            </div>
             {renderOrders(groupedOrders.previous)}
           </div>
         )}

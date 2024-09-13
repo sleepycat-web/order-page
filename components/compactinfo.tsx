@@ -123,7 +123,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   return (
     <div
       onClick={handleContainerClick}
-      className="bg-neutral-800 py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-4 flex flex-wrap lg:flex-nowrap lg:justify-between"
+      className="bg-neutral-800 py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-2 flex flex-wrap lg:flex-nowrap lg:justify-between"
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 w-full lg:w-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 w-full">
