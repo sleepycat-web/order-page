@@ -168,7 +168,7 @@ export default function OrderPage() {
       }
     };
     fetchOrders();
-    const intervalId = setInterval(fetchOrders, 5000);
+    const intervalId = setInterval(fetchOrders, 3000);
     return () => clearInterval(intervalId);
   }, [ slug]);
 
