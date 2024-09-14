@@ -46,19 +46,20 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     onToggle(newExpandedState);
   };
 
-  const handleDispatchAll = () => {
-    const orderIds = orders
-      .filter((order) => order.order !== "dispatched")
-      .map((order) => order._id);
+const handleDispatchAll = () => {
+  const orderIds = orders
+    .filter((order) => order.order !== "dispatched")
+    .map((order) => order._id);
 
-    setDispatchCountdown(5);
-    const timeoutId = setTimeout(() => {
-      onDispatchAll(orderIds);
-      setIsDispatched(true);
-      setDispatchCountdown(null);
-    }, 5000);
-    setDispatchTimeoutId(timeoutId);
+  setDispatchCountdown(5);
+  const timeoutId = setTimeout(() => {
+    onDispatchAll(orderIds);
+    setIsDispatched(true);
+    setDispatchCountdown(null);
+  }, 5000);
+  setDispatchTimeoutId(timeoutId);
   };
+  
   const nonRejectedTotal = orders
     .filter((order) => order.status !== "rejected")
     .reduce((sum, order) => sum + order.price, 0);

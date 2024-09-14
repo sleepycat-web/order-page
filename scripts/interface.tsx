@@ -51,6 +51,7 @@ export interface CompactInfoProps {
     order: string;
     status: string;
     price: number;
+    tableDeliveryCharge?: number; // Added this line
   }[];
   onDispatchAll: (orderIds: string[]) => void;
   onFulfillAll: (orderIds: string[]) => void;
