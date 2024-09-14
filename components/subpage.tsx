@@ -7,6 +7,7 @@ import OrderTabs from "@/components/tabview"; // Adjust the import path as neede
 import OrderSearch from "@/components/searchbox"; // Adjust the import path as needed
 import { Order } from "@/scripts/interface";
 import Expense from "@/components/expense";
+import ChangeHandler from "@/components/changehandler";
 
 export default function OrderPage() {
   const [slug, setSlug] = useState<string>("");
@@ -19,8 +20,7 @@ export default function OrderPage() {
   const orderRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>(
     {}
   );
-    const audioRef = useRef<HTMLAudioElement>(null);
-    
+
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(
     null
   );
@@ -36,16 +36,6 @@ export default function OrderPage() {
     previous: false,
   });
 
-  const [notificationPermission, setNotificationPermission] =
-    useState<NotificationPermission>("default");
-
-  useEffect(() => {
-    if ("Notification" in window) {
-      Notification.requestPermission().then((permission) => {
-        setNotificationPermission(permission);
-      });
-    }
-  }, []);
   useEffect(() => {
     if (typeof window !== "undefined") {
       const pathSegments = window.location.pathname.split("/");
@@ -53,14 +43,6 @@ export default function OrderPage() {
       setSlug(urlSlug || "default"); // Use 'default' or any fallback value if the slug is empty
     }
   }, []);
-  const sendNotification = useCallback(
-    (title: string, body: string) => {
-      if (notificationPermission === "granted") {
-        new Notification(title, { body });
-      }
-    },
-    [notificationPermission]
-  );
 
   const handleTabChange = (tab: "new" | "active" | "previous") => {
     setActiveTab(tab);
@@ -162,18 +144,6 @@ export default function OrderPage() {
               )
           );
 
-          if (newOrders.length > 0) {
-            sendNotification(
-              "New Order Received",
-              `${newOrders.length} new order has been placed.`
-            );
-            if (audioRef.current) {
-              audioRef.current.play().catch((error) => {
-                console.error("Audio playback failed:", error);
-              });
-            }
-          }
-
           const updatedOrderId = data.find((newOrder: Order) => {
             const currentOrder = orders.find(
               (order) => order._id === newOrder._id
@@ -187,10 +157,6 @@ export default function OrderPage() {
 
           if (updatedOrderId) {
             setLastUpdatedOrderId(updatedOrderId);
-            // sendNotification(
-            //   "Order Updated",
-            //   `Order ${updatedOrderId} has been updated.`
-            // );
           }
         }
 
@@ -202,9 +168,9 @@ export default function OrderPage() {
       }
     };
     fetchOrders();
-    const intervalId = setInterval(fetchOrders, 3000);
+    const intervalId = setInterval(fetchOrders, 5000);
     return () => clearInterval(intervalId);
-  }, [orders, sendNotification, slug]);
+  }, [ slug]);
 
   useEffect(() => {
     if (lastUpdatedOrderId && orderRefs.current[lastUpdatedOrderId]) {
@@ -213,29 +179,29 @@ export default function OrderPage() {
     }
   }, [lastUpdatedOrderId]);
 
- const sendDispatchSms = async (
-   phoneNumber: string,
-   customerName: string,
-   deliveryCharge: number
- ) => {
-   try {
-     const response = await fetch("/api/sendConfirmation", {
-       method: "POST",
-       headers: {
-         "Content-Type": "application/json",
-       },
-       body: JSON.stringify({ phoneNumber, customerName, deliveryCharge }),
-     });
+  const sendDispatchSms = async (
+    phoneNumber: string,
+    customerName: string,
+    deliveryCharge: number
+  ) => {
+    try {
+      const response = await fetch("/api/sendConfirmation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phoneNumber, customerName, deliveryCharge }),
+      });
 
-     if (!response.ok) {
-       throw new Error("Failed to send dispatch SMS");
-     }
+      if (!response.ok) {
+        throw new Error("Failed to send dispatch SMS");
+      }
 
-     console.log("Dispatch SMS sent successfully");
-   } catch (error) {
-     console.error("Error sending dispatch SMS:", error);
-   }
- };
+      console.log("Dispatch SMS sent successfully");
+    } catch (error) {
+      console.error("Error sending dispatch SMS:", error);
+    }
+  };
 
   const handleDispatch = async (orderId: string) => {
     try {
@@ -264,22 +230,22 @@ export default function OrderPage() {
     }
   };
 
- const handleDispatchSms = async (orderId: string) => {
-   try {
-     await handleDispatch(orderId);
+  const handleDispatchSms = async (orderId: string) => {
+    try {
+      await handleDispatch(orderId);
 
-     const updatedOrder = orders.find((o) => o._id === orderId);
-     if (updatedOrder) {
-       await sendDispatchSms(
-         updatedOrder.phoneNumber,
-         updatedOrder.customerName,
-         updatedOrder.tableDeliveryCharge || 0
-       );
-     }
-   } catch (error) {
-     console.error("Error dispatching order and sending SMS:", error);
-   }
- };
+      const updatedOrder = orders.find((o) => o._id === orderId);
+      if (updatedOrder) {
+        await sendDispatchSms(
+          updatedOrder.phoneNumber,
+          updatedOrder.customerName,
+          updatedOrder.tableDeliveryCharge || 0
+        );
+      }
+    } catch (error) {
+      console.error("Error dispatching order and sending SMS:", error);
+    }
+  };
 
   const handlePayment = async (orderId: string) => {
     try {
@@ -469,7 +435,6 @@ export default function OrderPage() {
                 }
                 initialExpanded={initialExpanded}
               />
-              <audio ref={audioRef} src="/alarm.mp3" />
               {expandedOrders[phoneNumber] && (
                 <>
                   {singleItemOrders.length > 0 && (
@@ -582,7 +547,7 @@ export default function OrderPage() {
             {renderOrders(groupedOrders.previous)}
           </div>
         )}
-
+        <ChangeHandler slug={slug} />
         {counts.new === 0 && counts.active === 0 && counts.previous === 0 && (
           <p className="text-center text-xl">No orders at the moment.</p>
         )}

@@ -54,6 +54,7 @@ export default async function handler(
       order: "pending",
       createdAt: now,
       _id: new ObjectId(),
+      load:"pending",
     };
 
     const result = await collection.insertOne(orderDocument);
