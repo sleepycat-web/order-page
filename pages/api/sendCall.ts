@@ -31,7 +31,7 @@ export async function sendCall({ from, to }: SendCallParams): Promise<void> {
     });
 
     // Log the entire response object
-    console.log("Call response:", JSON.stringify(response.data, null, 2));
+    // console.log("Call response:", JSON.stringify(response.data, null, 2));
 
     // You can add any additional processing here if needed
 
