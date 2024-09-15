@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../lib/mongodb";
-import axios from "axios"; // We'll use axios for making the API call
+import axios from "axios";
 
 export default async function handler(
   req: NextApiRequest,
@@ -71,9 +71,15 @@ export default async function handler(
     });
 
     // After sending the response, make an API call to automateCall
-    // Note: This will continue executing even after the response is sent
     try {
-      await axios.post("/api/automateCall", { selectedLocation });
+      const automateCallUrl = new URL(
+        "/api/automateCall",
+        `http://${req.headers.host}`
+      );
+      await axios.post(automateCallUrl.toString(), {
+        selectedLocation,
+        customerPhoneNumber: phoneNumber,
+      });
       console.log("AutomateCall API called successfully");
     } catch (error) {
       console.error("Error calling automateCall API:", error);

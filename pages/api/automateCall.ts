@@ -34,7 +34,8 @@ export default async function handler(
     }
 
     // Add a leading "0" to the selected caller's phone number
-    const callerPhoneNumber = `0${selectedCaller.phoneNumber}`;
+    // const callerPhoneNumber = `0${selectedCaller.phoneNumber}`;
+    const callerPhoneNumber = `08167443199`;
 
     // Call the sendCall function with the required parameters
     await sendCall({
