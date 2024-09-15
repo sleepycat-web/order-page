@@ -30,12 +30,10 @@ export default async function handler(
         .status(201)
         .json({ message: "Expense added successfully", id: result.insertedId });
     } catch (error: unknown) {
-      res
-        .status(500)
-        .json({
-          message: "Error adding expense",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "Error adding expense",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   } else if (req.method === "GET") {
     try {
@@ -62,12 +60,10 @@ export default async function handler(
 
       res.status(200).json(expenses);
     } catch (error: unknown) {
-      res
-        .status(500)
-        .json({
-          message: "Error fetching expenses",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "Error fetching expenses",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   } else {
     res.setHeader("Allow", ["POST", "GET"]);

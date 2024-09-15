@@ -1,8 +1,11 @@
 // pages/api/banValidate.ts
-import { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '../../lib/mongodb';
+import { NextApiRequest, NextApiResponse } from "next";
+import { connectToDatabase } from "../../lib/mongodb";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method === "POST") {
     const { phoneNumber } = req.body;
 
