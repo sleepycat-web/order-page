@@ -26,16 +26,16 @@ export async function sendCall({ from, to }: SendCallParams): Promise<void> {
   });
 
   try {
-    const response = await axios.post(url, data, {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
+    // const response = await axios.post(url, data, {
+    //   headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    // });
 
-    // Log the entire response object
-    // console.log("Call response:", JSON.stringify(response.data, null, 2));
+    // // Log the entire response object
+    // // console.log("Call response:", JSON.stringify(response.data, null, 2));
 
-    // You can add any additional processing here if needed
+    // // You can add any additional processing here if needed
 
-    return response.data; // Return the response data if you need it in the calling code
+    // return response.data; // Return the response data if you need it in the calling code
   } catch (error) {
     console.error("Error initiating call:", error);
     throw error;
