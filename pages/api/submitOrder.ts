@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../lib/mongodb";
+import axios from "axios"; // We'll use axios for making the API call
 
 export default async function handler(
   req: NextApiRequest,
@@ -36,8 +37,6 @@ export default async function handler(
 
     // Get current date and time
     const now = new Date();
-    // now.setHours(now.getHours() + 5); // Add 5 hours for IST
-    // now.setMinutes(now.getMinutes() +30); // Add 30 minutes for IST
 
     const orderDocument = {
       items,
@@ -54,11 +53,12 @@ export default async function handler(
       order: "pending",
       createdAt: now,
       _id: new ObjectId(),
-      load:"pending",
+      load: "pending",
     };
 
     const result = await collection.insertOne(orderDocument);
 
+    // Immediately send the response
     res.status(200).json({
       message: "Order submitted successfully",
       orderId: result.insertedId,
@@ -69,6 +69,16 @@ export default async function handler(
         ? tableDeliveryCharge
         : undefined,
     });
+
+    // After sending the response, make an API call to automateCall
+    // Note: This will continue executing even after the response is sent
+    try {
+      await axios.post("/api/automateCall", { selectedLocation });
+      console.log("AutomateCall API called successfully");
+    } catch (error) {
+      console.error("Error calling automateCall API:", error);
+      // You might want to log this error or handle it in some way
+    }
   } catch (error) {
     console.error("Error submitting order:", error);
     res.status(500).json({ message: "Error submitting order" });
