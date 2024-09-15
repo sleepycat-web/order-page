@@ -51,7 +51,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [isOtpLoading, setIsOtpLoading] = useState(false);
 
   const [otpState, setOtpState] = useState<"idle" | "loading" | "sent">("idle");
-const [isOtpRequested, setIsOtpRequested] = useState(false);
+  const [isOtpRequested, setIsOtpRequested] = useState(false);
   const otpRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -80,14 +80,13 @@ const [isOtpRequested, setIsOtpRequested] = useState(false);
     0
   );
 
-const handleClick = () => {
-  if (!isOtpRequested) {
-    setIsCheckboxChecked(!isCheckboxChecked);
-  } else if (!isCheckboxChecked) {
-    setIsCheckboxChecked(true);
-  }
-};
-
+  const handleClick = () => {
+    if (!isOtpRequested) {
+      setIsCheckboxChecked(!isCheckboxChecked);
+    } else if (!isCheckboxChecked) {
+      setIsCheckboxChecked(true);
+    }
+  };
 
   // Calculate table delivery charge
   const tableDeliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
@@ -178,12 +177,9 @@ const handleClick = () => {
     return response.data;
   };
 
-
-
   useEffect(() => {
     const checkVerificationAndBanStatus = async () => {
       setIsLoading(true);
-
 
       const cachedVerification = localStorage.getItem("otpVerified");
       if (cachedVerification) {
@@ -194,11 +190,9 @@ const handleClick = () => {
         } = JSON.parse(cachedVerification);
         if (verified && new Date().getTime() < expiry) {
           try {
-            const response = await axios.get(
-              `/api/banValidate?phoneNumber=${encodeURIComponent(
-                cachedPhoneNumber
-              )}`
-            );
+            const response = await axios.post(`/api/banValidate`, {
+              phoneNumber: cachedPhoneNumber,
+            });
             if (response.data.isBanned) {
               resetCheckoutState();
               localStorage.removeItem("otpVerified");
@@ -258,61 +252,61 @@ const handleClick = () => {
     const validStartDigits = ["9", "8", "7", "6"];
     return number.length === 10 && validStartDigits.includes(number[0]);
   };
-    const handleGetOtp = async () => {
-      if (!validatePhoneNumber(phoneNumber)) {
-        setPhoneError("Please enter a valid phone number");
-        setTimeout(() => setPhoneError(""), 5000);
+  const handleGetOtp = async () => {
+    if (!validatePhoneNumber(phoneNumber)) {
+      setPhoneError("Please enter a valid phone number");
+      setTimeout(() => setPhoneError(""), 5000);
+      return;
+    }
+
+    if (isOtpRequestInProgress) return;
+
+    setIsOtpRequestInProgress(true);
+    setOtpState("loading");
+    setIsOtpRequested(true); // Set this to true when OTP is requested
+    try {
+      // First, check if the user exists and their ban status
+      const { exists, banStatus } = await checkUserExists(phoneNumber);
+
+      if (banStatus) {
+        setIsBanned(true);
+        setShowUserModal(true);
+        setOtpState("idle");
         return;
       }
 
-      if (isOtpRequestInProgress) return;
-
-      setIsOtpRequestInProgress(true);
-      setOtpState("loading");
-      setIsOtpRequested(true); // Set this to true when OTP is requested
-      try {
-        // First, check if the user exists and their ban status
-        const { exists, banStatus } = await checkUserExists(phoneNumber);
-
-        if (banStatus) {
-          setIsBanned(true);
-          setShowUserModal(true);
-          setOtpState("idle");
-          return;
-        }
-
-        if (!exists) {
-          setShowUserModal(true);
-          setOtpState("idle");
-          return;
-        }
-
-        // If the user exists and is not banned, fetch user data
-        const fetchedUserData = await getUserData(phoneNumber);
-        setCustomerName(fetchedUserData.name.split(" ")[0]);
-
-        // Now, send the OTP
-        const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
-
-        if (otpResponse.status === 200) {
-          const { otp } = otpResponse.data;
-          setGeneratedOtp(otp);
-          setOtpState("sent");
-          setTimer(30);
-          // setOtpMessage(`OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`);
-        } else {
-          setOtpMessage("Failed to send OTP. Please try again.");
-          setOtpState("idle");
-        }
-      } catch (error) {
-        console.error("Error checking user or sending OTP:", error);
-        setOtpMessage("An error occurred. Please try again.");
+      if (!exists) {
+        setShowUserModal(true);
         setOtpState("idle");
-      } finally {
-        setIsOtpLoading(false);
-        setTimeout(() => setIsOtpRequestInProgress(false), 5000); // Allow new requests after 5 seconds
+        return;
       }
-    };
+
+      // If the user exists and is not banned, fetch user data
+      const fetchedUserData = await getUserData(phoneNumber);
+      setCustomerName(fetchedUserData.name.split(" ")[0]);
+
+      // Now, send the OTP
+      const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
+
+      if (otpResponse.status === 200) {
+        const { otp } = otpResponse.data;
+        setGeneratedOtp(otp);
+        setOtpState("sent");
+        setTimer(30);
+        // setOtpMessage(`OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`);
+      } else {
+        setOtpMessage("Failed to send OTP. Please try again.");
+        setOtpState("idle");
+      }
+    } catch (error) {
+      console.error("Error checking user or sending OTP:", error);
+      setOtpMessage("An error occurred. Please try again.");
+      setOtpState("idle");
+    } finally {
+      setIsOtpLoading(false);
+      setTimeout(() => setIsOtpRequestInProgress(false), 5000); // Allow new requests after 5 seconds
+    }
+  };
 
   const handleUserDataSubmit = async () => {
     if (userData.name) {
