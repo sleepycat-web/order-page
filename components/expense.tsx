@@ -26,8 +26,9 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUPIPaymentsExpanded, setIsUPIPaymentsExpanded] = useState(false);
   const [onlineBalance, setOnlineBalance] = useState(0);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allTimeCounterBalance, setAllTimeCounterBalance] = useState(0);
+
   const toggleExpenses = () => {
     setIsExpensesExpanded(!isExpensesExpanded);
   };
@@ -43,10 +44,10 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
     "Others",
   ];
 
-    const handleSubmit = async () => {
-        if (isSubmitting) return; // Prevent duplicate submissions
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/expenseHandler", {
         method: "POST",
@@ -70,6 +71,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
       setComment("");
 
       fetchDailyExpenses();
+      fetchAllTimeData();
     } catch (error) {
       console.error("Error submitting expense:", error);
     } finally {
@@ -93,6 +95,19 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
     }
   };
 
+  const fetchAllTimeData = async () => {
+    try {
+      const response = await fetch(`/api/allTimeData?slug=${slug}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch all-time data");
+      }
+      const data = await response.json();
+      setAllTimeCounterBalance(data.allTimeCounterBalance);
+    } catch (error) {
+      console.error("Error fetching all-time data:", error);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -110,6 +125,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
     }, 60000);
 
     fetchDailyExpenses();
+    fetchAllTimeData();
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -141,6 +157,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
 
     return `${day} ${month} ${year} ${formattedHours}:${formattedMinutes} ${ampm}`;
   };
+
   const formatDateNew = (date: Date) => {
     const day = date.getDate();
     const month = date.toLocaleString("default", { month: "long" });
@@ -208,8 +225,8 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
                 <span>₹{onlineBalance.toFixed(2)}</span>
               </div>
             )}
-            <div className="bg-fuchsia-600 p-2 rounded">
-              <span className="font-semibold">Counter Balance: </span>
+            {/* <div className="bg-fuchsia-600 p-2 rounded">
+              <span className="font-semibold">Daily Counter Balance: </span>
               <span>
                 ₹
                 {(
@@ -219,6 +236,10 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
                   calculateTotalExpenses()
                 ).toFixed(2)}
               </span>
+            </div> */}
+            <div className="bg-purple-600 p-2 rounded">
+              <span className="font-semibold">Counter Balance: </span>
+              <span>₹{allTimeCounterBalance.toFixed(2)}</span>
             </div>
           </div>
         )}
@@ -228,7 +249,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
         <div className="rounded-lg relative p-4 bg-neutral-900 mb-4">
           <button
             onClick={toggleExpenses}
-            className="absolute top-2 right-4 text-gray-400  z-10 hover:text-white"
+            className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
           >
             <p className="text-3xl">&times;</p>
           </button>
@@ -339,7 +360,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
           <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
             <button
               onClick={toggleUPIPayments}
-              className="absolute top-2 right-4 text-gray-400  z-10 hover:text-white"
+              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
             >
               <p className="text-3xl">&times;</p>
             </button>

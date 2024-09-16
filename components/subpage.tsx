@@ -1,5 +1,7 @@
 "use client";
 import CallListDropdown from "@/components/listcall";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import CompactOrderInfo from "@/components/compactinfo";
 import { SingleItemOrder, MultiItemOrder } from "@/components/orderitem";
@@ -8,7 +10,7 @@ import OrderSearch from "@/components/searchbox"; // Adjust the import path as n
 import { Order } from "@/scripts/interface";
 import Expense from "@/components/expense";
 import ChangeHandler from "@/components/changehandler";
-import CallStaff from "./callstaff"; 
+import CallStaff from "./callstaff";
 
 export default function OrderPage() {
   const [slug, setSlug] = useState<string>("");
@@ -44,6 +46,9 @@ export default function OrderPage() {
       setSlug(urlSlug || "default"); // Use 'default' or any fallback value if the slug is empty
     }
   }, []);
+  const [payLaterExpanded, setPayLaterExpanded] = useState(false);
+
+
 
   const handleTabChange = (tab: "new" | "active" | "previous") => {
     setActiveTab(tab);
@@ -285,17 +290,17 @@ export default function OrderPage() {
       await handlePayment(orderId);
     }
   };
- const calculateTotalSales = (orders: Order[]) => {
-   return orders
-     .filter(
-       (order) =>
-         order.order !== "rejected" &&
-         order.status !== "rejected" &&
-         new Date(order.createdAt).setHours(0, 0, 0, 0) >=
-           new Date().setHours(0, 0, 0, 0) // Only include orders from today
-     )
-     .reduce((total, order) => total + order.total, 0);
- };
+  const calculateTotalSales = (orders: Order[]) => {
+    return orders
+      .filter(
+        (order) =>
+          order.order !== "rejected" &&
+          order.status !== "rejected" &&
+          new Date(order.createdAt).setHours(0, 0, 0, 0) >=
+            new Date().setHours(0, 0, 0, 0) // Only include orders from today
+      )
+      .reduce((total, order) => total + order.total, 0);
+  };
 
   const calculateTotalDeliveryCharges = (orders: Order[]) => {
     return orders.reduce((total, order) => {
@@ -310,30 +315,30 @@ export default function OrderPage() {
     );
   if (error) return <div>{error}</div>;
 
- const groupedOrders = orders.reduce(
-   (acc, order) => {
-     let key: "new" | "active" | "previous";
-     if (
-       order.status === "fulfilled" ||
-       order.status === "rejected" ||
-       order.order === "rejected"
-     ) {
-       key = "previous";
-     } else if (order.order === "dispatched" && order.status !== "fulfilled") {
-       key = "active";
-     } else {
-       key = "new";
-     }
-     if (!acc[key]) {
-       acc[key] = [];
-     }
-     acc[key].push(order);
-     return acc;
-   },
-   { new: [], active: [], previous: [] } as {
-     [key in "new" | "active" | "previous"]: Order[];
-   }
- );
+  const groupedOrders = orders.reduce(
+    (acc, order) => {
+      let key: "new" | "active" | "previous";
+      if (
+        order.status === "fulfilled" ||
+        order.status === "rejected" ||
+        order.order === "rejected"
+      ) {
+        key = "previous";
+      } else if (order.order === "dispatched" && order.status !== "fulfilled") {
+        key = "active";
+      } else {
+        key = "new";
+      }
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(order);
+      return acc;
+    },
+    { new: [], active: [], previous: [] } as {
+      [key in "new" | "active" | "previous"]: Order[];
+    }
+  );
 
   const counts = {
     new: groupedOrders.new.length,
@@ -546,8 +551,18 @@ export default function OrderPage() {
             {/* Pay Later Orders Section */}
             {payLaterOrders.length > 0 && (
               <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-4">Pay Later Orders</h2>
-                {renderOrders(payLaterOrders, true)}
+                <div
+                  className="flex items-center cursor-pointer mb-4"
+                  onClick={() => setPayLaterExpanded(!payLaterExpanded)}
+                >
+                  <h2 className="text-2xl font-bold mr-2">Pay Later Orders</h2>
+                  {payLaterExpanded ? (
+                    <ChevronUp className="w-6 h-6" />
+                  ) : (
+                    <ChevronDown className="w-6 h-6" />
+                  )}
+                </div>
+                {payLaterExpanded && renderOrders(payLaterOrders, true)}
               </div>
             )}
           </div>
