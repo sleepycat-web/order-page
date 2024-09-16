@@ -29,6 +29,7 @@ export const menuItems: MenuItem[] = [
           { label: "BlackCurrant Juice", price: "100.00" },
           { label: "Cranberry Juice", price: "100.00" },
           { label: "Kiwi Juice", price: "100.00" },
+          { label: "Brazillian Lemonade", price: "200.00" },
         ],
       },
       {
@@ -98,9 +99,11 @@ export const menuItems: MenuItem[] = [
           { label: "Honey", price: "30.00" },
           { label: "MilkMaid", price: "30.00" },
           { label: "Peanut Butter", price: "30.00" },
-          { label: "Boiled Egg(2PCS)", price: "40.00" },
-          { label: "Poached Egg", price: "50.00" },
-          { label: "Plain Omelette", price: "50.00" },
+          { label: "Boiled Egg (2PCS)", price: "40.00" },
+          { label: "Poached Egg", price: "40.00" },
+          { label: "DryFruit Mix", price: "50.00" },
+
+          { label: "Plain Omelette", price: "40.00" },
           { label: "Masala Omelette", price: "80.00" },
           { label: "Hazelnut Spread", price: "80.00" },
         ],
@@ -126,6 +129,16 @@ export const menuItems: MenuItem[] = [
         ],
       },
       {
+        name: "Taste",
+        type: "radio",
+        options: [
+          { label: "Without Sugar" },
+          { label: "With Sugar" },
+          { label: "Salt" },
+          { label: "Sugarfree Tablet" },
+        ],
+      },
+      {
         name: "Herbs/Flavours",
         type: "checkbox",
         options: [
@@ -136,8 +149,8 @@ export const menuItems: MenuItem[] = [
           { label: "Rose", price: "10.00" },
           { label: "Chocolate", price: "10.00" },
           { label: "Honey", price: "10.00" },
+          { label: "Elaichi", price: "20.00" },
           { label: "Kesar", price: "30.00" },
-          { label: "Elaichi", price: "30.00" },
         ],
       },
       {
@@ -251,10 +264,9 @@ export const menuItems: MenuItem[] = [
           { label: "Capsicum", price: "40.00" },
           { label: "Mushrooms", price: "50.00" },
           { label: "Paneer", price: "50.00" },
-          { label: "Poached Egg", price: "50.00" },
+          { label: "Poached Egg", price: "40.00" },
           { label: "Plain Omelette", price: "40.00" },
           { label: "Masala Omelette", price: "80.00" },
-          { label: "Boiled Chicken", price: "50.00" },
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -318,10 +330,9 @@ export const menuItems: MenuItem[] = [
           { label: "Tomato", price: "10.00" },
           { label: "Carrot", price: "20.00" },
           { label: "Paneer", price: "50.00" },
-          { label: "Poached Egg", price: "50.00" },
+          { label: "Poached Egg", price: "40.00" },
           { label: "Plain Omelette", price: "40.00" },
           { label: "Masala Omelette", price: "80.00" },
-          { label: "Boiled Chicken", price: "50.00" },
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -381,12 +392,13 @@ export const menuItems: MenuItem[] = [
           { label: "Onion", price: "10.00" },
           { label: "Tomato", price: "10.00" },
           { label: "Carrot", price: "20.00" },
+          { label: "Capsicum", price: "40.00" },
+
           { label: "Mushrooms", price: "50.00" },
           { label: "Paneer", price: "50.00" },
-          { label: "Poached Egg", price: "50.00" },
+          { label: "Poached Egg", price: "40.00" },
           { label: "Plain Omelette", price: "40.00" },
           { label: "Masala Omelette", price: "80.00" },
-          { label: "Boiled Chicken", price: "50.00" },
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -437,7 +449,6 @@ export const menuItems: MenuItem[] = [
           { label: "Lemon", price: "20.00" },
           { label: "Infused Egg", price: "20.00" },
           { label: "Mushrooms", price: "50.00" },
-          { label: "Boiled Chicken", price: "50.00" },
           { label: "Sliced Chicken Sausages", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
         ],
@@ -457,9 +468,9 @@ export const menuItems: MenuItem[] = [
         type: "radio",
 
         options: [
-          { label: "Veg Momo", price: "70.00" },
+          { label: "Veg", price: "70.00" },
 
-          { label: "Chicken Momo", price: "100.00" },
+          { label: "Chicken ", price: "100.00" },
         ],
       },
 
@@ -553,7 +564,7 @@ export const menuItems: MenuItem[] = [
 
           { label: "Chicken Wings", price: "280.00" },
 
-          { label: "Fried Bacon", price: "280.00" },
+          { label: "Grilled Bacon", price: "280.00" },
         ],
       },
 
@@ -645,9 +656,9 @@ export const menuItems: MenuItem[] = [
 
           { label: "Brocolli", price: "50.00" },
 
-          { label: "Poached Egg", price: "50.00" },
+          { label: "Poached Egg", price: "40.00" },
 
-          { label: "Plain Omelette", price: "50.00" },
+          { label: "Plain Omelette", price: "40.00" },
 
           { label: "Masala Omelette", price: "80.00" },
 
@@ -764,8 +775,7 @@ export const menuItems: MenuItem[] = [
         options: [
           { label: "Mushrooms", price: "50.00" },
           { label: "Paneer", price: "50.00" },
-          { label: "Poached Egg", price: "50.00" },
-          { label: "Boiled Chicken", price: "50.00" },
+          { label: "Poached Egg", price: "40.00" },
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -804,8 +814,7 @@ export const menuItems: MenuItem[] = [
         options: [
           { label: "Mushrooms", price: "50.00" },
           { label: "Paneer", price: "50.00" },
-          { label: "Poached Egg", price: "50.00" },
-          { label: "Boiled Chicken", price: "50.00" },
+          { label: "Poached Egg", price: "40.00" },
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -859,6 +868,7 @@ export const menuItems: MenuItem[] = [
           { label: "Indiemint", price: "20.00" },
           { label: "Gold Flake Premium", price: "20.00" },
           { label: "Gold Flake Lite", price: "30.00" },
+          { label: "Classic Mild", price: "30.00" },
         ],
       },
       {
