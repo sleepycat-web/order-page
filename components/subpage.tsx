@@ -36,7 +36,7 @@ export default function OrderPage() {
     active: false,
     previous: false,
   });
-
+const [networkError, setNetworkError] = useState(false);
   useEffect(() => {
     if (typeof window !== "undefined") {
       const pathSegments = window.location.pathname.split("/");
@@ -126,52 +126,47 @@ export default function OrderPage() {
     return {};
   };
 
-  useEffect(() => {
-    if (!slug) return;
-    const fetchOrders = async () => {
-      try {
-        const response = await fetch(`/api/getOrders?slug=${slug}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch orders");
-        }
-        const data = await response.json();
-
-        // Compare new orders with current orders to detect updates
-        if (orders.length > 0) {
-          const newOrders = data.filter(
-            (newOrder: Order) =>
-              !orders.some(
-                (existingOrder) => existingOrder._id === newOrder._id
-              )
-          );
-
-          const updatedOrderId = data.find((newOrder: Order) => {
-            const currentOrder = orders.find(
-              (order) => order._id === newOrder._id
-            );
-            return (
-              currentOrder &&
-              (currentOrder.status !== newOrder.status ||
-                currentOrder.order !== newOrder.order)
-            );
-          })?._id;
-
-          if (updatedOrderId) {
-            setLastUpdatedOrderId(updatedOrderId);
-          }
-        }
-
-        setOrders(data);
-        setLoading(false);
-      } catch (err) {
-        setError("Error fetching orders. Please try again later.");
-        setLoading(false);
+useEffect(() => {
+  if (!slug) return;
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(`/api/getOrders?slug=${slug}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch orders");
       }
-    };
-    fetchOrders();
-    const intervalId = setInterval(fetchOrders, 3000);
-    return () => clearInterval(intervalId);
-  }, [ slug]);
+      const data = await response.json();
+
+      // Compare new orders with current orders to detect updates
+      if (orders.length > 0) {
+        const updatedOrderId = data.find((newOrder: Order) => {
+          const currentOrder = orders.find(
+            (order) => order._id === newOrder._id
+          );
+          return (
+            currentOrder &&
+            (currentOrder.status !== newOrder.status ||
+              currentOrder.order !== newOrder.order)
+          );
+        })?._id;
+
+        if (updatedOrderId) {
+          setLastUpdatedOrderId(updatedOrderId);
+        }
+      }
+
+      setOrders(data);
+      setLoading(false);
+      setNetworkError(false);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setNetworkError(true);
+      // Don't set loading to false here to keep existing orders on screen
+    }
+  };
+  fetchOrders();
+  const intervalId = setInterval(fetchOrders, 3000);
+  return () => clearInterval(intervalId);
+}, [slug, orders]);
 
   useEffect(() => {
     if (lastUpdatedOrderId && orderRefs.current[lastUpdatedOrderId]) {
@@ -506,6 +501,9 @@ export default function OrderPage() {
         <h1 className="text-3xl font-bold mb-6">
           {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
         </h1>
+        {networkError && (
+         null
+        )}
         <OrderSearch
           orders={orders}
           setActiveTab={setActiveTab}

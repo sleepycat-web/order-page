@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { connectToDatabase } from "../../lib/mongodb"; // Adjust the import path as needed
+import { connectToDatabase } from "../../lib/mongodb";
+import { ObjectId } from "mongodb";
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,9 +17,18 @@ export default async function handler(
       const { db } = await connectToDatabase();
       const collection = db.collection("CallData");
 
-      const callerData = await collection.find({}).toArray();
+      const branchName = getBranchName(slug);
 
-      res.status(200).json(callerData);
+      // Fetch the active caller for the specific branch
+      const activeCaller = await collection.findOne({
+        branch: branchName,
+        callerStatus: true,
+      });
+
+      // Fetch all callers
+      const allCallers = await collection.find({}).toArray();
+
+      res.status(200).json({ activeCaller, allCallers });
     } catch (error) {
       console.error("Error fetching caller data:", error);
       res.status(500).json({ error: "Error fetching caller data" });
@@ -34,35 +44,29 @@ export default async function handler(
       const { db } = await connectToDatabase();
       const collection = db.collection("CallData");
 
-      // Get the branch name based on the slug
       const branchName = getBranchName(slug);
 
-      // Find the caller to be set active
-      const callerToActivate = await collection.findOne({ _id: callerId });
-
-      if (!callerToActivate) {
-        return res.status(404).json({ error: "Caller not found" });
-      }
-
       // Check if the caller is already active in another branch
-      if (
-        callerToActivate.callerStatus &&
-        callerToActivate.branch !== branchName
-      ) {
-        return res
-          .status(400)
-          .json({ error: "Caller is already active in another branch" });
+      const activeCaller = await collection.findOne({
+        _id: new ObjectId(callerId),
+        callerStatus: true,
+      });
+
+      if (activeCaller && activeCaller.branch !== branchName) {
+        return res.status(400).json({
+          error: `This person is already an active caller for ${activeCaller.branch}. Please select someone else.`,
+        });
       }
 
-      // Set all callers in the current branch to inactive
+      // Set all callers for this branch to inactive
       await collection.updateMany(
         { branch: branchName },
         { $set: { callerStatus: false } }
       );
 
-      // Set the selected caller as active and update their branch
+      // Set the selected caller as active for this branch
       await collection.updateOne(
-        { _id: callerId },
+        { _id: new ObjectId(callerId) },
         { $set: { callerStatus: true, branch: branchName } }
       );
 

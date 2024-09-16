@@ -1,8 +1,7 @@
-// layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
-import ClientLayout from "./clientlayout";
+import ThemeProvider from "../themeprovider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,18 +10,16 @@ export const metadata: Metadata = {
   description: "",
 };
 
-const RootLayout = ({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) => {
+}>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ClientLayout>{children}</ClientLayout>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
-};
-
-export default RootLayout;
+}
