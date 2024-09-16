@@ -18,7 +18,7 @@ export default function ThemeProvider({
   }
 
   return (
-    <div data-theme="dark" className="min-h-screen bg-black text-white">
+    <div data-theme="dark" className="  bg-black text-white">
       {children}
     </div>
   );
