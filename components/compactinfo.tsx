@@ -50,38 +50,48 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   const [isOverdue, setIsOverdue] = useState(false);
 
 
+useEffect(() => {
+  const updateElapsedTime = () => {
+    const now = new Date();
+    const orderTime = new Date(oldestOrderTime);
 
-  useEffect(() => {
-    const updateElapsedTime = () => {
-      const now = new Date();
-      const orderTime = new Date(oldestOrderTime);
-      const diff = now.getTime() - orderTime.getTime() + 15 * 60 * 1000; // Add 15 minutes (in milliseconds)
+    // Get the time difference in milliseconds between now and the order time
+    const diff = now.getTime() - orderTime.getTime();
 
-      const totalMinutes = Math.floor(diff / (1000 * 60));
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    // Calculate how much time has passed since the order and adjust by 15 minutes (900,000 ms)
+    const adjustedDiffInMs = diff - 15 * 60 * 1000;
+    const isCountingUp = adjustedDiffInMs >= 0;
 
-      const sign = totalMinutes >= 0 ? "-" : "";
+    // Get the total minutes and seconds from the adjusted time
+    const totalMinutes = Math.floor(Math.abs(adjustedDiffInMs) / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const seconds = Math.floor(
+      (Math.abs(adjustedDiffInMs) % (1000 * 60)) / 1000
+    );
 
-      let timeString = "";
-      if (hours > 0) {
-        timeString += `${Math.abs(hours)}:`;
-      }
-      timeString += `${Math.abs(minutes)
-        .toString()
-        .padStart(2, "0")}:${Math.abs(seconds).toString().padStart(2, "0")}`;
+    // Format the elapsed time
+    let timeString = "";
+    if (hours > 0) {
+      timeString += `${hours}:`;
+    }
+    timeString += `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
 
-      setElapsedTime(`${sign}${timeString}`);
+    // If counting down, prefix with a minus sign
+    const sign = isCountingUp ? "-" : "";
+    setElapsedTime(`${sign}${timeString}`);
 
-      setIsOverdue(totalMinutes >= 0);
-    };
+    // Update the overdue state once the countdown has passed 0:00
+    setIsOverdue(isCountingUp);
+  };
 
-    updateElapsedTime();
-    const interval = setInterval(updateElapsedTime, 1000);
+  updateElapsedTime();
+  const interval = setInterval(updateElapsedTime, 1000);
 
-    return () => clearInterval(interval);
-  }, [oldestOrderTime]);
+  return () => clearInterval(interval);
+}, [oldestOrderTime]);
 
   const handleDispatchAll = () => {
     const orderIds = orders

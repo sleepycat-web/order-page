@@ -37,20 +37,29 @@ export default async function handler(
     // Get the current date in IST
     const now = new Date();
     // now.setHours(now.getHours() + 5); // Add 5 hours for IST
-    // now.setMinutes(now.getMinutes()+ 30); // Add 30 minutes for IST
+    // now.setMinutes(now.getMinutes() + 30); // Add 30 minutes for IST
 
     // Set the start of the day (midnight) in IST
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
 
-    const orders = await db
+    const currentOrders = await db
       .collection(collection)
       .find({
         createdAt: { $gte: startOfDay },
       })
       .toArray();
 
-    res.status(200).json(orders);
+    const payLaterOrders = await db
+      .collection(collection)
+      .find({
+        createdAt: { $lt: startOfDay },
+        order: "dispatched",
+        status: { $ne: "fulfilled" },
+      })
+      .toArray();
+
+    res.status(200).json({ currentOrders, payLaterOrders });
   } catch (error) {
     console.error("Database error:", error);
     res.status(500).json({ error: "Failed to fetch orders" });
