@@ -120,68 +120,7 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
   </div>
 );
 
-const Timer: React.FC<{
-  startTime: string;
-  isDispatched: boolean;
-  isRejected: boolean;
-  isFulfilled: boolean;
-}> = ({ startTime, isDispatched, isRejected, isFulfilled }) => {
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [isCountingUp, setIsCountingUp] = useState(false);
 
-  useEffect(() => {
-    const startTimestamp = new Date(startTime).getTime();
-    const duration = 15 * 60 * 1000; // 15 minutes
-
-    const calculateTimeLeft = () => {
-      const now = new Date().getTime();
-      const elapsedTime = now - startTimestamp;
-
-      if (elapsedTime < duration && !isDispatched) {
-        // Counting down
-        return Math.max(0, duration - elapsedTime);
-      } else if (isDispatched) {
-        // Counting up (negative values represent time past dispatch)
-        return elapsedTime - duration;
-      }
-      return 0;
-    };
-
-    const timer = setInterval(() => {
-      const newTimeLeft = calculateTimeLeft();
-      setTimeLeft(newTimeLeft);
-      setIsCountingUp(newTimeLeft > 0 && isDispatched);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [startTime, isDispatched]);
-
-  if (isRejected) {
-    return (
-      null
-    );
-  }
-
-  if (isFulfilled || timeLeft === null) {
-    return null;
-  }
-
-  const minutes = Math.floor(Math.abs(timeLeft) / (60 * 1000));
-  const seconds = Math.floor((Math.abs(timeLeft) % (60 * 1000)) / 1000);
-
-  return (
-    <span
-      className={`p-1 rounded ml-1 text-sm font-bold ${
-        isCountingUp ? "bg-orange-500" : "bg-yellow-500"
-      }`}
-    >
-      {isCountingUp ? "-" : ""}
-      {minutes.toString().padStart(2, "0")}:
-      {seconds.toString().padStart(2, "0")}
-    </span>
-  );
-};
- 
 
 
 
@@ -314,12 +253,7 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
     <OrderStatus order={order} onDispatch={onDispatch} onPayment={onPayment} />
     <p className="mb-2 ">
       Date: {formatDate(order.createdAt)}{" "}
-      <Timer
-        startTime={order.updatedAt || order.createdAt}
-        isDispatched={order.order === "dispatched"}
-        isFulfilled={order.status === "fulfilled"}
-        isRejected={order.order === "rejected" || order.status === "rejected"}
-      />{" "}
+      
     </p>
     <div className="mt-2">
       <OrderItem
@@ -380,12 +314,7 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
     <OrderStatus order={order} onDispatch={onDispatch} onPayment={onPayment} />
     <p className="mb-2">
       Date: {formatDate(order.createdAt)}{" "}
-      <Timer
-        startTime={order.updatedAt || order.createdAt}
-        isDispatched={order.order === "dispatched"}
-        isRejected={order.order === "rejected" || order.status === "rejected"}
-        isFulfilled={order.order === "fulfilled"}
-      />{" "}
+      
     </p>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
       {order.items.map((orderItem, index) => (

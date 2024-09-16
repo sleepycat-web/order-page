@@ -278,7 +278,9 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
             <input
               type="text"
               placeholder="Description"
-              className="input bg-neutral-800 w-full sm:w-40"
+              className={`input w-full sm:w-40 ${
+                comment ? "bg-neutral-800" : "bg-gray-800"
+              }`}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
