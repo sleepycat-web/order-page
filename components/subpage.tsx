@@ -8,6 +8,7 @@ import OrderSearch from "@/components/searchbox"; // Adjust the import path as n
 import { Order } from "@/scripts/interface";
 import Expense from "@/components/expense";
 import ChangeHandler from "@/components/changehandler";
+import CallStaff from "./callstaff"; 
 
 export default function OrderPage() {
   const [slug, setSlug] = useState<string>("");
@@ -531,11 +532,9 @@ export default function OrderPage() {
         {activeTab === "new" && (
           <div className="mb-8">{renderOrders(groupedOrders.new)}</div>
         )}
-
         {activeTab === "active" && (
           <div className="mb-8">{renderOrders(groupedOrders.active)}</div>
         )}
-
         {activeTab === "previous" && (
           <div className="mb-8">
             {/* Total Sales */}
@@ -551,6 +550,7 @@ export default function OrderPage() {
         {counts.new === 0 && counts.active === 0 && counts.previous === 0 && (
           <p className="text-center text-xl">No orders at the moment.</p>
         )}
+        {activeTab === "previous" && <CallStaff slug={slug} />}
       </div>
     </>
   );
