@@ -59,6 +59,7 @@ export interface CompactInfoProps {
   activeTab: "new" | "active" | "previous"; // Add this line
   onToggle: (isExpanded: boolean) => void;
   initialExpanded: boolean; // Add this prop
+  oldestOrderTime: string;
 }
 
 export interface OrderItemProps {

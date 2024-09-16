@@ -160,8 +160,8 @@ export default async function handler(
       return res.status(404).json({ message: "No available caller found" });
     }
 
-    // const callerPhoneNumber = `0${selectedCaller.phoneNumber}`;
-    const callerPhoneNumber = `08167443199`;
+    const callerPhoneNumber = `0${selectedCaller.phoneNumber}`;
+    // const callerPhoneNumber = ``;
 
     await initiateCallWithRetry(
       callerPhoneNumber,

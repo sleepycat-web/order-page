@@ -15,6 +15,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   onRejectAll,
   activeTab,
   initialExpanded,
+  oldestOrderTime,
 }) => {
   const [isDispatched, setIsDispatched] = useState(
     orders.every((order) => order.order === "dispatched")
@@ -45,21 +46,57 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     setIsExpanded(newExpandedState);
     onToggle(newExpandedState);
   };
+  const [elapsedTime, setElapsedTime] = useState("");
+  const [isOverdue, setIsOverdue] = useState(false);
 
-const handleDispatchAll = () => {
-  const orderIds = orders
-    .filter((order) => order.order !== "dispatched")
-    .map((order) => order._id);
 
-  setDispatchCountdown(5);
-  const timeoutId = setTimeout(() => {
-    onDispatchAll(orderIds);
-    setIsDispatched(true);
-    setDispatchCountdown(null);
-  }, 5000);
-  setDispatchTimeoutId(timeoutId);
+
+  useEffect(() => {
+    const updateElapsedTime = () => {
+      const now = new Date();
+      const orderTime = new Date(oldestOrderTime);
+      const diff = now.getTime() - orderTime.getTime() + 15 * 60 * 1000; // Add 15 minutes (in milliseconds)
+
+      const totalMinutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const sign = totalMinutes >= 0 ? "-" : "";
+
+      let timeString = "";
+      if (hours > 0) {
+        timeString += `${Math.abs(hours)}:`;
+      }
+      timeString += `${Math.abs(minutes)
+        .toString()
+        .padStart(2, "0")}:${Math.abs(seconds).toString().padStart(2, "0")}`;
+
+      setElapsedTime(`${sign}${timeString}`);
+
+      setIsOverdue(totalMinutes >= 0);
+    };
+
+    updateElapsedTime();
+    const interval = setInterval(updateElapsedTime, 1000);
+
+    return () => clearInterval(interval);
+  }, [oldestOrderTime]);
+
+  const handleDispatchAll = () => {
+    const orderIds = orders
+      .filter((order) => order.order !== "dispatched")
+      .map((order) => order._id);
+
+    setDispatchCountdown(5);
+    const timeoutId = setTimeout(() => {
+      onDispatchAll(orderIds);
+      setIsDispatched(true);
+      setDispatchCountdown(null);
+    }, 5000);
+    setDispatchTimeoutId(timeoutId);
   };
-  
+
   const nonRejectedTotal = orders
     .filter((order) => order.status !== "rejected")
     .reduce((sum, order) => sum + order.price, 0);
@@ -139,7 +176,17 @@ const handleDispatchAll = () => {
               {cabin}
             </span>
           </div>
+
           <div className="flex items-center gap-2 mt-1 sm:mt-0">
+            {activeTab != "previous" && (
+              <div
+                className={` px-2 py-1 rounded text-center text-sm font-semibold ${
+                  isOverdue ? "bg-orange-500" : "bg-yellow-500"
+                }`}
+              >
+                <> {elapsedTime}</>
+              </div>
+            )}
             <span className="text-sm">Status:</span>
             <span
               className={`px-1 py-1 rounded text-sm ${
@@ -156,6 +203,7 @@ const handleDispatchAll = () => {
                 ? "Dispatched"
                 : "Pending"}
             </span>
+
             {!isDispatched && !isRejected && (
               <>
                 <button
