@@ -424,9 +424,9 @@ const Checkout: React.FC<CheckoutProps> = ({
               >
                 {otpState === "loading" ? (
                   <span className="loading loading-spinner loading-sm"></span>
-                ) : otpState === "sent" && timer > 0 ? (
+                ) : otpState === "sent" || timer > 0 ? (
                   <span className="text-sm whitespace-nowrap">
-                    Resend in {timer}s
+                    {timer > 0 ? `Resend in ${timer}s` : "Resend OTP"}
                   </span>
                 ) : (
                   <span className="text-sm whitespace-nowrap">Get OTP</span>
