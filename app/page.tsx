@@ -16,6 +16,7 @@ export interface CartItem {
   specialRequests: string;
   basePrice: number; // Add this line
   totalPrice: number;
+  calculatedPrice: number; // Add this line
 }
 
 export default function Home() {
@@ -125,6 +126,7 @@ const handleAddToCart = (
     specialRequests,
     totalPrice,
     basePrice: totalPrice / quantity,
+    calculatedPrice: totalPrice,
   };
 
   setCartItems((prevItems) => {

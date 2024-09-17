@@ -69,10 +69,16 @@ const [isBillSectionOpen, setIsBillSectionOpen] = useState(false);
  const handleUpdateQuantity = (index: number, newQuantity: number) => {
    onUpdateQuantity(index, newQuantity);
  };
-  const handleCheckout = () => {
-    setIsCheckoutOpen(true);
-    onToggle(); // This will close the cart
-  };
+const handleCheckout = () => {
+  // Calculate the items with calculated price
+  const itemsWithCalculatedPrice = items.map((item) => ({
+    ...item,
+    calculatedPrice: item.totalPrice * item.quantity,
+  }));
+
+  setIsCheckoutOpen(true);
+  onToggle(); // This will close the cart
+};
 
   const handleCloseCheckout = () => {
     setIsCheckoutOpen(false);
@@ -131,7 +137,6 @@ const [isBillSectionOpen, setIsBillSectionOpen] = useState(false);
           <div className="container mx-auto px-4 py-8 pb-24 md:pb-12">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Cart</h2>{" "}
-            
               <button onClick={onToggle} className="text-3xl">
                 &times;
               </button>
@@ -313,6 +318,7 @@ const [isBillSectionOpen, setIsBillSectionOpen] = useState(false);
           onOrderSuccess={onOrderSuccess}
           onResetCart={onResetCart} // Pass this prop to Checkout
           tableDelivery={tableDelivery}
+          
         />
       )}
       {isBillSectionOpen && <BillSection onClose={handleCloseBillSection} />}
