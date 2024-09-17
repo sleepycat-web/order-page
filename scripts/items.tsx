@@ -466,7 +466,7 @@ export const menuItems: MenuItem[] = [
   {
     name: "Momo",
 
-    price: "70.00",
+    price: "100.00",
 
     customizationOptions: [
       {
