@@ -7,6 +7,7 @@ export interface MenuItem {
   price: string;
   description?: string;
   soldOut?: boolean;
+  outOfStock?: boolean;
   customizationOptions?: CustomizationOption[];
 }
 
@@ -33,7 +34,7 @@ export const MenuItemComponent: React.FC<MenuItem> = ({
   <div className="p-4 bg-neutral-950 rounded-lg  hover:cursor-pointer ">
     <h3 className="text-base font-semibold">{name}</h3>
     <p className={`text-base ${soldOut ? "text-red-500" : "text-green-600"}`}>
-      ₹{price} {soldOut && "Sold Out"}
+      ₹{price} {soldOut && "Unavailable"}
     </p>
     {description && <p className="text-sm text-gray-600">{description}</p>}
   </div>

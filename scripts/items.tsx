@@ -709,7 +709,7 @@ export const menuItems: MenuItem[] = [
   //Indian Gracy DOne
   {
     name: "Indian Gravy",
-    soldOut: false,
+    soldOut: true,
     price: "70.00",
 
     customizationOptions: [
@@ -719,7 +719,7 @@ export const menuItems: MenuItem[] = [
         type: "radio",
 
         options: [
-          { label: "Yellow Dal Tadka", price: "70.00" },
+          { label: "Yellow Dal Tadka", price: "70.00", },
 
           { label: "Dal Makhani", price: "100.00" },
 
