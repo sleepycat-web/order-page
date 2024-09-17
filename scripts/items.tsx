@@ -267,6 +267,8 @@ export const menuItems: MenuItem[] = [
           { label: "Poached Egg", price: "40.00" },
           { label: "Plain Omelette", price: "40.00" },
           { label: "Masala Omelette", price: "80.00" },
+          { label: "Chicken", price: "50.00" },
+
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -333,6 +335,7 @@ export const menuItems: MenuItem[] = [
           { label: "Poached Egg", price: "40.00" },
           { label: "Plain Omelette", price: "40.00" },
           { label: "Masala Omelette", price: "80.00" },
+          { label: "Chicken", price: "50.00" },
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -398,6 +401,8 @@ export const menuItems: MenuItem[] = [
           { label: "Paneer", price: "50.00" },
           { label: "Poached Egg", price: "40.00" },
           { label: "Plain Omelette", price: "40.00" },
+          { label: "Chicken", price: "50.00" },
+
           { label: "Masala Omelette", price: "80.00" },
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
@@ -448,6 +453,8 @@ export const menuItems: MenuItem[] = [
           { label: "Dalle Achar", price: "20.00" },
           { label: "Lemon", price: "20.00" },
           { label: "Infused Egg", price: "20.00" },
+          { label: "Chicken", price: "50.00" },
+
           { label: "Mushrooms", price: "50.00" },
           { label: "Sliced Chicken Sausages", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -555,6 +562,7 @@ export const menuItems: MenuItem[] = [
           { label: "Potato Cheese Shots", price: "100.00" },
 
           { label: "Cheese Corn Nuggets", price: "170.00" },
+          { label: "Paneer Pakora", price: "180.00" },
 
           { label: "Chicken Pakora", price: "180.00" },
 
@@ -776,6 +784,7 @@ export const menuItems: MenuItem[] = [
           { label: "Mushrooms", price: "50.00" },
           { label: "Paneer", price: "50.00" },
           { label: "Poached Egg", price: "40.00" },
+          { label: "Chicken", price: "50.00" },
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
@@ -818,6 +827,8 @@ export const menuItems: MenuItem[] = [
           { label: "Sliced Chicken Sausage", price: "50.00" },
           { label: "Chicken Salami", price: "50.00" },
           { label: "Chicken Pepperoni", price: "100.00" },
+          { label: "Chicken", price: "50.00" },
+
           { label: "Bacon Strips", price: "130.00" },
           { label: "Chicken Tikka", price: "150.00" },
         ],
