@@ -49,7 +49,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   const [elapsedTime, setElapsedTime] = useState("");
   const [isOverdue, setIsOverdue] = useState(false);
 
-
+const hasDeliveryCharge = orders.some((order) => order.deliveryCharge > 0);
 useEffect(() => {
   const updateElapsedTime = () => {
     const now = new Date();
@@ -171,7 +171,9 @@ useEffect(() => {
   return (
     <div
       onClick={handleContainerClick}
-      className="bg-neutral-800 py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-2 flex flex-wrap lg:flex-nowrap lg:justify-between"
+      className={`py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-2 flex flex-wrap lg:flex-nowrap lg:justify-between ${
+        hasDeliveryCharge ? "bg-slate-800" : "bg-neutral-800"
+      }`}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 w-full lg:w-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 w-full">

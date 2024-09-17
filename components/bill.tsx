@@ -24,10 +24,10 @@ interface Order {
   total: number;
   status: string;
   order: string;
-  createdAt: string ;
+  createdAt: string;
   customerName: string;
   tableDeliveryCharge: number;
-  appliedPromo: string | null;
+  appliedPromo: string | { code: string; percentage: number } | null;
 }
 
 interface BillSectionProps {
@@ -321,7 +321,11 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, customerName }) => {
           {order.appliedPromo && (
             <p className="text-neutral-300">
               Applied Promo:{" "}
-              <span className="text-white">{order.appliedPromo}</span>
+              <span className="text-white">
+                {typeof order.appliedPromo === "string"
+                  ? order.appliedPromo
+                  : `${order.appliedPromo.code} (${order.appliedPromo.percentage}%)`}
+              </span>
             </p>
           )}
         </div>
