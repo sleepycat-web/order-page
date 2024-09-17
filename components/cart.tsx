@@ -39,7 +39,7 @@ const Cart: React.FC<CartProps> = ({
   setTotal,
   onResetCart,
   onTableDeliveryChange,
-}) => {
+ }) => {
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -57,7 +57,9 @@ const Cart: React.FC<CartProps> = ({
       onApplyPromo(null);
     }
   };
-
+ const handleUpdateQuantity = (index: number, newQuantity: number) => {
+   onUpdateQuantity(index, newQuantity);
+ };
   const handleCheckout = () => {
     setIsCheckoutOpen(true);
     onToggle(); // This will close the cart
@@ -69,11 +71,12 @@ const Cart: React.FC<CartProps> = ({
       onToggle(); // This will open the cart if it's closed
     }
   };
+
   const calculateTotal = () => {
-   const newSubtotal = items.reduce(
-     (total, item) => total + (item.item.price ?? 0) * item.quantity,
-     0
-   );
+    const newSubtotal = items.reduce(
+      (total, item) => total + item.totalPrice,
+      0
+    );
     setSubtotal(newSubtotal);
 
     const deliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
@@ -84,12 +87,6 @@ const Cart: React.FC<CartProps> = ({
 
     return discountableTotal - discount + deliveryCharge;
   };
-
-  useEffect(() => {
-    const newTotal = calculateTotal();
-    setUltraGrandTotal(newTotal);
-    setTotal(newTotal);
-  }, [items, appliedPromo, tableDelivery, setTotal, selectedLocation]);
 
   useEffect(() => {
     const newTotal = calculateTotal();
@@ -143,9 +140,8 @@ const Cart: React.FC<CartProps> = ({
                   {items.map((item, index) => (
                     <li key={index} className="border-b border-gray-700 pb-4">
                       <div className="flex justify-between items-start space-x-1">
-                        {" "}
-                        <div className="flex-grow ">
-                          <h3 className="font-semibold text-lg ">
+                        <div className="flex-grow">
+                          <h3 className="font-semibold text-lg">
                             {item.item.name}
                           </h3>
                           <div className="flex items-center mt-2">
@@ -172,8 +168,8 @@ const Cart: React.FC<CartProps> = ({
                           </div>
                           <div className="mt-2 flex items-center">
                             <span className="mr-2">Price:</span>
-                            <div className="px-2  mb-0.5 bg-blue-600 rounded text-white font-semibold">
-                              ₹{(item.item.price * item.quantity).toFixed(2)}
+                            <div className="px-2 mb-0.5 bg-blue-600 rounded text-white font-semibold">
+                              ₹{item.totalPrice.toFixed(2)}
                             </div>
                           </div>
                           {Object.entries(item.selectedOptions).map(

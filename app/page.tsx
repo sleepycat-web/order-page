@@ -14,8 +14,8 @@ export interface CartItem {
   selectedOptions: Record<string, string[]>;
   quantity: number;
   specialRequests: string;
+  basePrice: number; // Add this line
   totalPrice: number;
-  
 }
 
 export default function Home() {
@@ -87,13 +87,20 @@ export default function Home() {
   
   
 
-  const handleUpdateQuantity = (index: number, newQuantity: number) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item, i) =>
-        i === index ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
+
+const handleUpdateQuantity = (index: number, newQuantity: number) => {
+  setCartItems((prevItems) =>
+    prevItems.map((item, i) =>
+      i === index
+        ? {
+            ...item,
+            quantity: newQuantity,
+            totalPrice: item.basePrice * newQuantity,
+          }
+        : item
+    )
+  );
+};
 
 const areItemsIdentical = (item1: CartItem, item2: CartItem) => {
   return (
@@ -117,6 +124,7 @@ const handleAddToCart = (
     quantity,
     specialRequests,
     totalPrice,
+    basePrice: totalPrice / quantity,
   };
 
   setCartItems((prevItems) => {
@@ -125,14 +133,18 @@ const handleAddToCart = (
     );
 
     if (existingItemIndex !== -1) {
-      // If an identical item exists, update its quantity by adding only the new quantity
+      // If an identical item exists, update its quantity and recalculate total price
       return prevItems.map((cartItem, index) =>
         index === existingItemIndex
-          ? { ...cartItem, quantity: cartItem.quantity + quantity }
+          ? {
+              ...cartItem,
+              quantity: cartItem.quantity + quantity,
+              totalPrice: (cartItem.quantity + quantity) * cartItem.basePrice,
+            }
           : cartItem
       );
     } else {
-      // If no identical item exists, add the new item with its quantity
+      // If no identical item exists, add the new item
       return [...prevItems, newItem];
     }
   });
