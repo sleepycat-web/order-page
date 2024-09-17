@@ -69,12 +69,11 @@ const Cart: React.FC<CartProps> = ({
       onToggle(); // This will open the cart if it's closed
     }
   };
-
   const calculateTotal = () => {
-    const newSubtotal = items.reduce(
-      (total, item) => total + item.totalPrice * item.quantity,
-      0
-    );
+   const newSubtotal = items.reduce(
+     (total, item) => total + (item.item.price ?? 0) * item.quantity,
+     0
+   );
     setSubtotal(newSubtotal);
 
     const deliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
@@ -83,9 +82,14 @@ const Cart: React.FC<CartProps> = ({
       ? discountableTotal * (appliedPromo.percentage / 100)
       : 0;
 
-    // Apply delivery charge after discount
     return discountableTotal - discount + deliveryCharge;
   };
+
+  useEffect(() => {
+    const newTotal = calculateTotal();
+    setUltraGrandTotal(newTotal);
+    setTotal(newTotal);
+  }, [items, appliedPromo, tableDelivery, setTotal, selectedLocation]);
 
   useEffect(() => {
     const newTotal = calculateTotal();
@@ -169,7 +173,7 @@ const Cart: React.FC<CartProps> = ({
                           <div className="mt-2 flex items-center">
                             <span className="mr-2">Price:</span>
                             <div className="px-2  mb-0.5 bg-blue-600 rounded text-white font-semibold">
-                              ₹{(item.totalPrice * item.quantity).toFixed(2)}
+                              ₹{(item.item.price * item.quantity).toFixed(2)}
                             </div>
                           </div>
                           {Object.entries(item.selectedOptions).map(
