@@ -305,24 +305,37 @@ const Checkout: React.FC<CheckoutProps> = ({
     }
   };
 
-  const handleUserDataSubmit = async () => {
-    if (userData.name) {
-      try {
-        await addNewUser(phoneNumber, userData.name, userData.email);
-        setCustomerName(userData.name.split(" ")[0]);
-        setShowUserModal(false);
+ const handleUserDataSubmit = async () => {
+   if (userData.name) {
+     try {
+     setOtpState("loading");
+       await addNewUser(phoneNumber, userData.name, userData.email);
+       setCustomerName(userData.name.split(" ")[0]);
+       setShowUserModal(false);
 
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        setGeneratedOtp(otp);
-        setIsOtpSent(true);
-        setTimer(30);
-        setOtpMessage(`Your OTP is: ${otp}`);
-      } catch (error) {
-        console.error("Error adding new user:", error);
-        setOtpMessage("An error occurred. Please try again.");
-      }
-    }
-  };
+       // Send OTP for the new user
+       const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
+
+       if (otpResponse.status === 200) {
+         const { otp } = otpResponse.data;
+         setGeneratedOtp(otp);
+         setOtpState("sent");
+         setIsOtpSent(true);
+         setTimer(30);
+        //  setOtpMessage(
+        //    `OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`
+        //  );
+       } else {
+         setOtpMessage("Failed to send OTP. Please try again.");
+         setOtpState("idle");
+       }
+     } catch (error) {
+       console.error("Error adding new user or sending OTP:", error);
+       setOtpMessage("An error occurred. Please try again.");
+     }
+   }
+ };
+
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length <= 1) {
