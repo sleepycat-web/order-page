@@ -444,7 +444,7 @@ export const menuItems: MenuItem[] = [
         options: [
           { label: "Black Pepper" },
           { label: "Black Salt" },
-          { label: "PeriPeri Seasoning", price: "10.00" },
+          { label: "PeriPeri Seasoning", price: "20.00" },
           { label: "Chat Masala", price: "10.00" },
           { label: "Soya Sauce", price: "10.00" },
           { label: "Ginger", price: "10.00" },
@@ -497,7 +497,7 @@ export const menuItems: MenuItem[] = [
         options: [
           { label: "Plain" },
 
-          { label: "PeriPeri", price: "30.00" },
+          { label: "PeriPeri", price: "20.00" },
 
           { label: "Jhol Momo", price: "50.00" },
 
@@ -588,7 +588,7 @@ export const menuItems: MenuItem[] = [
 
           { label: "GingerGarlic", price: "20.00" },
 
-          { label: "PeriPeri", price: "30.00" },
+          { label: "PeriPeri", price: "20.00" },
 
           { label: "Saute In Schezwan Sauce", price: "70.00" },
 
@@ -719,7 +719,7 @@ export const menuItems: MenuItem[] = [
         type: "radio",
 
         options: [
-          { label: "Yellow Dal Tadka", price: "70.00", },
+          { label: "Yellow Dal Tadka", price: "70.00" },
 
           { label: "Dal Makhani", price: "100.00" },
 
