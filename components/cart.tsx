@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { CartItem } from "../app/page"; // Adjust the import path as needed
 import { validatePromo, Promo } from "../scripts/promo"; // Adjust the import path as needed
 import Checkout from "./checkout";
+import BillSection from "./bill"; // Make sure to import BillSection
 
 interface CartProps {
   items: CartItem[];
@@ -46,7 +47,15 @@ const Cart: React.FC<CartProps> = ({
   const [tableDelivery, setTableDelivery] = useState(false);
   const [ultraGrandTotal, setUltraGrandTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
+const [isBillSectionOpen, setIsBillSectionOpen] = useState(false);
 
+ const handleOpenBillSection = () => {
+   setIsBillSectionOpen(true);
+ };
+
+ const handleCloseBillSection = () => {
+   setIsBillSectionOpen(false);
+ };
   const handleApplyPromo = () => {
     const validPromo = validatePromo(promoCode);
     if (validPromo) {
@@ -120,8 +129,9 @@ const Cart: React.FC<CartProps> = ({
       {isOpen && (
         <div className="fixed inset-0 bg-neutral-900 z-40 overflow-y-auto">
           <div className="container mx-auto px-4 py-8 pb-24 md:pb-12">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Cart</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Cart</h2>{" "}
+            
               <button onClick={onToggle} className="text-3xl">
                 &times;
               </button>
@@ -131,7 +141,13 @@ const Cart: React.FC<CartProps> = ({
                 <p className="text-md ">{selectedLocation}</p>
                 {selectedCabin && <p className="text-md"> {selectedCabin}</p>}
               </div>
-            )}
+            )}{" "}
+            <button
+              onClick={handleOpenBillSection}
+              className=" btn btn-primary btn-sm  text-black mb-4   font-bold rounded-lg  "
+            >
+              Check Your Bill
+            </button>
             {items.length === 0 ? (
               <p>Your cart is empty</p>
             ) : (
@@ -299,6 +315,7 @@ const Cart: React.FC<CartProps> = ({
           tableDelivery={tableDelivery}
         />
       )}
+      {isBillSectionOpen && <BillSection onClose={handleCloseBillSection} />}
     </>
   );
 };

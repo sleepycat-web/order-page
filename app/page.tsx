@@ -292,7 +292,7 @@ const handleAddToCart = (
         <footer className="footer grid grid-flow-col bg-neutral-950 p-6 pt-10 pb-10 gap-4 text-neutral-content">
           <aside>
             <span className="cursor-pointer w-auto" onClick={toggleBillSection}>
-              Check Bill
+              Check Your Bill
             </span>
           </aside>
         </footer>
