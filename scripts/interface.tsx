@@ -37,21 +37,23 @@ export interface Order {
   updatedAt?: string;
   dispatchedAt?: string;
   fulfilledAt?: string;
-    tableDeliveryCharge?: number;
-    
+  tableDeliveryCharge?: number;
+  dispatchTime?: string; // Add this line
 }
 
 export interface CompactInfoProps {
   customerName: string;
   phoneNumber: string;
   cabin: string;
+  location: string;
+
   total: number;
   orders: {
     _id: string;
     order: string;
     status: string;
     price: number;
-      deliveryCharge: number;
+    deliveryCharge: number;
     tableDeliveryCharge?: number; // Added this line
   }[];
   onDispatchAll: (orderIds: string[]) => void;
@@ -61,6 +63,7 @@ export interface CompactInfoProps {
   onToggle: (isExpanded: boolean) => void;
   initialExpanded: boolean; // Add this prop
   oldestOrderTime: string;
+  oldestDispatchTime: string | null; // Add this line
 }
 
 export interface OrderItemProps {

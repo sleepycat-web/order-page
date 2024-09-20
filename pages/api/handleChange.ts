@@ -15,14 +15,16 @@ export default async function handler(
     return res.status(400).json({ message: "Invalid slug" });
   }
 
-  const dbName ="ChaiMine";
+  const dbName = "ChaiMine";
 
   try {
     const client = new MongoClient(process.env.MONGODB_URI as string);
     await client.connect();
 
     const db = client.db(dbName);
-    const collection = db.collection(slug === "sevoke" ? "OrderSevoke" : "OrderDagapur");
+    const collection = db.collection(
+      slug === "sevoke" ? "OrderSevoke" : "OrderDagapur"
+    );
 
     // Find pending orders
     const pendingOrders = await collection.find({ load: "pending" }).toArray();

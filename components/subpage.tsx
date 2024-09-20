@@ -398,7 +398,15 @@ export default function OrderPage() {
               ? current
               : oldest
           ).createdAt;
-
+  const oldestDispatchTime = customerOrders.reduce((oldest, current) => {
+    if (
+      current.dispatchTime &&
+      (!oldest || new Date(current.dispatchTime) < new Date(oldest))
+    ) {
+      return current.dispatchTime;
+    }
+    return oldest;
+  }, null as string | null);
           return (
             <div
               key={phoneNumber}
@@ -423,7 +431,7 @@ export default function OrderPage() {
                   order: order.order,
                   status: order.status,
                   price: order.total,
-                   deliveryCharge: order.tableDeliveryCharge || 0, 
+                  deliveryCharge: order.tableDeliveryCharge || 0,
                 }))}
                 onDispatchAll={handleDispatchAll}
                 onFulfillAll={handleFulfillAll}
@@ -434,6 +442,8 @@ export default function OrderPage() {
                 }
                 initialExpanded={initialExpanded}
                 oldestOrderTime={oldestOrderTime} // Pass the oldest order time
+                oldestDispatchTime={oldestDispatchTime} // Pass the oldest dispatch time
+                location={slug}
               />
               {expandedOrders[phoneNumber] && (
                 <>

@@ -238,7 +238,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
               </span>
             </div> */}
             <div className="bg-purple-600 p-2 rounded">
-              <span className="font-semibold">Counter Balance: </span>
+              <span className="font-semibold">Cash Balance: </span>
               <span>₹{allTimeCounterBalance.toFixed(2)}</span>
             </div>
           </div>
