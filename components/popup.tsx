@@ -351,7 +351,7 @@ const handleAddToOrder = () => {
             ></textarea>
           </div>
         </div>
-        {hasSelectedOptions && (
+        {hasSelectedOptions && hasSelectedOptionsWithPrice() && (
           <div className="flex items-center my-4">
             <button
               onClick={() => handleQuantityChange(-1)}
@@ -368,6 +368,7 @@ const handleAddToOrder = () => {
             </button>
           </div>
         )}
+
         {error && <p className="text-red-500 mt-2">{error}</p>}
         <div className="flex gap-2 ">
           <button

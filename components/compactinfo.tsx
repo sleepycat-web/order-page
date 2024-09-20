@@ -172,7 +172,7 @@ useEffect(() => {
     <div
       onClick={handleContainerClick}
       className={`py-3 px-3 sm:px-3 sm:py-3 rounded-lg mb-2 flex flex-wrap lg:flex-nowrap lg:justify-between ${
-        hasDeliveryCharge ? "bg-slate-800" : "bg-neutral-800"
+        hasDeliveryCharge ? "bg-slate-700" : "bg-neutral-800"
       }`}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 w-full lg:w-auto">

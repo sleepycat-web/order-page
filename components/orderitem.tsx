@@ -245,7 +245,7 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
     className={`rounded-lg p-4 ${
       order.selectedLocation.includes("Sevoke Road") &&
       order.tableDeliveryCharge
-        ? "bg-slate-800"
+        ? "bg-slate-700"
         : "bg-neutral-800"
     }`}
   >
@@ -306,7 +306,7 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
     className={`rounded-lg p-4 ${
       order.selectedLocation.includes("Sevoke Road") &&
       order.tableDeliveryCharge
-        ? "bg-slate-800"
+        ? "bg-slate-700"
         : "bg-neutral-800"
     }`}
   >
