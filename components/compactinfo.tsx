@@ -33,6 +33,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   const [dispatchCountdown, setDispatchCountdown] = useState<number | null>(
     null
   );
+  const [isProcessing, setIsProcessing] = useState(false);
   const [dispatchTimeoutId, setDispatchTimeoutId] =
     useState<NodeJS.Timeout | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -102,40 +103,43 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     setIsFulfillModalOpen(true);
   };
 
- const confirmFulfill = async () => {
-   try {
-    
-     await onFulfillAll(orders.map((order) => order._id));
-     setIsFulfilled(true);
+const confirmFulfill = async () => {
+  if (isProcessing) return; // Prevent multiple calls if already processing
+  try {
+    setIsProcessing(true);
+    await onFulfillAll(orders.map((order) => order._id));
+    setIsFulfilled(true);
 
-     // Check if GPay is selected (either alone or with cash)
-     if (selectedMethods.gpay) {
-       const amountToSend = selectedMethods.cash
-         ? Number(paymentAmounts.gpay)
-         : nonRejectedTotal;
+    // Check if GPay is selected (either alone or with cash)
+    if (selectedMethods.gpay) {
+      const amountToSend = selectedMethods.cash
+        ? Number(paymentAmounts.gpay)
+        : nonRejectedTotal;
 
-       const response = await fetch("/api/updateOnline", {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-         },
-         body: JSON.stringify({
-           location,
-           amount: amountToSend,
-           name:customerName,
-         }),
-       });
+      const response = await fetch("/api/updateOnline", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          location,
+          amount: amountToSend,
+          name: customerName,
+        }),
+      });
 
-       if (!response.ok) {
-         throw new Error("Failed to update online payment");
-       }
-     }
+      if (!response.ok) {
+        throw new Error("Failed to update online payment");
+      }
+    }
 
-     setIsFulfillModalOpen(false);
-   } catch (error) {
-     console.error("Error fulfilling orders:", error);
-   }
- };
+    setIsFulfillModalOpen(false);
+  } catch (error) {
+    console.error("Error fulfilling orders:", error);
+  } finally {
+    setIsProcessing(false);
+  }
+};
   
   useEffect(() => {
     // This effect now only runs once when the component mounts
@@ -433,7 +437,9 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
           <div className="flex space-x-4 my-4">
             <button
               className={`p-2 border rounded ${
-                selectedMethods.cash ? "border-blue-500 border-2" : "border-gray-500"
+                selectedMethods.cash
+                  ? "border-blue-500 border-2"
+                  : "border-gray-500"
               }`}
               onClick={() => toggleMethod("cash")}
             >
@@ -545,7 +551,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
             <button
               className="btn btn-primary"
               onClick={confirmFulfill}
-              disabled={isSubmitDisabled()}
+              disabled={isSubmitDisabled() || isProcessing}
             >
               Confirm
             </button>

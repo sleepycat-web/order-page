@@ -250,7 +250,7 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
     cash: "0",
     gpay: "0",
   });
-
+const [isProcessing, setIsProcessing] = useState(false);
   const toggleMethod = (method: "cash" | "gpay") => {
     setSelectedMethods((prev) => {
       const newMethods = {
@@ -303,7 +303,10 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
   };
 
   const confirmFulfill = async () => {
+    if (isProcessing) return; // Prevent multiple calls if already processing
+
     try {
+      setIsProcessing(true);
       await onPayment(order._id);
 
       if (selectedMethods.gpay) {
@@ -325,6 +328,8 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
       setIsFulfillModalOpen(false);
     } catch (error) {
       console.error("Error fulfilling order:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -512,7 +517,7 @@ const SingleItemOrder: React.FC<OrderComponentProps> = ({
             <button
               className="btn btn-primary"
               onClick={confirmFulfill}
-              disabled={isSubmitDisabled()}
+              disabled={isSubmitDisabled() || isProcessing}
             >
               Confirm
             </button>
@@ -543,7 +548,7 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
     cash: "0",
     gpay: "0",
   });
-
+const [isProcessing, setIsProcessing] = useState(false);
   const toggleMethod = (method: "cash" | "gpay") => {
     setSelectedMethods((prev) => {
       const newMethods = {
@@ -596,7 +601,10 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
   };
 
   const confirmFulfill = async () => {
+    if (isProcessing) return; // Prevent multiple calls if already processing
+
     try {
+      setIsProcessing(true);
       await onPayment(order._id);
 
       if (selectedMethods.gpay) {
@@ -618,6 +626,8 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
       setIsFulfillModalOpen(false);
     } catch (error) {
       console.error("Error fulfilling order:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -808,9 +818,9 @@ const MultiItemOrder: React.FC<OrderComponentProps> = ({
             <button
               className="btn btn-primary"
               onClick={confirmFulfill}
-              disabled={isSubmitDisabled()}
+              disabled={isSubmitDisabled() || isProcessing}
             >
-              Confirm
+             Confirm
             </button>
             <button
               className="btn"
