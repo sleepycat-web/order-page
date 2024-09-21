@@ -177,7 +177,7 @@ export const menuItems: MenuItem[] = [
         type: "radio",
         options: [
           { label: "Hot", price: "50.00" },
-          { label: "Cold", price: "110.00" },
+          { label: "Cold", price: "160.00" },
         ],
       },
       {
