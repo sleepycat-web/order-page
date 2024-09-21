@@ -73,7 +73,7 @@ const ChangeHandler: React.FC<ChangeHandlerProps> = ({ slug }) => {
 
   return (
     <div style={{ display: "none" }}>
-      <audio ref={audioRef} src="/alarm.mp3" />
+      <audio ref={audioRef} src="/alarm3.mp3" />
     </div>
   );
 };

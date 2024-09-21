@@ -579,7 +579,7 @@ export const menuItems: MenuItem[] = [
       {
         name: "Flavour",
 
-        type: "radio",
+        type: "checkbox",
 
         options: [
           { label: "Classic Salted" },
