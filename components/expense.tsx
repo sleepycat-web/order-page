@@ -40,8 +40,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
     "Salary",
     "Rent",
     "Electricity",
-    "UPI Payment",
-    "Others",
+     "Others",
   ];
 
   const handleSubmit = async () => {
