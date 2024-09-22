@@ -28,12 +28,21 @@ export const addNewUser = async (
 ): Promise<void> => {
   const database = await connectToDatabase();
   const collection = database.collection("UserData");
+
+  // Create a new Date object for the current time in IST
+  const now = new Date();
+  const istDate = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+
   await collection.insertOne({
     phoneNumber,
     name,
     banStatus: false,
+    signupDate: istDate,
   });
 };
+
 
 export const getUserData = async (
   phoneNumber: string
