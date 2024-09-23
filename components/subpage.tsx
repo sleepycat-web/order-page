@@ -367,8 +367,8 @@ export default function OrderPage() {
           : latest
       );
       return (
-        new Date(latestOrderA.createdAt).getTime() -
-        new Date(latestOrderB.createdAt).getTime()
+        new Date(latestOrderB.createdAt).getTime() -
+        new Date(latestOrderA.createdAt).getTime()
       );
     });
 
@@ -384,14 +384,12 @@ export default function OrderPage() {
           const sortOrders = (orders: Order[]) =>
             orders.sort(
               (a, b) =>
-                new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime()
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
             );
           const initialExpanded = tabInitialStates[activeTab];
           const sortedCustomerOrders = sortOrders(customerOrders);
-          const newestOrder =
-            sortedCustomerOrders[sortedCustomerOrders.length - 1];
-
+              const newestOrder = sortedCustomerOrders[0];
           // Calculate the oldest order time
           const oldestOrderTime = customerOrders.reduce((oldest, current) =>
             new Date(current.createdAt) < new Date(oldest.createdAt)
