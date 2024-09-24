@@ -106,17 +106,15 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
           </div>
         )
       )}
+      {item.specialRequests && (
+        <div className=" flex items-start">
+          <p className="font-bold text-sm mr-1 ">Special Requests:</p>
+          <span className="bg-blue-500 text-white text-sm px-1 rounded">
+            {item.specialRequests}
+          </span>
+        </div>
+      )}
     </div>
-    {item.specialRequests && (
-      <div className="mt-3 flex items-start">
-        <p className="font-bold text-sm mr-2 ">
-          Special Requests:
-        </p>
-        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded inline-block">
-          {item.specialRequests}
-        </span>
-      </div>
-    )}
   </div>
 );
 
@@ -218,14 +216,14 @@ const OrderStatus: React.FC<OrderComponentProps> = ({
             >
               {order.status === "fulfilled" ? "Fulfilled" : "Pending"}
             </span>
-            {order.status !== "fulfilled" && (
+            {/* {order.status !== "fulfilled" && (
               <button
                 className="btn btn-primary btn-sm ml-1"
                 onClick={() => onPayment(order._id)}
               >
                 Fulfill
               </button>
-            )}
+            )} */}
           </div>
         )}
         

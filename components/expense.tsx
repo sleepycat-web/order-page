@@ -28,6 +28,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [onlineBalance, setOnlineBalance] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allTimeCounterBalance, setAllTimeCounterBalance] = useState(0);
+const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
 
   const toggleExpenses = () => {
     setIsExpensesExpanded(!isExpensesExpanded);
@@ -169,19 +170,58 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
 
     return `${day} ${month} ${year} at ${formattedHours}:${formattedMinutes} ${ampm}`;
   };
+ const calculateTotalSales = () => {
+   const regularSales = totalSales;
+   const extraCashPayments = dailyExpenses
+     .filter((expense) => expense.category === "Extra Cash Payment")
+     .reduce((total, expense) => total + expense.amount, 0);
+   const extraUPIPayments = dailyExpenses
+     .filter((expense) => expense.category === "Extra UPI Payment")
+     .reduce((total, expense) => total + expense.amount, 0);
+   return regularSales + extraCashPayments + extraUPIPayments;
+ };
+
+
 
   const calculateTotalExpenses = () => {
     return dailyExpenses
-      .filter((expense) => expense.category !== "UPI Payment")
+      .filter(
+        (expense) =>
+          expense.category !== "UPI Payment" &&
+          expense.category !== "Extra Cash Payment" &&
+          expense.category !== "Extra UPI Payment"
+      )
       .reduce((total, expense) => total + expense.amount, 0);
   };
 
-  const calculateOnlineBalance = () => {
-    return dailyExpenses
-      .filter((expense) => expense.category === "UPI Payment")
-      .reduce((total, expense) => total + expense.amount, 0);
-  };
 
+const calculateCashBalance = () => {
+  const regularCashBalance = allTimeCounterBalance;
+
+  const extraCashPayments = dailyExpenses
+    .filter((expense) => expense.category === "Extra Cash Payment")
+    .reduce((total, expense) => total + expense.amount, 0);
+
+  const extraUPIPayments = dailyExpenses
+    .filter((expense) => expense.category === "Extra UPI Payment")
+    .reduce((total, expense) => total + expense.amount, 0);
+
+  return regularCashBalance + extraCashPayments + extraUPIPayments;
+  };
+  
+const calculateOnlineBalance = () => {
+  const upiPayments = dailyExpenses
+    .filter((expense) => expense.category === "UPI Payment")
+    .reduce((total, expense) => total + expense.amount, 0);
+  const extraUpiPayments = dailyExpenses
+    .filter((expense) => expense.category === "Extra UPI Payment")
+    .reduce((total, expense) => total + expense.amount, 0);
+  return upiPayments + extraUpiPayments;
+};
+  
+const toggleCashBalance = () => {
+  setIsCashBalanceExpanded(!isCashBalanceExpanded);
+};
   useEffect(() => {
     setOnlineBalance(calculateOnlineBalance());
   }, [dailyExpenses]);
@@ -197,7 +237,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
           <div className="flex flex-wrap gap-2">
             <div className="bg-lime-600 p-2 rounded">
               <span className="font-semibold">Total sales: </span>
-              <span>₹{totalSales.toFixed(2)}</span>
+              <span>₹{calculateTotalSales().toFixed(2)}</span>
             </div>
 
             {totalTips > 0 && (
@@ -236,9 +276,12 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
                 ).toFixed(2)}
               </span>
             </div> */}
-            <div className="bg-purple-600 p-2 rounded">
+            <div
+              className="bg-purple-600 p-2 rounded cursor-pointer"
+              onClick={toggleCashBalance}
+            >
               <span className="font-semibold">Cash Balance: </span>
-              <span>₹{allTimeCounterBalance.toFixed(2)}</span>
+              <span>₹{calculateCashBalance().toFixed(2)}</span>
             </div>
           </div>
         )}
@@ -331,7 +374,12 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
               )}
               <ul className="space-y-2">
                 {dailyExpenses
-                  .filter((expense) => expense.category !== "UPI Payment")
+                  .filter(
+                    (expense) =>
+                      expense.category !== "UPI Payment" &&
+                      expense.category !== "Extra Cash Payment" &&
+                      expense.category !== "Extra UPI Payment"
+                  )
                   .map((expense) => (
                     <li
                       key={expense._id}
@@ -353,7 +401,39 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
           )}
         </div>
       )}
-
+      <div className="mb-4">
+        {isCashBalanceExpanded && (
+          <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+            <button
+              onClick={toggleCashBalance}
+              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+            >
+              <p className="text-3xl">&times;</p>
+            </button>
+            <h3 className="font-semibold mb-2">Cash Balance Details</h3>
+            <ul className="space-y-2">
+              {dailyExpenses
+                .filter((expense) => expense.category === "Extra Cash Payment")
+                .map((expense) => (
+                  <li
+                    key={expense._id}
+                    className="flex justify-between items-center"
+                  >
+                    <span className="font-medium">Extra Cash Payment</span>
+                    <span className="flex items-center">
+                      <span className="p-1 bg-neutral-800 rounded mr-2">
+                        ₹{expense.amount.toFixed(2)}
+                      </span>
+                      <span className="text-sm text-gray-400">
+                        {expense.comment}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
+      </div>
       <div className="mb-4">
         {isUPIPaymentsExpanded && (
           <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
@@ -366,19 +446,29 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
             <h3 className="font-semibold mb-2">UPI Payments for the day</h3>
             <ul className="space-y-2">
               {dailyExpenses
-                .filter((expense) => expense.category === "UPI Payment")
+                .filter(
+                  (expense) =>
+                    expense.category === "UPI Payment" ||
+                    expense.category === "Extra UPI Payment"
+                )
                 .map((expense) => (
                   <li
                     key={expense._id}
                     className="flex justify-between items-center"
                   >
-                    <span className="font-medium">{expense.comment}</span>
+                    <span className="font-medium">
+                      {expense.category === "Extra UPI Payment"
+                        ? "Extra UPI Payment"
+                        : expense.comment}
+                    </span>
                     <span className="flex items-center">
                       <span className="p-1 bg-neutral-800 rounded mr-2">
                         ₹{expense.amount.toFixed(2)}
                       </span>
                       <span className="text-sm text-gray-400">
-                        {formatDateNew(new Date(expense.createdAt))}
+                        {expense.category === "Extra UPI Payment"
+                          ? expense.comment
+                          : formatDateNew(new Date(expense.createdAt))}
                       </span>
                     </span>
                   </li>

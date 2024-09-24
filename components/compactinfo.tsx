@@ -1,6 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-
+import { Plus } from "lucide-react";
 import { CompactInfoProps } from "@/scripts/interface";
 
 const CompactInfo: React.FC<CompactInfoProps> = ({
@@ -18,7 +18,12 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
   oldestOrderTime,
   location, oldestDispatchTime, 
 }) => {
- 
+   const [showExtraPayment, setShowExtraPayment] = useState(false);
+   const [extraPaymentType, setExtraPaymentType] = useState<
+     "cash" | "upi" | null
+   >(null);
+   const [extraPaymentAmount, setExtraPaymentAmount] = useState("");
+
   const [isDispatched, setIsDispatched] = useState(
     orders.every((order) => order.order === "dispatched")
   );
@@ -48,6 +53,19 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     gpay: "0",
   });
 
+    const handleExtraPaymentToggle = () => {
+      setShowExtraPayment(!showExtraPayment);
+      setExtraPaymentType(null);
+      setExtraPaymentAmount("");
+    };
+ const handleExtraPaymentTypeSelect = (type: "cash" | "upi") => {
+   setExtraPaymentType(type);
+ };
+
+ const handleExtraPaymentAmountChange = (value: string) => {
+   const cleanedValue = value.replace(/[^0-9]/g, "");
+   setExtraPaymentAmount(cleanedValue === "" ? "" : cleanedValue);
+ };
 
     const toggleMethod = (method: "cash" | "gpay") => {
       setSelectedMethods((prev) => {
@@ -103,44 +121,59 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     setIsFulfillModalOpen(true);
   };
 
-const confirmFulfill = async () => {
-  if (isProcessing) return; // Prevent multiple calls if already processing
-  try {
-    setIsProcessing(true);
-    await onFulfillAll(orders.map((order) => order._id));
-    setIsFulfilled(true);
+ const confirmFulfill = async () => {
+   if (isProcessing) return;
+   try {
+     setIsProcessing(true);
+     await onFulfillAll(orders.map((order) => order._id));
+     setIsFulfilled(true);
 
-    // Check if GPay is selected (either alone or with cash)
-    if (selectedMethods.gpay) {
-      const amountToSend = selectedMethods.cash
-        ? Number(paymentAmounts.gpay)
-        : nonRejectedTotal;
+     if (selectedMethods.gpay) {
+       const amountToSend = selectedMethods.cash
+         ? Number(paymentAmounts.gpay)
+         : nonRejectedTotal;
 
-      const response = await fetch("/api/updateOnline", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          location,
-          amount: amountToSend,
-          name: customerName,
-        }),
-      });
+       await updateOnlinePayment(location, amountToSend, customerName, "upi");
+     }
 
-      if (!response.ok) {
-        throw new Error("Failed to update online payment");
-      }
+     if (extraPaymentAmount && extraPaymentType) {
+       const extraAmount = Number(extraPaymentAmount);
+       const paymentType =
+         extraPaymentType === "upi" ? "extraUpi" : "extraCash";
+       await updateOnlinePayment(
+         location,
+         extraAmount,
+         customerName,
+         paymentType
+       );
+     }
+
+     setIsFulfillModalOpen(false);
+   } catch (error) {
+     console.error("Error fulfilling orders:", error);
+   } finally {
+     setIsProcessing(false);
+   }
+ };
+
+   const updateOnlinePayment = async (location: string, amount: number, name: string, paymentType: string) => {
+    const response = await fetch("/api/updateOnline", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        location,
+        amount,
+        name,
+        paymentType,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update online payment");
     }
-
-    setIsFulfillModalOpen(false);
-  } catch (error) {
-    console.error("Error fulfilling orders:", error);
-  } finally {
-    setIsProcessing(false);
-  }
-};
-  
+  };
   useEffect(() => {
     // This effect now only runs once when the component mounts
     onToggle(isExpanded);
@@ -508,6 +541,16 @@ const confirmFulfill = async () => {
                 </g>
               </svg>
             </button>
+            <button
+              className={`w-16 h-16 flex items-center justify-center rounded border ${
+                showExtraPayment
+                  ? "border-2 border-blue-500"
+                  : "border-gray-500"
+              }`}
+              onClick={handleExtraPaymentToggle}
+            >
+              <Plus size={24} />
+            </button>
           </div>
           {selectedMethods.cash && selectedMethods.gpay && (
             <div className="flex space-x-4 my-4">
@@ -545,6 +588,41 @@ const confirmFulfill = async () => {
                   className="mt-1 p-1 block w-full rounded-md bg-neutral-700 border-gray-600 text-white"
                 />
               </div>
+            </div>
+          )}
+          {showExtraPayment && (
+            <div className="mt-4">
+              <div className="flex space-x-4 mb-2">
+                <button
+                  className={`btn btn-sm ${
+                    extraPaymentType === "cash" ? "btn-primary" : "btn-outline"
+                  }`}
+                  onClick={() => handleExtraPaymentTypeSelect("cash")}
+                >
+                  Cash
+                </button>
+                <button
+                  className={`btn btn-sm ${
+                    extraPaymentType === "upi" ? "btn-primary" : "btn-outline"
+                  }`}
+                  onClick={() => handleExtraPaymentTypeSelect("upi")}
+                >
+                  UPI
+                </button>
+              </div>
+              {extraPaymentType && (
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={extraPaymentAmount}
+                  onChange={(e) =>
+                    handleExtraPaymentAmountChange(e.target.value)
+                  }
+                  className="mt-1 block w-full p-1 rounded-md bg-neutral-700 border-gray-600 text-white"
+                  placeholder="Enter extra amount"
+                />
+              )}
             </div>
           )}
           <div className="modal-action">

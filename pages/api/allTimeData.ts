@@ -35,10 +35,15 @@ export default async function handler(
       ]);
 
       const totalOrders = orderTotals.length > 0 ? orderTotals[0].total : 0;
-      const totalExpenses = expenses.reduce(
-        (sum, expense) => sum + expense.amount,
-        0
-      );
+
+      // Calculate total expenses excluding those with category "Extra Cash Payment"
+      const totalExpenses = expenses.reduce((sum, expense) => {
+        // Only sum the expenses that are NOT in the category "Extra Cash Payment"
+        if (expense.category !== "Extra Cash Payment") {
+          return sum + expense.amount;
+        }
+        return sum;
+      }, 0);
 
       res.status(200).json({
         totalOrders,

@@ -10,9 +10,9 @@ export default async function handler(
   }
 
   try {
-    const { location, amount, name } = req.body;
+    const { location, amount, name, paymentType } = req.body;
 
-    if (!location || amount === undefined) {
+    if (!location || amount === undefined || !paymentType) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -32,10 +32,25 @@ export default async function handler(
       return res.status(400).json({ message: "Invalid location" });
     }
 
+    let category: string;
+    switch (paymentType) {
+      case "upi":
+        category = "UPI Payment";
+        break;
+      case "extraCash":
+        category = "Extra Cash Payment";
+        break;
+      case "extraUpi":
+        category = "Extra UPI Payment";
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid payment type" });
+    }
+
     const document = {
-      category: "UPI Payment",
+      category,
       amount: Number(amount),
-      comment: ` ${name}`,
+      comment: `${name}`,
       createdAt: new Date(),
     };
 
@@ -43,7 +58,7 @@ export default async function handler(
 
     if (result.acknowledged) {
       res.status(200).json({
-        message: "Online payment updated successfully",
+        message: "Payment updated successfully",
         insertedId: result.insertedId,
       });
     } else {
