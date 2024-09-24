@@ -359,7 +359,7 @@ export default function OrderPage() {
         entries: [string, Order[]][]
       ): [string, Order[]][] => {
         if (activeTab === "new") {
-          // Keep the current sorting logic for the "new" tab
+          // Keep the current sorting logic for the "new" tab commit change
           return entries.sort((a, b) => {
             const latestOrderA = a[1].reduce((latest, current) =>
               new Date(current.createdAt) > new Date(latest.createdAt)
