@@ -170,6 +170,7 @@ const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
 
     return `${day} ${month} ${year} at ${formattedHours}:${formattedMinutes} ${ampm}`;
   };
+  
  const calculateTotalSales = () => {
    const regularSales = totalSales;
    const extraCashPayments = dailyExpenses
@@ -202,11 +203,8 @@ const calculateCashBalance = () => {
     .filter((expense) => expense.category === "Extra Cash Payment")
     .reduce((total, expense) => total + expense.amount, 0);
 
-  const extraUPIPayments = dailyExpenses
-    .filter((expense) => expense.category === "Extra UPI Payment")
-    .reduce((total, expense) => total + expense.amount, 0);
-
-  return regularCashBalance + extraCashPayments + extraUPIPayments;
+ 
+  return regularCashBalance ;
   };
   
 const calculateOnlineBalance = () => {
@@ -264,18 +262,6 @@ const toggleCashBalance = () => {
                 <span>₹{onlineBalance.toFixed(2)}</span>
               </div>
             )}
-            {/* <div className="bg-fuchsia-600 p-2 rounded">
-              <span className="font-semibold">Daily Counter Balance: </span>
-              <span>
-                ₹
-                {(
-                  totalSales -
-                  totalTips -
-                  onlineBalance -
-                  calculateTotalExpenses()
-                ).toFixed(2)}
-              </span>
-            </div> */}
             <div
               className="bg-purple-600 p-2 rounded cursor-pointer"
               onClick={toggleCashBalance}

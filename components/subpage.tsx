@@ -290,23 +290,30 @@ export default function OrderPage() {
       await handlePayment(orderId);
     }
   };
-  const calculateTotalSales = (orders: Order[]) => {
+ 
+const calculateTotalSales = (orders: Order[]) => {
+  return orders
+    .filter(
+      (order) =>
+        order.order !== "rejected" &&
+        order.status !== "rejected" &&
+        new Date(order.createdAt).setHours(0, 0, 0, 0) >=
+          new Date().setHours(0, 0, 0, 0) // Only include orders from today
+    )
+    .reduce((total, order) => total + order.total - (order.tableDeliveryCharge || 0), 0);
+};
+
+ 
+  const calculateTotalDeliveryCharges = (orders: Order[]) => {
     return orders
       .filter(
-        (order) =>
-          order.order !== "rejected" &&
-          order.status !== "rejected" &&
-          new Date(order.createdAt).setHours(0, 0, 0, 0) >=
-            new Date().setHours(0, 0, 0, 0) // Only include orders from today
+        (order) => order.order !== "rejected" && order.status !== "rejected"
       )
-      .reduce((total, order) => total + order.total, 0);
+      .reduce((total, order) => {
+        return total + (order.tableDeliveryCharge || 0);
+      }, 0);
   };
-
-  const calculateTotalDeliveryCharges = (orders: Order[]) => {
-    return orders.reduce((total, order) => {
-      return total + (order.tableDeliveryCharge || 0);
-    }, 0);
-  };
+  
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen ">

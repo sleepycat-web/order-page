@@ -67,28 +67,27 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
    setExtraPaymentAmount(cleanedValue === "" ? "" : cleanedValue);
  };
 
-    const toggleMethod = (method: "cash" | "gpay") => {
-      setSelectedMethods((prev) => {
-        const newMethods = {
-          ...prev,
-          [method]: !prev[method],
-        };
-        if (!newMethods.cash && !newMethods.gpay) {
-          setPaymentAmounts({ cash: "0", gpay: "0" });
-        } else if (newMethods.cash && !newMethods.gpay) {
-          setPaymentAmounts({ cash: nonRejectedTotal.toString(), gpay: "0" });
-        } else if (!newMethods.cash && newMethods.gpay) {
-          setPaymentAmounts({ cash: "0", gpay: nonRejectedTotal.toString() });
-        } else {
-          // Both methods selected, set GPay to total if it's currently 0
-          setPaymentAmounts((prev) => ({
-            cash: prev.cash,
-            gpay: prev.gpay === "0" ? nonRejectedTotal.toString() : prev.gpay,
-          }));
-        }
-        return newMethods;
-      });
-    }; 
+   const toggleMethod = (method: "cash" | "gpay") => {
+     setSelectedMethods((prev) => {
+       const newMethods = {
+         ...prev,
+         [method]: !prev[method],
+       };
+
+       // If no methods are selected, reset both amounts to 0
+       if (!newMethods.cash && !newMethods.gpay) {
+         setPaymentAmounts({ cash: "0", gpay: "0" });
+       } else {
+         // Always set GPay to the total amount and Cash to 0 when any method is selected
+         setPaymentAmounts({
+           gpay: nonRejectedTotal.toString(),
+           cash: "0",
+         });
+       }
+
+       return newMethods;
+     });
+   };
  const handlePaymentChange = (method: "cash" | "gpay", value: string) => {
    // Remove leading zeros and non-numeric characters
    const cleanedValue = value.replace(/^0+/, "").replace(/[^0-9]/g, "");

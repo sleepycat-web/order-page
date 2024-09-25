@@ -8,6 +8,7 @@ interface UpdateFields {
   dispatchedAt?: Date;
   fulfilledAt?: Date;
   rejectedAt?: Date;
+  total?: number;
 }
 
 export default async function handler(
@@ -67,6 +68,7 @@ export default async function handler(
       updateFields.order = "rejected";
       updateFields.status = "rejected";
       updateFields.rejectedAt = now;
+      updateFields.total = 0; // Set total to 0 when rejecting
     } else {
       return res.status(400).json({ message: "Invalid type parameter" });
     }

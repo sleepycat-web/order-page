@@ -43,7 +43,6 @@ export const addNewUser = async (
   });
 };
 
-
 export const getUserData = async (
   phoneNumber: string
 ): Promise<{ name: string; email?: string; banStatus: boolean }> => {
