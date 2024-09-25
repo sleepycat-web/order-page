@@ -34,20 +34,25 @@ export default async function handler(
         expenseCollection.find({}).toArray(),
       ]);
 
-      const totalOrders = orderTotals.length > 0 ? orderTotals[0].total : 0;
+      let totalOrders = orderTotals.length > 0 ? orderTotals[0].total : 0;
+      let totalExpenses = 0;
+      let extraCashPayments = 0;
 
-      // Calculate total expenses excluding those with category "Extra Cash Payment"
-      const totalExpenses = expenses.reduce((sum, expense) => {
-        // Only sum the expenses that are NOT in the category "Extra Cash Payment"
-        if (expense.category !== "Extra Cash Payment") {
-          return sum + expense.amount;
+      expenses.forEach((expense) => {
+        if (expense.category === "Extra Cash Payment") {
+          extraCashPayments += expense.amount;
+        } else {
+          totalExpenses += expense.amount;
         }
-        return sum;
-      }, 0);
+      });
+
+      // Add extra cash payments to total orders
+      totalOrders += extraCashPayments;
 
       res.status(200).json({
         totalOrders,
         totalExpenses,
+        extraCashPayments,
         allTimeCounterBalance: totalOrders - totalExpenses,
       });
     } catch (error: unknown) {

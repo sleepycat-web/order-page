@@ -19,11 +19,14 @@ export default async function handler(
       }`;
       const collection = db.collection(collectionName);
 
+      // Get current time in IST
+      const istTime = new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000);
+
       const result = await collection.insertOne({
         category,
         amount: parseFloat(amount),
         comment,
-        createdAt: new Date(),
+        createdAt: istTime,
       });
 
       res
@@ -49,13 +52,12 @@ export default async function handler(
       }`;
       const collection = db.collection(collectionName);
 
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
+      // Calculate start of day in IST
+      const startOfDay = new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000);
+      startOfDay.setUTCHours(0, 0, 0, 0);
 
       const expenses = await collection
-        .find({
-          createdAt: { $gte: startOfDay },
-        })
+        .find({ createdAt: { $gte: startOfDay } })
         .toArray();
 
       res.status(200).json(expenses);
