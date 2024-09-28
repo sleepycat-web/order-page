@@ -149,7 +149,7 @@ const loadData = async () => {
             value={selectedBranch}
             onChange={handleBranchChange}
           >
-            <option value="">Select a caller</option>
+            <option value="">Select a number</option>
             {currentBranchData.map((caller) => (
               <option key={caller._id} value={`${caller.branch}-${caller._id}`}>
                 {caller.name} - {caller.phoneNumber}
@@ -165,7 +165,7 @@ const loadData = async () => {
             value={selectedOtherBranch}
             onChange={handleOtherBranchChange}
           >
-            <option value="">Select a caller</option>
+            <option value="">Select a number</option>
             {otherBranchesData.map((caller) => (
               <option key={caller._id} value={`${caller.branch}-${caller._id}`}>
                 {caller.branch} - {caller.name} - {caller.phoneNumber}
@@ -222,14 +222,14 @@ const loadData = async () => {
         className="bg-neutral-600 p-2 rounded inline-block cursor-pointer"
         onClick={toggleSection}
       >
-        <span className="font-semibold text-white">Calling Number</span>
+        <span className="font-semibold text-white">SMS Number</span>
       </div>
 
       {isOpen && (
         <div className="mt-2 p-4 bg-neutral-900 rounded-lg text-white">
           <div className="flex justify-between items-center mb-4">
             <span className="text-lg">
-              Active Caller for {getBranchName(slug)}:
+              Active Number for {getBranchName(slug)}:
             </span>
             <button
               onClick={toggleSection}
