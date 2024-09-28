@@ -490,9 +490,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                 <p className="hidden md:block text-xl font-bold ">
                   Order Placed Successfully! Check your SMS for updates.
                 </p>
-                <p className="hidden md:block text-xl font-bold mb-4">
-                  Please pay while collecting the order.
-                </p>
+              
                 <div className="block md:hidden">
                   <p className="text-xl font-bold ">
                     Order Placed Successfully!
@@ -500,9 +498,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                   <p className="text-xl font-bold ">
                     Check your SMS for updates.
                   </p>
-                  <p className="text-xl font-bold mb-4">
-                    Please pay while collecting the order.
-                  </p>
+                  
                 </div>
 
                 <p>
