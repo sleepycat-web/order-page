@@ -488,7 +488,7 @@ const Checkout: React.FC<CheckoutProps> = ({
             {orderPlaced ? (
               <div className="text-center">
                 <p className="hidden md:block text-xl font-bold ">
-                  Order Placed Successfully! Check SMS for updates.
+                  Order Placed Successfully! Check SMS for Order Updates.
                 </p>
               
                 <div className="block md:hidden">
@@ -496,7 +496,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                     Order Placed Successfully!
                   </p>
                   <p className="text-xl font-bold ">
-                    Check SMS for updates.
+                    Check SMS for Order Updates.
                   </p>
                   
                 </div>
