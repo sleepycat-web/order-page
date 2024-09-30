@@ -37,10 +37,14 @@ export default async function handler(
       let totalOrders = orderTotals.length > 0 ? orderTotals[0].total : 0;
       let totalExpenses = 0;
       let extraCashPayments = 0;
+      let extraUpiPayments = 0; // For tracking ignored UPI payments
 
       expenses.forEach((expense) => {
         if (expense.category === "Extra Cash Payment") {
           extraCashPayments += expense.amount;
+        } else if (expense.category === "Extra UPI Payment") {
+          // Ignore UPI payments for expense calculation
+          extraUpiPayments += expense.amount;
         } else {
           totalExpenses += expense.amount;
         }
@@ -49,11 +53,15 @@ export default async function handler(
       // Add extra cash payments to total orders
       totalOrders += extraCashPayments;
 
+      // Calculate all-time counter balance excluding UPI payments from expenses
+      const allTimeCounterBalance = totalOrders - totalExpenses;
+
       res.status(200).json({
         totalOrders,
         totalExpenses,
         extraCashPayments,
-        allTimeCounterBalance: totalOrders - totalExpenses,
+        extraUpiPayments, // Just for reporting purposes
+        allTimeCounterBalance,
       });
     } catch (error: unknown) {
       res.status(500).json({

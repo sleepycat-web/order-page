@@ -204,7 +204,7 @@ const calculateCashBalance = () => {
     .reduce((total, expense) => total + expense.amount, 0);
 
  
-  return regularCashBalance ;
+  return regularCashBalance  ;
   };
   
 const calculateOnlineBalance = () => {
