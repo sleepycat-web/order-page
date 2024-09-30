@@ -840,7 +840,7 @@ export const menuItems: MenuItem[] = [
   {
     name: "Pan Pizza",
     price: "350.00",
-    soldOut: true,
+    soldOut: false,
 
     customizationOptions: [
       {
