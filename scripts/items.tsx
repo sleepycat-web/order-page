@@ -4,13 +4,13 @@ export const menuItems: MenuItem[] = [
   //Beverages Done
   {
     name: "Beverages",
-    price: "20.00",
+    price: "30.00",
     customizationOptions: [
       {
         name: "Select Beverage",
         type: "radio",
         options: [
-          { label: "Water", price: "20.00" },
+          { label: "Water (1LTR)", price: "30.00" },
 
           { label: "Coca Cola", price: "50.00" },
           { label: "Pepsi", price: "50.00" },
@@ -840,7 +840,7 @@ export const menuItems: MenuItem[] = [
   {
     name: "Pan Pizza",
     price: "350.00",
-    soldOut: true,
+    soldOut: false,
 
     customizationOptions: [
       {

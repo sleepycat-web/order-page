@@ -28,21 +28,14 @@ export default async function handler(
       const collections = ["OrderSevoke", "OrderDagpaur"];
       let allOrders: Document[] = [];
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
       for (const collectionName of collections) {
         const collection = db.collection(collectionName);
         const orders = await collection
           .find({
             phoneNumber,
-            createdAt: {
-              $gte: today,
-              $lt: tomorrow,
-            },
           })
+          .sort({ createdAt: -1 }) // Sort by createdAt in descending order
+          .limit(10) // Limit to last 10 orders per collection
           .toArray();
         allOrders = allOrders.concat(orders);
       }
@@ -50,8 +43,14 @@ export default async function handler(
       if (allOrders.length === 0) {
         return res
           .status(404)
-          .json({ message: "No orders found for this phone number today" });
+          .json({ message: "No orders found for this phone number" });
       }
+
+      // Sort all orders by createdAt in descending order
+      allOrders.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
 
       // Ensure all required fields are present in the response
       const formattedOrders = allOrders.map((order) => ({
