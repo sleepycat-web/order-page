@@ -56,16 +56,32 @@ const [isBillSectionOpen, setIsBillSectionOpen] = useState(false);
  const handleCloseBillSection = () => {
    setIsBillSectionOpen(false);
  };
-  const handleApplyPromo = () => {
-    const validPromo = validatePromo(promoCode);
-    if (validPromo) {
-      onApplyPromo(validPromo);
-      setPromoError("");
-    } else {
-      setPromoError("Invalid promo code");
-      onApplyPromo(null);
-    }
-  };
+const handleApplyPromo = () => {
+  const validPromo = validatePromo(promoCode);
+  if (validPromo) {
+    onApplyPromo(validPromo);
+    setPromoError("");
+  } else {
+    setPromoError("Invalid promo code");
+    onApplyPromo(null);
+  }
+};
+
+const handlePromoCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const newPromoCode = e.target.value;
+  setPromoCode(newPromoCode);
+
+  // If there's an applied promo and the input changes, remove the promo
+  if (appliedPromo) {
+    onApplyPromo(null);
+  }
+
+  // Clear error when input changes
+  if (promoError) {
+    setPromoError("");
+  }
+};
+
  const handleUpdateQuantity = (index: number, newQuantity: number) => {
    onUpdateQuantity(index, newQuantity);
  };
@@ -244,14 +260,16 @@ const handleCheckout = () => {
                         placeholder="Enter promo code"
                         className="input bg-neutral-800  max-w-xs"
                         value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
+                        onChange={handlePromoCodeChange}
                       />
-                      <button
-                        className="btn btn-primary"
-                        onClick={handleApplyPromo}
-                      >
-                        Apply
-                      </button>
+                      {!appliedPromo && (
+                        <button
+                          className="btn btn-primary"
+                          onClick={handleApplyPromo}
+                        >
+                          Apply
+                        </button>
+                      )}
                     </div>
                     {promoError && <p className="text-red-500">{promoError}</p>}
                     <div className="mt-6 space-y-4  mb-4">
@@ -318,7 +336,6 @@ const handleCheckout = () => {
           onOrderSuccess={onOrderSuccess}
           onResetCart={onResetCart} // Pass this prop to Checkout
           tableDelivery={tableDelivery}
-          
         />
       )}
       {isBillSectionOpen && <BillSection onClose={handleCloseBillSection} />}
