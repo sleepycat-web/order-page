@@ -76,21 +76,31 @@ useEffect(() => {
   ) => {
     setSelectedOptions((prev: Record<string, string[]>) => {
       const newOptions = { ...prev };
+
       if (type === "radio") {
         newOptions[optionName] = [value];
       } else if (type === "checkbox") {
         if (!newOptions[optionName]) {
           newOptions[optionName] = [];
         }
+
         const index = newOptions[optionName].indexOf(value);
         if (index > -1) {
+          // Remove the value if it exists
           newOptions[optionName] = newOptions[optionName].filter(
             (item) => item !== value
           );
+
+          // If the array is empty after removing the value, delete the key
+          if (newOptions[optionName].length === 0) {
+            delete newOptions[optionName];
+          }
         } else {
-          newOptions[optionName] = [...newOptions[optionName], value];
+          // Add the value if it doesn't exist
+          newOptions[optionName] = [...(newOptions[optionName] || []), value];
         }
       }
+
       return newOptions;
     });
     setError(null);
