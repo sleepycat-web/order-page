@@ -7,6 +7,8 @@ export const promos: Promo[] = [
   { code: "4NKUXH", percentage: 10 },
   { code: "KRITS24", percentage: 10 },
   { code: "GOEPIC", percentage: 5 },
+  { code: "AYUSHI", percentage: 5 },
+
   { code: "KABYAROY", percentage: 10 },
   { code: "ABID12345", percentage: 10 },
   { code: "CHAIMINESKS", percentage: 10 },
