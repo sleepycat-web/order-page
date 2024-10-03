@@ -707,31 +707,31 @@ export const menuItems: MenuItem[] = [
   },
 
   //Indian Gracy DOne
-  {
-    name: "Indian Gravy",
-    soldOut: true,
-    price: "70.00",
+  // {
+  //   name: "Indian Gravy",
+  //   soldOut: true,
+  //   price: "70.00",
 
-    customizationOptions: [
-      {
-        name: "Select Your Meal",
+  //   customizationOptions: [
+  //     {
+  //       name: "Select Your Meal",
 
-        type: "radio",
+  //       type: "radio",
 
-        options: [
-          { label: "Yellow Dal Tadka", price: "70.00" },
+  //       options: [
+  //         { label: "Yellow Dal Tadka", price: "70.00" },
 
-          { label: "Dal Makhani", price: "100.00" },
+  //         { label: "Dal Makhani", price: "100.00" },
 
-          { label: "Rajma Masala", price: "150.00" },
+  //         { label: "Rajma Masala", price: "150.00" },
 
-          { label: "Paneer Butter Masala", price: "200.00" },
+  //         { label: "Paneer Butter Masala", price: "200.00" },
 
-          { label: "Butter Chicken", price: "200.00" },
-        ],
-      },
-    ],
-  },
+  //         { label: "Butter Chicken", price: "200.00" },
+  //       ],
+  //     },
+  //   ],
+  // },
 
   //Pasta Done
   {
