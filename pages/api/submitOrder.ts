@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../lib/mongodb";
 import axios from "axios";
+import nodemailer from "nodemailer";
 
 interface Fast2SMSResponse {
   return: boolean;
@@ -64,6 +65,26 @@ export default async function handler(
 
     const result = await collection.insertOne(orderDocument);
 
+    // Send the response immediately after submitting the order
+    res.status(200).json({
+      message: "Order submitted successfully",
+      orderDate: now.toISOString(),
+    });
+
+    // Perform the following operations asynchronously
+    sendNotifications(db, orderDocument, selectedLocation).catch(console.error);
+  } catch (error) {
+    console.error("Error submitting order:", error);
+    res.status(500).json({ message: "Error submitting order" });
+  }
+}
+
+async function sendNotifications(
+  db: any,
+  orderDocument: any,
+  selectedLocation: string
+) {
+  try {
     // Get the active caller for the branch
     let branch;
     if (selectedLocation.includes("Sevoke Road")) {
@@ -71,7 +92,7 @@ export default async function handler(
     } else if (selectedLocation.includes("Dagapur")) {
       branch = "Dagapur";
     } else {
-      return res.status(400).json({ message: "Invalid location" });
+      throw new Error("Invalid location");
     }
 
     const selectedCaller = await db
@@ -79,7 +100,7 @@ export default async function handler(
       .findOne({ branch, callerStatus: true }, { sort: { dateUpdated: -1 } });
 
     if (!selectedCaller) {
-      return res.status(404).json({ message: "No available caller found" });
+      throw new Error("No available caller found");
     }
 
     const callerPhoneNumber = `${selectedCaller.phoneNumber}`;
@@ -87,19 +108,97 @@ export default async function handler(
     // Send SMS to the active caller
     await sendSMSNotification(
       selectedLocation,
-      customerName,
+      orderDocument.customerName,
       callerPhoneNumber
     );
 
-    // Send the response
-    // Send the response
-    res.status(200).json({
-      message: "Order submitted and notification sent successfully",
-       orderDate: now.toISOString(),
-    });
-  } catch (error) {
-    console.error("Error submitting order:", error);
-    res.status(500).json({ message: "Error submitting order" });
+    // Send email confirmation
+    await sendEmailConfirmation(orderDocument);
+
+   } catch (error) {
+    console.error("Error sending notifications:", error);
+  }
+}
+
+async function sendEmailConfirmation(orderDetails: any): Promise<void> {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  // Generate items list handling dynamic parameters
+  const itemsList = orderDetails.items
+    .map((orderItem: any) => {
+      const itemName = orderItem.item?.name || "Item";
+      const options = Object.entries(orderItem.selectedOptions || {})
+        .map(([optionName, selectedValues]) => {
+          const values = Array.isArray(selectedValues)
+            ? selectedValues.join(", ")
+            : selectedValues;
+          return `- ${optionName}: ${values}`;
+        })
+        .join("\n    ");
+
+      return `${itemName}
+    ${options}
+    - Quantity: ${orderItem.quantity}
+    - Price: ₹${orderItem.totalPrice}
+    ${
+      orderItem.specialRequests
+        ? `- Special Requests: ${orderItem.specialRequests}`
+        : ""
+    }`;
+    })
+    .join("\n\n");
+
+  const emailContent = `
+New Order Received!
+
+Customer Details:
+- Name: ${orderDetails.customerName}
+- Phone Number: ${orderDetails.phoneNumber}
+- Location: ${orderDetails.selectedLocation}
+${orderDetails.selectedCabin ? `- Cabin: ${orderDetails.selectedCabin}` : ""}
+
+Order Items:
+${itemsList}
+
+${
+  orderDetails.tableDeliveryCharge
+    ? `Table Delivery Charge: ₹${orderDetails.tableDeliveryCharge}`
+    : ""
+}
+${
+  orderDetails.appliedPromo
+    ? `Applied Promo: ${
+        typeof orderDetails.appliedPromo === "object"
+          ? `${orderDetails.appliedPromo.code} (${orderDetails.appliedPromo.percentage}% off)`
+          : orderDetails.appliedPromo
+      }`
+    : ""
+}
+Order Time: ${new Date(orderDetails.createdAt).toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "medium",
+  })}
+Total: ₹${orderDetails.total}
+  `.trim();
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.NOTIFICATION_EMAIL,
+    subject: `New Order Received at Chai Mine ${orderDetails.selectedLocation}`,
+    text: emailContent,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+   } catch (error) {
+    console.error("Error sending email:", error);
+    throw error;
   }
 }
 

@@ -745,8 +745,7 @@ export const menuItems: MenuItem[] = [
           { label: "White Sauce", price: "200.00" },
           { label: "Red Sauce", price: "200.00" },
           { label: "Masala Penne", price: "200.00" },
-          { label: "Mushroom Penne", price: "200.00" },
-        ],
+         ],
       },
       {
         name: "Extras",

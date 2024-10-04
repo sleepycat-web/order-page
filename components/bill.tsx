@@ -261,6 +261,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, customerName }) => {
               order.status !== "fulfilled" &&
               "Dispatched"}
             {order.status === "fulfilled" && "Fulfilled"}
+            {order.status === "rejected" && "Rejected"}
           </span>
         </p>
         <p className="text-neutral-300 col-span-4">
