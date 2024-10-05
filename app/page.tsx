@@ -33,7 +33,7 @@ export default function Home() {
   const [showError, setShowError] = useState(false);
   const [isBillSectionOpen, setIsBillSectionOpen] = useState(false); // New state for BillSection visibility
   const [isHomepage, setIsHomepage] = useState(true);
-  
+  const [tableDeliveryCharge, setTableDeliveryCharge] = useState(0);
  const shouldHideFooter = () => {
    return (
      isBillSectionOpen ||
@@ -228,6 +228,7 @@ const handleAddToCart = (
               onOrderSuccess={handleOrderSuccess}
               onResetCart={handleOrderSuccess}
               tableDelivery={tableDelivery}
+              
               onTableDeliveryChange={handleTableDeliveryChange}
             />
           </div>
@@ -287,7 +288,8 @@ const handleAddToCart = (
             onOrderSuccess={handleOrderSuccess}
             onResetCart={handleOrderSuccess}
             tableDelivery={tableDelivery}
-          />
+            tableDeliveryCharge={tableDeliveryCharge}
+           />
         )}
       </div>
       {!shouldHideFooter() && (

@@ -21,7 +21,6 @@ interface CartProps {
   onResetCart: () => void;
   tableDelivery: boolean; // Add this line
   onTableDeliveryChange: (isChecked: boolean) => void;
-  
 }
 
 const Cart: React.FC<CartProps> = ({
@@ -40,62 +39,63 @@ const Cart: React.FC<CartProps> = ({
   setTotal,
   onResetCart,
   onTableDeliveryChange,
- }) => {
+  
+}) => {
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [tableDelivery, setTableDelivery] = useState(false);
   const [ultraGrandTotal, setUltraGrandTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
-const [isBillSectionOpen, setIsBillSectionOpen] = useState(false);
- const [tableDeliveryCharge, setTableDeliveryCharge] = useState(0);
+  const [isBillSectionOpen, setIsBillSectionOpen] = useState(false);
+  const [tableDeliveryCharge, setTableDeliveryCharge] = useState(0);
 
- const handleOpenBillSection = () => {
-   setIsBillSectionOpen(true);
- };
+  const handleOpenBillSection = () => {
+    setIsBillSectionOpen(true);
+  };
 
- const handleCloseBillSection = () => {
-   setIsBillSectionOpen(false);
- };
-const handleApplyPromo = () => {
-  const validPromo = validatePromo(promoCode);
-  if (validPromo) {
-    onApplyPromo(validPromo);
-    setPromoError("");
-  } else {
-    setPromoError("Invalid promo code");
-    onApplyPromo(null);
-  }
-};
+  const handleCloseBillSection = () => {
+    setIsBillSectionOpen(false);
+  };
+  const handleApplyPromo = () => {
+    const validPromo = validatePromo(promoCode);
+    if (validPromo) {
+      onApplyPromo(validPromo);
+      setPromoError("");
+    } else {
+      setPromoError("Invalid promo code");
+      onApplyPromo(null);
+    }
+  };
 
-const handlePromoCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const newPromoCode = e.target.value;
-  setPromoCode(newPromoCode);
+  const handlePromoCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPromoCode = e.target.value;
+    setPromoCode(newPromoCode);
 
-  // If there's an applied promo and the input changes, remove the promo
-  if (appliedPromo) {
-    onApplyPromo(null);
-  }
+    // If there's an applied promo and the input changes, remove the promo
+    if (appliedPromo) {
+      onApplyPromo(null);
+    }
 
-  // Clear error when input changes
-  if (promoError) {
-    setPromoError("");
-  }
-};
+    // Clear error when input changes
+    if (promoError) {
+      setPromoError("");
+    }
+  };
 
- const handleUpdateQuantity = (index: number, newQuantity: number) => {
-   onUpdateQuantity(index, newQuantity);
- };
-const handleCheckout = () => {
-  // Calculate the items with calculated price
-  const itemsWithCalculatedPrice = items.map((item) => ({
-    ...item,
-    calculatedPrice: item.totalPrice * item.quantity,
-  }));
+  const handleUpdateQuantity = (index: number, newQuantity: number) => {
+    onUpdateQuantity(index, newQuantity);
+  };
+  const handleCheckout = () => {
+    // Calculate the items with calculated price
+    const itemsWithCalculatedPrice = items.map((item) => ({
+      ...item,
+      calculatedPrice: item.totalPrice * item.quantity,
+    }));
 
-  setIsCheckoutOpen(true);
-  onToggle(); // This will close the cart
-};
+    setIsCheckoutOpen(true);
+    onToggle(); // This will close the cart
+  };
 
   const handleCloseCheckout = () => {
     setIsCheckoutOpen(false);
@@ -104,23 +104,23 @@ const handleCheckout = () => {
     }
   };
 
-   const calculateTotal = () => {
-     const newSubtotal = items.reduce(
-       (total, item) => total + item.totalPrice,
-       0
-     );
-     setSubtotal(newSubtotal);
+  const calculateTotal = () => {
+    const newSubtotal = items.reduce(
+      (total, item) => total + item.totalPrice,
+      0
+    );
+    setSubtotal(newSubtotal);
 
-     const newTableDeliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
-     setTableDeliveryCharge(newTableDeliveryCharge);
+    const newTableDeliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
+    setTableDeliveryCharge(newTableDeliveryCharge);
 
-     const discountableTotal = newSubtotal;
-     const discount = appliedPromo
-       ? discountableTotal * (appliedPromo.percentage / 100)
-       : 0;
+    const discountableTotal = newSubtotal;
+    const discount = appliedPromo
+      ? discountableTotal * (appliedPromo.percentage / 100)
+      : 0;
 
-     return discountableTotal - discount + newTableDeliveryCharge;
-   };
+    return discountableTotal - discount + newTableDeliveryCharge;
+  };
 
   useEffect(() => {
     const newTotal = calculateTotal();
@@ -339,6 +339,7 @@ const handleCheckout = () => {
           onOrderSuccess={onOrderSuccess}
           onResetCart={onResetCart} // Pass this prop to Checkout
           tableDeliveryCharge={tableDeliveryCharge}
+          tableDelivery={tableDelivery}
         />
       )}
       {isBillSectionOpen && <BillSection onClose={handleCloseBillSection} />}

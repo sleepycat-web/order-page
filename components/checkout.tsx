@@ -16,6 +16,7 @@ interface CheckoutProps {
   onOrderSuccess: () => void;
   onResetCart: () => void;
   tableDeliveryCharge: number; // Add this line
+  tableDelivery: boolean; // Add this line
 }
 
 interface UserData {
@@ -178,54 +179,54 @@ const Checkout: React.FC<CheckoutProps> = ({
     return response.data;
   };
 
- useEffect(() => {
-   const checkVerificationAndBanStatus = async () => {
-     setIsLoading(true);
+  useEffect(() => {
+    const checkVerificationAndBanStatus = async () => {
+      setIsLoading(true);
 
-     const cachedVerification = localStorage.getItem("otpVerified");
-     if (cachedVerification) {
-       const { verified, phoneNumber: cachedPhoneNumber } =
-         JSON.parse(cachedVerification);
-       if (verified) {
-         try {
-           const response = await axios.post(`/api/banValidate`, {
-             phoneNumber: cachedPhoneNumber,
-           });
-           if (response.data.isBanned) {
-             resetCheckoutState();
-             localStorage.removeItem("otpVerified");
-             localStorage.removeItem("userName");
-           } else {
-             setOtpVerified(true);
-             setIsOtpSent(true);
-             setPhoneNumber(cachedPhoneNumber);
-             const cachedName = localStorage.getItem("userName");
-             if (cachedName) {
-               setCustomerName(cachedName);
-             } else {
-               const userData = await getUserData(cachedPhoneNumber);
-               setCustomerName(userData.name.split(" ")[0]);
-             }
-           }
-         } catch (error) {
-           console.error("Error checking ban status:", error);
-           resetCheckoutState();
-         }
-       } else {
-         localStorage.removeItem("otpVerified");
-         localStorage.removeItem("userName");
-         resetCheckoutState();
-       }
-     } else {
-       resetCheckoutState();
-     }
+      const cachedVerification = localStorage.getItem("otpVerified");
+      if (cachedVerification) {
+        const { verified, phoneNumber: cachedPhoneNumber } =
+          JSON.parse(cachedVerification);
+        if (verified) {
+          try {
+            const response = await axios.post(`/api/banValidate`, {
+              phoneNumber: cachedPhoneNumber,
+            });
+            if (response.data.isBanned) {
+              resetCheckoutState();
+              localStorage.removeItem("otpVerified");
+              localStorage.removeItem("userName");
+            } else {
+              setOtpVerified(true);
+              setIsOtpSent(true);
+              setPhoneNumber(cachedPhoneNumber);
+              const cachedName = localStorage.getItem("userName");
+              if (cachedName) {
+                setCustomerName(cachedName);
+              } else {
+                const userData = await getUserData(cachedPhoneNumber);
+                setCustomerName(userData.name.split(" ")[0]);
+              }
+            }
+          } catch (error) {
+            console.error("Error checking ban status:", error);
+            resetCheckoutState();
+          }
+        } else {
+          localStorage.removeItem("otpVerified");
+          localStorage.removeItem("userName");
+          resetCheckoutState();
+        }
+      } else {
+        resetCheckoutState();
+      }
 
-     setIsLoading(false);
-   };
+      setIsLoading(false);
+    };
 
-   checkVerificationAndBanStatus();
- }, [items]);
-  
+    checkVerificationAndBanStatus();
+  }, [items]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (timer > 0) {
@@ -306,37 +307,36 @@ const Checkout: React.FC<CheckoutProps> = ({
     }
   };
 
- const handleUserDataSubmit = async () => {
-   if (userData.name) {
-     try {
-     setOtpState("loading");
-       await addNewUser(phoneNumber, userData.name, userData.email);
-       setCustomerName(userData.name.split(" ")[0]);
-       setShowUserModal(false);
+  const handleUserDataSubmit = async () => {
+    if (userData.name) {
+      try {
+        setOtpState("loading");
+        await addNewUser(phoneNumber, userData.name, userData.email);
+        setCustomerName(userData.name.split(" ")[0]);
+        setShowUserModal(false);
 
-       // Send OTP for the new user
-       const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
+        // Send OTP for the new user
+        const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
 
-       if (otpResponse.status === 200) {
-         const { otp } = otpResponse.data;
-         setGeneratedOtp(otp);
-         setOtpState("sent");
-         setIsOtpSent(true);
-         setTimer(30);
-        //  setOtpMessage(
-        //    `OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`
-        //  );
-       } else {
-         setOtpMessage("Failed to send OTP. Please try again.");
-         setOtpState("idle");
-       }
-     } catch (error) {
-       console.error("Error adding new user or sending OTP:", error);
-       setOtpMessage("An error occurred. Please try again.");
-     }
-   }
- };
-
+        if (otpResponse.status === 200) {
+          const { otp } = otpResponse.data;
+          setGeneratedOtp(otp);
+          setOtpState("sent");
+          setIsOtpSent(true);
+          setTimer(30);
+          //  setOtpMessage(
+          //    `OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`
+          //  );
+        } else {
+          setOtpMessage("Failed to send OTP. Please try again.");
+          setOtpState("idle");
+        }
+      } catch (error) {
+        console.error("Error adding new user or sending OTP:", error);
+        setOtpMessage("An error occurred. Please try again.");
+      }
+    }
+  };
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length <= 1) {
@@ -360,25 +360,25 @@ const Checkout: React.FC<CheckoutProps> = ({
 
   const handleVerifyOtp = async () => {
     const enteredOtp = otpInputs.join("");
-   if (enteredOtp === generatedOtp) {
-     setOtpVerified(true);
-     localStorage.setItem(
-       "otpVerified",
-       JSON.stringify({
-         verified: true,
-         phoneNumber: phoneNumber,
-       })
-     );
+    if (enteredOtp === generatedOtp) {
+      setOtpVerified(true);
+      localStorage.setItem(
+        "otpVerified",
+        JSON.stringify({
+          verified: true,
+          phoneNumber: phoneNumber,
+        })
+      );
 
-     // Fetch and save user name
-     const userData = await getUserData(phoneNumber);
-     const userName = userData.name.split(" ")[0];
-     setCustomerName(userName);
-     localStorage.setItem("userName", userName);
-   } else {
-     console.log("Incorrect OTP");
-     setOtpMessage("Incorrect OTP. Please try again.");
-   }
+      // Fetch and save user name
+      const userData = await getUserData(phoneNumber);
+      const userName = userData.name.split(" ")[0];
+      setCustomerName(userName);
+      localStorage.setItem("userName", userName);
+    } else {
+      console.log("Incorrect OTP");
+      setOtpMessage("Incorrect OTP. Please try again.");
+    }
   };
 
   const isGetOtpDisabled = phoneNumber.length !== 10 || timer > 0;
@@ -491,7 +491,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                 <p className="hidden md:block text-xl font-bold ">
                   Order Placed Successfully! Check SMS for Order Updates.
                 </p>
-              
+
                 <div className="block md:hidden">
                   <p className="text-xl font-bold ">
                     Order Placed Successfully!
@@ -499,7 +499,6 @@ const Checkout: React.FC<CheckoutProps> = ({
                   <p className="text-xl font-bold ">
                     Check SMS for Order Updates.
                   </p>
-                  
                 </div>
 
                 <p>
@@ -530,7 +529,7 @@ const Checkout: React.FC<CheckoutProps> = ({
                       <div className="mt-2 flex items-center">
                         <span className="mr-2">Price:</span>
                         <div className="px-2  mb-0.5  bg-blue-600 rounded text-white font-semibold">
-                          ₹{(item.totalPrice ).toFixed(2)}
+                          ₹{item.totalPrice.toFixed(2)}
                         </div>
                       </div>
                       {Object.entries(item.selectedOptions).map(
