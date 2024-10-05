@@ -321,11 +321,11 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, customerName }) => {
           )}
           {order.appliedPromo && (
             <p className="text-neutral-300">
-              Applied Promo:{" "}
+              Promo Applied{" "}
               <span className="text-white">
                 {typeof order.appliedPromo === "string"
                   ? order.appliedPromo
-                  : `${order.appliedPromo.code} (${order.appliedPromo.percentage}%)`}
+                  : ` (${order.appliedPromo.percentage}% off)`}
               </span>
             </p>
           )}

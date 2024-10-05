@@ -48,6 +48,7 @@ const Cart: React.FC<CartProps> = ({
   const [ultraGrandTotal, setUltraGrandTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
 const [isBillSectionOpen, setIsBillSectionOpen] = useState(false);
+ const [tableDeliveryCharge, setTableDeliveryCharge] = useState(0);
 
  const handleOpenBillSection = () => {
    setIsBillSectionOpen(true);
@@ -103,21 +104,23 @@ const handleCheckout = () => {
     }
   };
 
-  const calculateTotal = () => {
-    const newSubtotal = items.reduce(
-      (total, item) => total + item.totalPrice,
-      0
-    );
-    setSubtotal(newSubtotal);
+   const calculateTotal = () => {
+     const newSubtotal = items.reduce(
+       (total, item) => total + item.totalPrice,
+       0
+     );
+     setSubtotal(newSubtotal);
 
-    const deliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
-    const discountableTotal = newSubtotal;
-    const discount = appliedPromo
-      ? discountableTotal * (appliedPromo.percentage / 100)
-      : 0;
+     const newTableDeliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
+     setTableDeliveryCharge(newTableDeliveryCharge);
 
-    return discountableTotal - discount + deliveryCharge;
-  };
+     const discountableTotal = newSubtotal;
+     const discount = appliedPromo
+       ? discountableTotal * (appliedPromo.percentage / 100)
+       : 0;
+
+     return discountableTotal - discount + newTableDeliveryCharge;
+   };
 
   useEffect(() => {
     const newTotal = calculateTotal();
@@ -335,7 +338,7 @@ const handleCheckout = () => {
           appliedPromo={appliedPromo}
           onOrderSuccess={onOrderSuccess}
           onResetCart={onResetCart} // Pass this prop to Checkout
-          tableDelivery={tableDelivery}
+          tableDeliveryCharge={tableDeliveryCharge}
         />
       )}
       {isBillSectionOpen && <BillSection onClose={handleCloseBillSection} />}

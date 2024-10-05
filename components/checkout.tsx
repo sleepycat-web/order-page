@@ -15,7 +15,7 @@ interface CheckoutProps {
   appliedPromo: Promo | null;
   onOrderSuccess: () => void;
   onResetCart: () => void;
-  tableDelivery: boolean; // Add this line
+  tableDeliveryCharge: number; // Add this line
 }
 
 interface UserData {
@@ -32,7 +32,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   total,
   appliedPromo,
   onResetCart,
-  tableDelivery, // Add this line
+  tableDeliveryCharge, // Add this line
 }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
@@ -89,7 +89,8 @@ const Checkout: React.FC<CheckoutProps> = ({
   };
 
   // Calculate table delivery charge
-  const tableDeliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
+  // const tableDeliveryCharge = tableDelivery ? subtotal * 0.05 : 0;
+
   useEffect(() => {
     const handleUserBanned = () => {
       resetCheckoutState();
