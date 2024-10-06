@@ -561,17 +561,15 @@ const calculateTotalSales = (orders: Order[]) => {
           orderRefs={orderRefs}
           setHighlightedOrderId={setHighlightedOrderId}
         />
-        {(activeTab === "new" || activeTab === "active") && (
-          <div className="">
-            <VacantCabinDropdown
-              orders={combinedOrders([
-                ...Object.values(groupedOrders.new).flat(),
-                ...Object.values(groupedOrders.active).flat(),
-              ])}
-              slug={slug}
-            />
-          </div>
-        )}
+        <div className="">
+          <VacantCabinDropdown
+            orders={combinedOrders([
+              ...Object.values(groupedOrders.new).flat(),
+              ...Object.values(groupedOrders.active).flat(),
+            ])}
+            slug={slug}
+          />
+        </div>
         <div className="mb-8">
           <OrderTabs
             activeTab={activeTab}
