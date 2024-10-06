@@ -70,6 +70,15 @@ useEffect(() => {
   };
 
 
+  const cleanupEmptyEntries = (options: Record<string, string[]>) => {
+    const cleanedOptions = { ...options };
+    Object.keys(cleanedOptions).forEach((key) => {
+      if (cleanedOptions[key].length === 0) {
+        delete cleanedOptions[key];
+      }
+    });
+    return cleanedOptions;
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -136,14 +145,15 @@ useEffect(() => {
     return !hasOnlyCheckboxes || hasSelectedCheckbox;
   };
 
-const handleAddToOrder = () => {
+const handleAddToOrderWithCleanup = () => {
   if (validateSelection()) {
-    // Create a new orderedSelectedOptions object that follows the order of item.customizationOptions
-    const orderedSelectedOptions: Record<string, string[]> = {};
+    const cleanedOptions = cleanupEmptyEntries(selectedOptions);
 
+    // Create orderedSelectedOptions based on the order of item.customizationOptions
+    const orderedSelectedOptions: Record<string, string[]> = {};
     item.customizationOptions?.forEach((option) => {
-      if (selectedOptions[option.name]) {
-        orderedSelectedOptions[option.name] = selectedOptions[option.name];
+      if (cleanedOptions[option.name]) {
+        orderedSelectedOptions[option.name] = cleanedOptions[option.name];
       }
     });
 
@@ -165,7 +175,6 @@ const handleAddToOrder = () => {
       setError("Please select required options");
     }
 
-    // Find the first invalid option and scroll to it
     const firstInvalidOptionIndex = item.customizationOptions?.findIndex(
       (option, index) => {
         if (option.type === "radio") {
@@ -192,10 +201,7 @@ const handleAddToOrder = () => {
     ) {
       const invalidElement = optionRefs.current[firstInvalidOptionIndex];
       if (invalidElement) {
-        invalidElement.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
+        invalidElement.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
   }
@@ -374,7 +380,7 @@ const handleAddToOrder = () => {
         <div className="flex gap-2 ">
           <button
             className="btn mt-2 btn-primary w-2/3"
-            onClick={handleAddToOrder}
+            onClick={handleAddToOrderWithCleanup}
           >
             {hasSelectedOptionsWithPrice()
               ? `Add to my order ₹${totalPrice.toFixed(2)}`
