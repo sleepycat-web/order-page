@@ -69,42 +69,7 @@ useEffect(() => {
     );
   };
 
-  const handleOptionChange = (
-    optionName: string,
-    value: string,
-    type: "radio" | "checkbox"
-  ) => {
-    setSelectedOptions((prev: Record<string, string[]>) => {
-      const newOptions = { ...prev };
 
-      if (type === "radio") {
-        newOptions[optionName] = [value];
-      } else if (type === "checkbox") {
-        if (!newOptions[optionName]) {
-          newOptions[optionName] = [];
-        }
-
-        const index = newOptions[optionName].indexOf(value);
-        if (index > -1) {
-          // Remove the value if it exists
-          newOptions[optionName] = newOptions[optionName].filter(
-            (item) => item !== value
-          );
-
-          // If the array is empty after removing the value, delete the key
-          if (newOptions[optionName].length === 0) {
-            delete newOptions[optionName];
-          }
-        } else {
-          // Add the value if it doesn't exist
-          newOptions[optionName] = [...(newOptions[optionName] || []), value];
-        }
-      }
-
-      return newOptions;
-    });
-    setError(null);
-  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -299,54 +264,80 @@ const handleAddToOrder = () => {
                 {option.name}
               </h3>
               <div className="grid grid-cols-2 gap-2 grid-flow-row-dense">
-                {option.options.map((opt, optIndex) => (
-                  <div
-                    key={optIndex}
-                    className={`bg-neutral-900 rounded-lg p-3 cursor-pointer ${
-                      selectedOptions[option.name]?.includes(opt.label)
-                        ? "border border-white"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      handleOptionChange(option.name, opt.label, option.type)
-                    } // Handle click on div
-                  >
-                    <label
-                      className={`flex items-center cursor-pointer w-full`}
-                    >
-                      <input
-                        type={option.type}
-                        id={`${item.name}-${option.name}-${opt.label}`}
-                        name={option.name}
-                        value={opt.label}
-                        checked={selectedOptions[option.name]?.includes(
-                          opt.label
-                        )}
-                        className="mr-2 cursor-pointer"
-                        onChange={() =>
-                          handleOptionChange(
-                            option.name,
-                            opt.label,
-                            option.type
-                          )
+                {option.options.map((opt, optIndex) => {
+                  const isSelected = selectedOptions[option.name]?.includes(
+                    opt.label
+                  );
+
+                  const handleOptionClick = (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    updateOptionSelection(opt.label);
+                  };
+
+                  const handleInputChange = (
+                    e: React.ChangeEvent<HTMLInputElement>
+                  ) => {
+                    updateOptionSelection(opt.label);
+                  };
+
+                  const updateOptionSelection = (optLabel: string) => {
+                    setSelectedOptions((prev) => {
+                      const newOptions = { ...prev };
+                      if (option.type === "radio") {
+                        newOptions[option.name] = [optLabel];
+                      } else if (option.type === "checkbox") {
+                        if (!newOptions[option.name]) {
+                          newOptions[option.name] = [];
                         }
-                      />
-                      <span className="flex-grow text-sm">
-                        {opt.label}{" "}
-                        <div className="inline-block">
+                        const index = newOptions[option.name].indexOf(optLabel);
+                        if (index > -1) {
+                          newOptions[option.name] = newOptions[
+                            option.name
+                          ].filter((item) => item !== optLabel);
+                        } else {
+                          newOptions[option.name] = [
+                            ...newOptions[option.name],
+                            optLabel,
+                          ];
+                        }
+                      }
+                      return newOptions;
+                    });
+                  };
+
+                  return (
+                    <div
+                      key={optIndex}
+                      className={`bg-neutral-900 rounded-lg p-3 cursor-pointer ${
+                        isSelected ? "border border-white" : ""
+                      }`}
+                      onClick={handleOptionClick}
+                    >
+                      <label className="flex items-center cursor-pointer w-full">
+                        <input
+                          type={option.type}
+                          id={`${item.name}-${option.name}-${opt.label}`}
+                          name={option.name}
+                          value={opt.label}
+                          checked={isSelected}
+                          className="mr-2 cursor-pointer"
+                          onChange={handleInputChange}
+                          onClick={(e) => e.stopPropagation()} // Prevent double-triggering
+                        />
+                        <span className="flex-grow text-sm select-none">
+                          {opt.label}{" "}
                           {opt.price && (
-                            <>
-                              {" "}
+                            <span className="inline-block">
                               {option.type === "checkbox"
                                 ? `(+₹${opt.price})`
                                 : `(₹${opt.price})`}
-                            </>
+                            </span>
                           )}
-                        </div>
-                      </span>
-                    </label>
-                  </div>
-                ))}
+                        </span>
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
