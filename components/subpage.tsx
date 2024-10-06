@@ -1,5 +1,5 @@
 "use client";
-import CallListDropdown from "@/components/listcall";
+import VacantCabinDropdown from "@/components/vacantcabin";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
@@ -563,11 +563,12 @@ const calculateTotalSales = (orders: Order[]) => {
         />
         {(activeTab === "new" || activeTab === "active") && (
           <div className="">
-            <CallListDropdown
+            <VacantCabinDropdown
               orders={combinedOrders([
                 ...Object.values(groupedOrders.new).flat(),
                 ...Object.values(groupedOrders.active).flat(),
-              ])} // Pass the grouped orders as an object
+              ])}
+              slug={slug}
             />
           </div>
         )}
