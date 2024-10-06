@@ -661,8 +661,7 @@ const [isProcessing, setIsProcessing] = useState(false);
       <p className="mt-2 font-semibold">Subtotal: ₹{order.total}</p>
       {order.appliedPromo && (
         <p className="mt-1 text-green-500 text-sm">
-          Promo Applied: {order.appliedPromo.code} (
-          {order.appliedPromo.percentage}% off)
+          Promo Applied ({order.appliedPromo.percentage}% off)
         </p>
       )}
       {order.selectedLocation.includes("Sevoke Road") &&
@@ -818,7 +817,7 @@ const [isProcessing, setIsProcessing] = useState(false);
               onClick={confirmFulfill}
               disabled={isSubmitDisabled() || isProcessing}
             >
-             Confirm
+              Confirm
             </button>
             <button
               className="btn"
