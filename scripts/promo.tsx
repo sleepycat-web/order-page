@@ -33,7 +33,7 @@ export const promos: Promo[] = [
   { code: "CMSNEHA", percentage: 10 },
   { code: "SHATRU", percentage: 5 },
   { code: "CMSTAFF", percentage: 50 },
-  { code: "CMADMIN", percentage: 100 },
+  { code: "CMOWNER", percentage: 100 },
 ];
 
 export function validatePromo(code: string): Promo | null {
