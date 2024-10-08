@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../lib/mongodb";
+import fetch from "node-fetch";
 
 interface UpdateFields {
   order?: string;
@@ -9,6 +10,12 @@ interface UpdateFields {
   fulfilledAt?: Date;
   rejectedAt?: Date;
   total?: number;
+}
+
+interface Fast2SMSResponse {
+  return: boolean;
+  request_id: string;
+  message: string;
 }
 
 export default async function handler(
@@ -32,7 +39,6 @@ export default async function handler(
     let orderIdsToUpdate: ObjectId[];
 
     if (orderId) {
-      // Single order update
       const orderIdObj = new ObjectId(orderId);
       const sevokeOrder = await db
         .collection("OrderSevoke")
@@ -42,9 +48,7 @@ export default async function handler(
         : db.collection("OrderDagapur");
       orderIdsToUpdate = [orderIdObj];
     } else if (orderIds) {
-      // Multiple order update
       orderIdsToUpdate = orderIds.map((id: string) => new ObjectId(id));
-      // Assume all orders are in the same collection for simplicity
       const sevokeOrder = await db
         .collection("OrderSevoke")
         .findOne({ _id: orderIdsToUpdate[0] });
@@ -68,7 +72,7 @@ export default async function handler(
       updateFields.order = "rejected";
       updateFields.status = "rejected";
       updateFields.rejectedAt = now;
-      updateFields.total = 0; // Set total to 0 when rejecting
+      updateFields.total = 0;
     } else {
       return res.status(400).json({ message: "Invalid type parameter" });
     }
@@ -84,6 +88,16 @@ export default async function handler(
         .json({ message: "Order(s) not found or status not updated" });
     }
 
+    // If the order is fulfilled, schedule SMS sending after 10 minutes
+    if (type === "/payment") {
+      for (const orderId of orderIdsToUpdate) {
+        const order = await collection.findOne({ _id: orderId });
+        if (order) {
+           setTimeout(() => sendSMS(order), 600000); // 600,000 milliseconds = 10 minutes
+        }
+      }
+    }
+
     res.status(200).json({
       message: "Order status updated successfully",
       updatedFields: updateFields,
@@ -92,5 +106,49 @@ export default async function handler(
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ message: "Error updating order status" });
+  }
+}
+
+async function sendSMS(order: any) {
+  const apiKey = process.env.FAST2SMS_API_KEY;
+
+  if (!apiKey) {
+    console.error("FAST2SMS_API_KEY is not configured");
+    return;
+  }
+
+  const url = "https://www.fast2sms.com/dev/bulkV2";
+  const headers = {
+    authorization: apiKey,
+    "Content-Type": "application/json",
+  };
+
+  const firstName = order.customerName.split(" ")[0];
+  const capitalizedFirstName =
+    firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+
+  const body = {
+    route: "dlt",
+    sender_id: "CHMINE",
+    message: "174072",
+    variables_values: capitalizedFirstName,
+    flash: 0,
+    numbers: order.phoneNumber,
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = (await response.json()) as Fast2SMSResponse;
+
+    if (data.return !== true) {
+      console.error(`Failed to send SMS:`, data.message);
+    }
+  } catch (error) {
+    console.error(`Error sending SMS:`, error);
   }
 }
