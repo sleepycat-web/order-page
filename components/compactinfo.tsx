@@ -52,7 +52,7 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
     cash: "0",
     gpay: "0",
   });
-
+const [showPhoneNumber, setShowPhoneNumber] = useState(false);
     const handleExtraPaymentToggle = () => {
       setShowExtraPayment(!showExtraPayment);
       setExtraPaymentType(null);
@@ -61,7 +61,10 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
  const handleExtraPaymentTypeSelect = (type: "cash" | "upi") => {
    setExtraPaymentType(type);
  };
-
+const togglePhoneNumber = () => {
+  setShowPhoneNumber(true);
+  setTimeout(() => setShowPhoneNumber(false), 10000); // 10 seconds
+};
  const handleExtraPaymentAmountChange = (value: string) => {
    const cleanedValue = value.replace(/[^0-9]/g, "");
    setExtraPaymentAmount(cleanedValue === "" ? "" : cleanedValue);
@@ -320,7 +323,16 @@ const CompactInfo: React.FC<CompactInfoProps> = ({
               {customerName}
             </span>
             <span className="text-blue-400 text-sm sm:text-base">
-              <a href={`tel:${phoneNumber}`}>{phoneNumber}</a>
+              {showPhoneNumber ? (
+                <a href={`tel:${phoneNumber}`}>{phoneNumber}</a>
+              ) : (
+                <button
+                  onClick={togglePhoneNumber}
+                  className="text-blue-400 "
+                >
+                  Show Number
+                </button>
+              )}
             </span>
             <span className="bg-blue-600 px-2 py-0.5 rounded text-xs sm:text-sm">
               {cabin}
