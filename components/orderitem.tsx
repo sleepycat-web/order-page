@@ -861,17 +861,17 @@ const OrderManagementPage: React.FC = () => {
           )
         );
 
-        const { phoneNumber, customerName } = order;
-        const smsResponse = await axios.post("/api/sendConfirmationSms", {
-          phoneNumber,
-          customerName,
-        });
+        // const { phoneNumber, customerName } = order;
+        // const smsResponse = await axios.post("/api/sendConfirmationSms", {
+        //   phoneNumber,
+        //   customerName,
+        // });
 
-        if (smsResponse.status === 200) {
-          console.log("Confirmation SMS sent successfully.");
-        } else {
-          console.error("Failed to send confirmation SMS.");
-        }
+        // if (smsResponse.status === 200) {
+        //   console.log("Confirmation SMS sent successfully.");
+        // } else {
+        //   console.error("Failed to send confirmation SMS.");
+        // }
       } else {
         console.error("Failed to update order status");
       }

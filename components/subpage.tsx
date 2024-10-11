@@ -166,29 +166,29 @@ export default function OrderPage() {
     }
   }, [lastUpdatedOrderId]);
 
-  const sendDispatchSms = async (
-    phoneNumber: string,
-    customerName: string,
-    deliveryCharge: number
-  ) => {
-    try {
-      const response = await fetch("/api/sendConfirmation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phoneNumber, customerName, deliveryCharge }),
-      });
+  // const sendDispatchSms = async (
+  //   phoneNumber: string,
+  //   customerName: string,
+  //   deliveryCharge: number
+  // ) => {
+  //   try {
+  //     const response = await fetch("/api/sendConfirmation", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ phoneNumber, customerName, deliveryCharge }),
+  //     });
 
-      if (!response.ok) {
-        throw new Error("Failed to send dispatch SMS");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Failed to send dispatch SMS");
+  //     }
 
-      console.log("Dispatch SMS sent successfully");
-    } catch (error) {
-      console.error("Error sending dispatch SMS:", error);
-    }
-  };
+  //     console.log("Dispatch SMS sent successfully");
+  //   } catch (error) {
+  //     console.error("Error sending dispatch SMS:", error);
+  //   }
+  // };
 
   const handleDispatch = async (orderId: string) => {
     try {
@@ -221,14 +221,14 @@ export default function OrderPage() {
     try {
       await handleDispatch(orderId);
 
-      const updatedOrder = orders.find((o) => o._id === orderId);
-      if (updatedOrder) {
-        await sendDispatchSms(
-          updatedOrder.phoneNumber,
-          updatedOrder.customerName,
-          updatedOrder.tableDeliveryCharge || 0
-        );
-      }
+      // const updatedOrder = orders.find((o) => o._id === orderId);
+      // if (updatedOrder) {
+      //   await sendDispatchSms(
+      //     updatedOrder.phoneNumber,
+      //     updatedOrder.customerName,
+      //     updatedOrder.tableDeliveryCharge || 0
+      //   );
+      // }
     } catch (error) {
       console.error("Error dispatching order and sending SMS:", error);
     }
@@ -273,14 +273,14 @@ export default function OrderPage() {
         0
       );
 
-      if (ordersToDispatch.length > 0) {
-        const firstOrder = ordersToDispatch[0];
-        await sendDispatchSms(
-          firstOrder.phoneNumber,
-          firstOrder.customerName,
-          totalDeliveryCharge
-        );
-      }
+      // if (ordersToDispatch.length > 0) {
+      //   const firstOrder = ordersToDispatch[0];
+      //   await sendDispatchSms(
+      //     firstOrder.phoneNumber,
+      //     firstOrder.customerName,
+      //     totalDeliveryCharge
+      //   );
+      // }
     } catch (error) {
       console.error("Error dispatching all orders:", error);
     }
