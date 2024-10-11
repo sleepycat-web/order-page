@@ -70,7 +70,7 @@ export const menuItems: MenuItem[] = [
         name: "Texture",
         type: "radio",
         options: [
-          { label: "Plain", price: "30.00" },
+          { label: "Raw", price: "30.00" },
           { label: "Butter Toast", price: "60.00" },
           { label: "GingerGarlic Toast", price: "80.00" },
           { label: "Milk Toast", price: "100.00" },
