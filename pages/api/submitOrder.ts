@@ -114,8 +114,7 @@ async function sendNotifications(
 
     // Send email confirmation
     await sendEmailConfirmation(orderDocument);
-
-   } catch (error) {
+  } catch (error) {
     console.error("Error sending notifications:", error);
   }
 }
@@ -196,7 +195,7 @@ Total: ₹${orderDetails.total}
 
   try {
     await transporter.sendMail(mailOptions);
-   } catch (error) {
+  } catch (error) {
     console.error("Error sending email:", error);
     throw error;
   }

@@ -892,7 +892,7 @@ export const menuItems: MenuItem[] = [
           { label: "Vanilla Icecream", price: "50.00" },
           { label: "Strawberry Icecream", price: "50.00" },
           { label: "Chocolate Icecream", price: "50.00" },
-          { label: "Biscoff Cheesecake", price: "150.00" },
+          // { label: "Biscoff Cheesecake", price: "150.00" },
           { label: "Hot Choco Brownie", price: "150.00" },
           { label: "Chocolava Cake", price: "150.00" },
         ],

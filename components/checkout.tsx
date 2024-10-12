@@ -50,6 +50,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [phoneError, setPhoneError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isOtpLoading, setIsOtpLoading] = useState(false);
+const [isAutoPlacingOrder, setIsAutoPlacingOrder] = useState(false);
 
   const [otpState, setOtpState] = useState<"idle" | "loading" | "sent">("idle");
   const [isOtpRequested, setIsOtpRequested] = useState(false);
@@ -127,34 +128,7 @@ const Checkout: React.FC<CheckoutProps> = ({
     return response.data;
   };
 
-  const handleConfirmOrder = async () => {
-    if (isSubmitting) return; // Prevent double submission
-
-    try {
-      setIsSubmitting(true);
-      const response = await axios.post("/api/submitOrder", {
-        items,
-        selectedLocation,
-        selectedCabin,
-        total,
-        appliedPromo,
-        phoneNumber,
-        customerName,
-        tableDeliveryCharge,
-      });
-
-      if (response.status === 200) {
-        console.log("Order submitted:", response.data.orderId);
-        setOrderPlaced(true);
-        onOrderSuccess();
-        onResetCart();
-      }
-    } catch (error) {
-      console.error("Error submitting order:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  
 
   const addNewUser = async (
     phoneNumber: string,
@@ -179,54 +153,7 @@ const Checkout: React.FC<CheckoutProps> = ({
     return response.data;
   };
 
-  useEffect(() => {
-    const checkVerificationAndBanStatus = async () => {
-      setIsLoading(true);
-
-      const cachedVerification = localStorage.getItem("otpVerified");
-      if (cachedVerification) {
-        const { verified, phoneNumber: cachedPhoneNumber } =
-          JSON.parse(cachedVerification);
-        if (verified) {
-          try {
-            const response = await axios.post(`/api/banValidate`, {
-              phoneNumber: cachedPhoneNumber,
-            });
-            if (response.data.isBanned) {
-              resetCheckoutState();
-              localStorage.removeItem("otpVerified");
-              localStorage.removeItem("userName");
-            } else {
-              setOtpVerified(true);
-              setIsOtpSent(true);
-              setPhoneNumber(cachedPhoneNumber);
-              const cachedName = localStorage.getItem("userName");
-              if (cachedName) {
-                setCustomerName(cachedName);
-              } else {
-                const userData = await getUserData(cachedPhoneNumber);
-                setCustomerName(userData.name.split(" ")[0]);
-              }
-            }
-          } catch (error) {
-            console.error("Error checking ban status:", error);
-            resetCheckoutState();
-          }
-        } else {
-          localStorage.removeItem("otpVerified");
-          localStorage.removeItem("userName");
-          resetCheckoutState();
-        }
-      } else {
-        resetCheckoutState();
-      }
-
-      setIsLoading(false);
-    };
-
-    checkVerificationAndBanStatus();
-  }, [items]);
-
+ 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (timer > 0) {
@@ -358,28 +285,121 @@ const Checkout: React.FC<CheckoutProps> = ({
     }
   };
 
-  const handleVerifyOtp = async () => {
-    const enteredOtp = otpInputs.join("");
-    if (enteredOtp === generatedOtp) {
-      setOtpVerified(true);
-      localStorage.setItem(
-        "otpVerified",
-        JSON.stringify({
-          verified: true,
-          phoneNumber: phoneNumber,
-        })
-      );
+  
+ const [shouldPlaceOrder, setShouldPlaceOrder] = useState(false);
 
-      // Fetch and save user name
-      const userData = await getUserData(phoneNumber);
-      const userName = userData.name.split(" ")[0];
-      setCustomerName(userName);
-      localStorage.setItem("userName", userName);
-    } else {
-      console.log("Incorrect OTP");
-      setOtpMessage("Incorrect OTP. Please try again.");
-    }
-  };
+ useEffect(() => {
+   const checkVerificationAndSetOrderFlag = async () => {
+     setIsLoading(true);
+     setIsAutoPlacingOrder(true); // Add this line
+
+     const cachedVerification = localStorage.getItem("otpVerified");
+     if (cachedVerification) {
+       const { verified, phoneNumber: cachedPhoneNumber } =
+         JSON.parse(cachedVerification);
+       if (verified) {
+         try {
+           const response = await axios.post(`/api/banValidate`, {
+             phoneNumber: cachedPhoneNumber,
+           });
+           if (!response.data.isBanned) {
+             setOtpVerified(true);
+             setIsOtpSent(true);
+             setPhoneNumber(cachedPhoneNumber);
+             const cachedName = localStorage.getItem("userName");
+             if (cachedName) {
+               setCustomerName(cachedName);
+             } else {
+               const userData = await getUserData(cachedPhoneNumber);
+               setCustomerName(userData.name.split(" ")[0]);
+             }
+             setShouldPlaceOrder(true);
+           } else {
+             resetCheckoutState();
+             localStorage.removeItem("otpVerified");
+             localStorage.removeItem("userName");
+           }
+         } catch (error) {
+           console.error("Error checking ban status:", error);
+           resetCheckoutState();
+         }
+       } else {
+         localStorage.removeItem("otpVerified");
+         localStorage.removeItem("userName");
+         resetCheckoutState();
+       }
+     } else {
+       resetCheckoutState();
+     }
+
+     setIsLoading(false);
+     setIsAutoPlacingOrder(false); // Add this line
+   };
+
+   checkVerificationAndSetOrderFlag();
+ }, []);
+
+ useEffect(() => {
+   if (shouldPlaceOrder && !isSubmitting && !orderPlaced) {
+     handleConfirmOrder();
+   }
+ }, [shouldPlaceOrder, isSubmitting, orderPlaced]);
+
+ const handleVerifyOtp = async () => {
+   const enteredOtp = otpInputs.join("");
+   if (enteredOtp === generatedOtp) {
+     setOtpVerified(true);
+     localStorage.setItem(
+       "otpVerified",
+       JSON.stringify({
+         verified: true,
+         phoneNumber: phoneNumber,
+       })
+     );
+
+     // Fetch and save user name
+     const userData = await getUserData(phoneNumber);
+     const userName = userData.name.split(" ")[0];
+     setCustomerName(userName);
+     localStorage.setItem("userName", userName);
+
+     // Set flag to place order
+     setShouldPlaceOrder(true);
+   } else {
+     console.log("Incorrect OTP");
+     setOtpMessage("Incorrect OTP. Please try again.");
+   }
+ };
+
+ const handleConfirmOrder = async () => {
+   if (isSubmitting) return; // Prevent double submission
+
+   try {
+     setIsSubmitting(true);
+     const response = await axios.post("/api/submitOrder", {
+       items,
+       selectedLocation,
+       selectedCabin,
+       total,
+       appliedPromo,
+       phoneNumber,
+       customerName,
+       tableDeliveryCharge,
+     });
+
+     if (response.status === 200) {
+       console.log("Order submitted:", response.data.orderId);
+       setOrderPlaced(true);
+       onOrderSuccess();
+       onResetCart();
+     }
+   } catch (error) {
+     console.error("Error submitting order:", error);
+   } finally {
+     setIsSubmitting(false);
+     setShouldPlaceOrder(false);
+   }
+ };
 
   const isGetOtpDisabled = phoneNumber.length !== 10 || timer > 0;
   if (isLoading) {
@@ -395,7 +415,7 @@ const Checkout: React.FC<CheckoutProps> = ({
     <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50 overflow-y-auto">
       <div className="container bg-neutral-900 rounded-lg px-4 py-8 pb-16 md:pb-12  w-full h-full relative">
         <div className="flex justify-between items-center mb-6">
-          {!orderPlaced && <h2 className="text-2xl font-bold">Checkout</h2>}
+          {/* {!orderPlaced && <h2 className="text-2xl font-bold">Checkout</h2>} */}
           <div className="flex-grow" />
           <button onClick={handleClose} className="text-3xl">
             &times;
@@ -486,119 +506,25 @@ const Checkout: React.FC<CheckoutProps> = ({
           </div>
         ) : (
           <div className="orderitems pb-16">
-            {orderPlaced ? (
-              <div className="text-center">
-                <p className="hidden md:block text-xl font-bold ">
-                  Order Placed Successfully! Check SMS for Order Updates.
-                </p>
+            <div className="text-center">
+              <p className="hidden md:block text-xl font-bold ">
+                Order Placed Successfully! Check SMS for Order Updates.
+              </p>
 
-                <div className="block md:hidden">
-                  <p className="text-xl font-bold ">
-                    Order Placed Successfully!
-                  </p>
-                  <p className="text-xl font-bold ">
-                    Check SMS for Order Updates.
-                  </p>
-                </div>
-
-                <p>
-                  <a className="underline" href="https://www.chaimine.com">
-                    {" "}
-                    Go to Home Page
-                  </a>
+              <div className="block md:hidden">
+                <p className="text-xl font-bold ">Order Placed Successfully!</p>
+                <p className="text-xl font-bold ">
+                  Check SMS for Order Updates.
                 </p>
               </div>
-            ) : (
-              <>
-                <p className="text-lg font-semibold mb-4">
-                  {customerName
-                    ? `Dear ${customerName}, Kindly Confirm your order`
-                    : "Kindly confirm your order"}
-                </p>
-                <div className="mb-4 bg-neutral-800 rounded-lg p-4">
-                  <p className="text-md">{selectedLocation}</p>
-                  <p className="text-md">{selectedCabin}</p>
-                </div>
-                <ul className="space-y-4">
-                  {items.map((item, index) => (
-                    <li key={index} className="border-b border-gray-700 pb-4">
-                      <h3 className="text-lg font-semibold mb-2">
-                        {item.item.name}
-                      </h3>
-                      <p>Quantity: {item.quantity}</p>
-                      <div className="mt-2 flex items-center">
-                        <span className="mr-2">Price:</span>
-                        <div className="px-2  mb-0.5  bg-blue-600 rounded text-white font-semibold">
-                          ₹{item.totalPrice.toFixed(2)}
-                        </div>
-                      </div>
-                      {Object.entries(item.selectedOptions).map(
-                        ([optionName, values]) => (
-                          <div
-                            key={optionName}
-                            className="flex flex-wrap items-center gap-1 "
-                          >
-                            <span className="text-sm py-1 text-gray-400">
-                              {optionName}:{" "}
-                            </span>
-                            {values.map((value) => (
-                              <span
-                                key={value}
-                                className="text-sm px-2 py-0.5  rounded bg-blue-600 text-white"
-                              >
-                                {value}
-                              </span>
-                            ))}
-                          </div>
-                        )
-                      )}
-                      {item.specialRequests && (
-                        <p className="text-sm text-gray-400 mt-1 ">
-                          Special:
-                          <span
-                            key={item.specialRequests}
-                            className=" ml-1  text-sm px-2 py-1  rounded bg-blue-600 text-white"
-                          >
-                            {item.specialRequests}
-                          </span>
-                        </p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-2 space-y-2  mb-2">
-                  {appliedPromo && (
-                    <div className="text-green-500">
-                      Applied Promo: {appliedPromo.code} (
-                      {appliedPromo.percentage}% off)
-                    </div>
-                  )}
-                  {selectedLocation === "Sevoke Road" &&
-                    tableDeliveryCharge > 0 && (
-                      <label className="flex items-center justify-between w-full max-w-xs">
-                        <span className="label-text">
-                          Table Delivery (5% charge) - ₹
-                          {tableDeliveryCharge.toFixed(2)}
-                        </span>
-                      </label>
-                    )}
-                  <div className="text-xl font-bold">
-                    Total: ₹{total.toFixed(2)}
-                  </div>
-                </div>
-                <div className="fixed bottom-8 md:bottom-4 left-4 right-4 flex justify-center">
-                  <button
-                    className={`btn btn-primary w-full max-w-lg ${
-                      isSubmitting ? "opacity-75 " : ""
-                    }`}
-                    onClick={handleConfirmOrder}
-                    // disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Confirm" : "Confirm"}
-                  </button>
-                </div>
-              </>
-            )}
+
+              <p>
+                <a className="underline" href="https://www.chaimine.com">
+                  {" "}
+                  Go to Home Page
+                </a>
+              </p>
+            </div>
           </div>
         )}
         {showUserModal && (
