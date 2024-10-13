@@ -105,12 +105,17 @@ async function sendNotifications(
 
     const callerPhoneNumber = `${selectedCaller.phoneNumber}`;
 
-    // Send SMS to the active caller
-    await sendSMSNotification(
-      selectedLocation,
-      orderDocument.customerName,
-      callerPhoneNumber
-    );
+    const firstName = orderDocument.customerName.split(" ")[0];
+
+    // Check if the first name is not "Manual" before sending SMS
+    if (firstName.toLowerCase() !== "manual") {
+      // Send SMS to the active caller
+      await sendSMSNotification(
+        selectedLocation,
+        orderDocument.customerName,
+        callerPhoneNumber
+      );
+    }
 
     // Send email confirmation
     await sendEmailConfirmation(orderDocument);
