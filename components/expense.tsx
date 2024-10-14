@@ -1,3 +1,4 @@
+import { is } from "date-fns/locale";
 import React, { useState, useRef, useEffect } from "react";
 
 interface ExpenseProps {
@@ -16,6 +17,8 @@ interface DailyExpense {
 
 const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [category, setCategory] = useState("");
+    const [paycategory, setPayCategory] = useState("");
+
   const [amount, setAmount] = useState("");
   const [comment, setComment] = useState("");
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -29,11 +32,32 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allTimeCounterBalance, setAllTimeCounterBalance] = useState(0);
 const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
+  const [isAddExpanded, setIsAddExpanded] = useState(false);
+  
+const toggleExpenses = () => {
+  setIsExpensesExpanded(!isExpensesExpanded);
+ 
+  if (isAddExpanded) {
+        setIsAddExpanded(false);
 
-  const toggleExpenses = () => {
-    setIsExpensesExpanded(!isExpensesExpanded);
-  };
+    setCategory("");
+    setPayCategory("");
+    setAmount("");
+    setComment("");
+  }
+};
 
+const toggleAdd = () => {
+  setIsAddExpanded(!isAddExpanded);
+  if (isExpensesExpanded) {
+    setIsExpensesExpanded(false);
+    setCategory("");
+    setPayCategory("");
+    setAmount("");
+    setComment("");
+  }
+};
+  
   const categories = [
     "Supplier",
     "Drawings",
@@ -43,7 +67,10 @@ const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
     "Electricity",
      "Others",
   ];
-
+ const paycategories = [
+   "Extra UPI Payment",
+   "Extra Cash Payment",
+ ];
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
@@ -56,7 +83,7 @@ const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
         },
         body: JSON.stringify({
           slug,
-          category,
+          category: paycategory || category, // Use paycategory if it's set, otherwise use category
           amount,
           comment,
         }),
@@ -67,6 +94,8 @@ const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
       }
 
       setCategory("");
+      setPayCategory("");
+
       setAmount("");
       setComment("");
 
@@ -137,7 +166,10 @@ const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
     setCategory(cat);
     setIsDropdownOpen(false);
   };
-
+ const handlePayCategorySelect = (cat: string) => {
+   setPayCategory(cat);
+   setIsDropdownOpen(false);
+ };
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value)) {
@@ -252,7 +284,12 @@ const toggleCashBalance = () => {
               <span className="font-semibold">Expenses: </span>
               <span>₹{calculateTotalExpenses().toFixed(2)}</span>
             </div>
-
+            <div
+              className="bg-indigo-600 p-2 rounded cursor-pointer"
+              onClick={toggleAdd}
+            >
+              <span className="font-semibold">Add Cash/UPI</span>
+            </div>
             {onlineBalance > 0 && (
               <div
                 className="bg-blue-600 p-2 rounded cursor-pointer"
@@ -273,6 +310,120 @@ const toggleCashBalance = () => {
         )}
       </div>
 
+      {isAddExpanded && (
+        <div className="rounded-lg relative p-4 bg-neutral-900 mb-4">
+          <button
+            onClick={toggleAdd}
+            className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+          >
+            <p className="text-3xl">&times;</p>
+          </button>
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="btn bg-neutral-800 border-none hover:bg-neutral-800 px-6 p-3 w-full sm:w-auto flex items-center justify-left"
+              >
+                {paycategory || "Select Category"}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-4 h-4 ml-2"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              {isDropdownOpen && (
+                <ul className="absolute z-10 mt-1 w-full bg-neutral-800 rounded-box shadow-lg">
+                  {paycategories.map((cat) => (
+                    <li
+                      key={cat}
+                      className="px-4 py-2 hover:bg-neutral-700 cursor-pointer"
+                      onClick={() => handlePayCategorySelect(cat)}
+                    >
+                      {cat}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <input
+              type="text"
+              inputMode="decimal"
+              className="input bg-neutral-800 w-full sm:w-40"
+              placeholder="Amount"
+              value={amount}
+              onChange={handleAmountChange}
+            />
+            <input
+              type="text"
+              placeholder="Description"
+              className={`input w-full sm:w-40 ${
+                comment ? "bg-neutral-800" : "bg-gray-800"
+              }`}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+
+            <button
+              className="btn btn-primary text-black w-full sm:w-auto"
+              onClick={handleSubmit}
+              disabled={ !amount || !comment || !paycategory}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                </>
+              ) : (
+                "Submit"
+              )}{" "}
+            </button>
+          </div>
+
+          <div className="text-sm text-gray-400 mb-4">
+            {formatDate(currentDateTime)}
+          </div>
+
+          {dailyExpenses.length > 0 && (
+  <div>
+    {calculateTotalExpenses() > 0 && (
+      <h3 className="font-semibold mb-2">Extra Payments for the day</h3>
+    )}
+    <ul className="space-y-2">
+      {dailyExpenses
+        .filter(
+          (expense) =>
+            expense.category === "Extra Cash Payment" ||
+            expense.category === "Extra UPI Payment"
+        )
+        .map((expense) => (
+          <li
+            key={expense._id}
+            className="flex justify-between items-center"
+          >
+            <span className="font-medium">{expense.category}</span>
+            <span className="flex items-center">
+              <span className="p-1 bg-neutral-800 rounded mr-2">
+                ₹{expense.amount.toFixed(2)}
+              </span>
+              <span className="text-sm text-gray-400">
+                {expense.comment}
+              </span>
+            </span>
+          </li>
+        ))}
+    </ul>
+  </div>
+)}
+        </div>
+      )}
+      
       {isExpensesExpanded && (
         <div className="rounded-lg relative p-4 bg-neutral-900 mb-4">
           <button
