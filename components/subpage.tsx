@@ -322,30 +322,33 @@ const calculateTotalSales = (orders: Order[]) => {
     );
   if (error) return <div>{error}</div>;
 
-  const groupedOrders = orders.reduce(
-    (acc, order) => {
-      let key: "new" | "active" | "previous";
-      if (
-        order.status === "fulfilled" ||
-        order.status === "rejected" ||
-        order.order === "rejected"
-      ) {
-        key = "previous";
-      } else if (order.order === "dispatched" && order.status !== "fulfilled") {
-        key = "active";
-      } else {
-        key = "new";
+    const groupedOrders = orders.reduce(
+      (acc, order) => {
+        let key: "new" | "active" | "previous";
+        if (
+          order.status === "fulfilled" ||
+          order.status === "rejected" ||
+          order.order === "rejected"
+        ) {
+          key = "previous";
+        } else if (
+          order.order === "dispatched" &&
+          order.status !== "fulfilled"
+        ) {
+          key = "active";
+        } else {
+          key = "new";
+        }
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        acc[key].push(order);
+        return acc;
+      },
+      { new: [], active: [], previous: [] } as {
+        [key in "new" | "active" | "previous"]: Order[];
       }
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(order);
-      return acc;
-    },
-    { new: [], active: [], previous: [] } as {
-      [key in "new" | "active" | "previous"]: Order[];
-    }
-  );
+    );
 
    const counts = {
     new: new Set(groupedOrders.new.map(order => order.phoneNumber)).size,
@@ -353,176 +356,175 @@ const calculateTotalSales = (orders: Order[]) => {
     previous: new Set([...groupedOrders.previous, ...payLaterOrders].map(order => order.phoneNumber)).size,
   };
 
-    const renderOrders = (orders: Order[], isPayLater: boolean = false) => {
-      const groupedByPhone = orders.reduce((acc, order) => {
-        if (!acc[order.phoneNumber]) {
-          acc[order.phoneNumber] = [];
-        }
-        acc[order.phoneNumber].push(order);
-        return acc;
-      }, {} as { [key: string]: Order[] });
+   const renderOrders = (orders: Order[], isPayLater: boolean = false) => {
+     const groupedByPhoneAndCabin = orders.reduce((acc, order) => {
+       const key = `${order.phoneNumber}-${order.selectedCabin}`;
+       if (!acc[key]) {
+         acc[key] = [];
+       }
+       acc[key].push(order);
+       return acc;
+     }, {} as { [key: string]: Order[] });
 
-      const sortOrderEntries = (
-        entries: [string, Order[]][]
-      ): [string, Order[]][] => {
-        if (activeTab === "new") {
-          // Keep the current sorting logic for the "new" tab commit change
-          return entries.sort((a, b) => {
-            const latestOrderA = a[1].reduce((latest, current) =>
-              new Date(current.createdAt) > new Date(latest.createdAt)
-                ? current
-                : latest
-            );
-            const latestOrderB = b[1].reduce((latest, current) =>
-              new Date(current.createdAt) > new Date(latest.createdAt)
-                ? current
-                : latest
-            );
-            return (
-              new Date(latestOrderA.createdAt).getTime() -
-              new Date(latestOrderB.createdAt).getTime()
-            );
-          });
-        } else {
-          // For "active" and "previous" tabs, sort by the latest order's creation time in descending order
-          return entries.sort((a, b) => {
-            const latestOrderA = a[1].reduce((latest, current) =>
-              new Date(current.createdAt) > new Date(latest.createdAt)
-                ? current
-                : latest
-            );
-            const latestOrderB = b[1].reduce((latest, current) =>
-              new Date(current.createdAt) > new Date(latest.createdAt)
-                ? current
-                : latest
-            );
-            return (
-              new Date(latestOrderB.createdAt).getTime() -
-              new Date(latestOrderA.createdAt).getTime()
-            );
-          });
-        }
-      };
+   const sortOrderEntries = (
+     entries: [string, Order[]][]
+   ): [string, Order[]][] => {
+     if (activeTab === "new") {
+       return entries.sort((a, b) => {
+         const latestOrderA = a[1].reduce((latest, current) =>
+           new Date(current.createdAt) > new Date(latest.createdAt)
+             ? current
+             : latest
+         );
+         const latestOrderB = b[1].reduce((latest, current) =>
+           new Date(current.createdAt) > new Date(latest.createdAt)
+             ? current
+             : latest
+         );
+         return (
+           new Date(latestOrderA.createdAt).getTime() -
+           new Date(latestOrderB.createdAt).getTime()
+         );
+       });
+     } else {
+       return entries.sort((a, b) => {
+         const latestOrderA = a[1].reduce((latest, current) =>
+           new Date(current.createdAt) > new Date(latest.createdAt)
+             ? current
+             : latest
+         );
+         const latestOrderB = b[1].reduce((latest, current) =>
+           new Date(current.createdAt) > new Date(latest.createdAt)
+             ? current
+             : latest
+         );
+         return (
+           new Date(latestOrderB.createdAt).getTime() -
+           new Date(latestOrderA.createdAt).getTime()
+         );
+       });
+     }
+   };
 
-      const sortedOrderEntries = sortOrderEntries(
-        Object.entries(groupedByPhone)
-      );
+     const sortedOrderEntries = sortOrderEntries(
+       Object.entries(groupedByPhoneAndCabin)
+     );
 
-      return (
-        <div className="space-y-8">
-          {sortedOrderEntries.map(([phoneNumber, customerOrders]) => {
-            const singleItemOrders = customerOrders.filter(
-              (order) => order.items.length === 1
-            );
-            const multiItemOrders = customerOrders.filter(
-              (order) => order.items.length > 1
-            );
-            const sortOrders = (orders: Order[]) =>
-              orders.sort(
-                (a, b) =>
-                  new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-              );
-            const initialExpanded = tabInitialStates[activeTab];
-            const sortedCustomerOrders = sortOrders(customerOrders);
-            const newestOrder =
-              sortedCustomerOrders[sortedCustomerOrders.length - 1];
+     return (
+       <div className="space-y-8">
+         {sortedOrderEntries.map(([phoneNumber, customerOrders]) => {
+           const singleItemOrders = customerOrders.filter(
+             (order) => order.items.length === 1
+           );
+           const multiItemOrders = customerOrders.filter(
+             (order) => order.items.length > 1
+           );
+           const sortOrders = (orders: Order[]) =>
+             orders.sort(
+               (a, b) =>
+                 new Date(a.createdAt).getTime() -
+                 new Date(b.createdAt).getTime()
+             );
+           const initialExpanded = tabInitialStates[activeTab];
+           const sortedCustomerOrders = sortOrders(customerOrders);
+           const newestOrder =
+             sortedCustomerOrders[sortedCustomerOrders.length - 1];
 
-            // Calculate the oldest order time
-            const oldestOrderTime = customerOrders.reduce((oldest, current) =>
-              new Date(current.createdAt) < new Date(oldest.createdAt)
-                ? current
-                : oldest
-            ).createdAt;
-            const oldestDispatchTime = customerOrders.reduce(
-              (oldest, current) => {
-                if (
-                  current.dispatchTime &&
-                  (!oldest || new Date(current.dispatchTime) < new Date(oldest))
-                ) {
-                  return current.dispatchTime;
-                }
-                return oldest;
-              },
-              null as string | null
-            );
-            return (
-              <div
-                key={phoneNumber}
-                className="bg-neutral-900 rounded-lg p-4"
-                style={getHighlightStyle(newestOrder._id)}
-                ref={(el) => {
-                  if (el) {
-                    orderRefs.current[newestOrder._id] = { current: el };
-                  }
-                }}
-              >
-                <CompactOrderInfo
-                  customerName={newestOrder.customerName}
-                  phoneNumber={phoneNumber}
-                  cabin={newestOrder.selectedCabin}
-                  total={customerOrders.reduce(
-                    (sum, order) => sum + order.total,
-                    0
-                  )}
-                  orders={sortedCustomerOrders.map((order) => ({
-                    _id: order._id,
-                    order: order.order,
-                    status: order.status,
-                    price: order.total,
-                    deliveryCharge: order.tableDeliveryCharge || 0,
-                  }))}
-                  onDispatchAll={handleDispatchAll}
-                  onFulfillAll={handleFulfillAll}
-                  onRejectAll={handleRejectAll}
-                  activeTab={activeTab}
-                  onToggle={(isExpanded) =>
-                    handleOrderToggle(phoneNumber, isExpanded)
-                  }
-                  initialExpanded={initialExpanded}
-                  oldestOrderTime={oldestOrderTime} // Pass the oldest order time
-                  oldestDispatchTime={oldestDispatchTime} // Pass the oldest dispatch time
-                  location={slug}
-                />
-                {expandedOrders[phoneNumber] && (
-                  <>
-                    {singleItemOrders.length > 0 && (
-                      <div className="mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {sortOrders(singleItemOrders).map((order) => (
-                            <SingleItemOrder
-                              key={order._id}
-                              order={order}
-                              onDispatch={handleDispatchSms}
-                              onPayment={handlePayment}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
+           // Calculate the oldest order time
+           const oldestOrderTime = customerOrders.reduce((oldest, current) =>
+             new Date(current.createdAt) < new Date(oldest.createdAt)
+               ? current
+               : oldest
+           ).createdAt;
+           const oldestDispatchTime = customerOrders.reduce(
+             (oldest, current) => {
+               if (
+                 current.dispatchTime &&
+                 (!oldest || new Date(current.dispatchTime) < new Date(oldest))
+               ) {
+                 return current.dispatchTime;
+               }
+               return oldest;
+             },
+             null as string | null
+           );
+           return (
+             <div
+               key={phoneNumber}
+               className="bg-neutral-900 rounded-lg p-4"
+               style={getHighlightStyle(newestOrder._id)}
+               ref={(el) => {
+                 if (el) {
+                   orderRefs.current[newestOrder._id] = { current: el };
+                 }
+               }}
+             >
+               <CompactOrderInfo
+                 customerName={newestOrder.customerName}
+                 phoneNumber={phoneNumber}
+                 cabin={newestOrder.selectedCabin}
+                 total={customerOrders.reduce(
+                   (sum, order) => sum + order.total,
+                   0
+                 )}
+                 orders={sortedCustomerOrders.map((order) => ({
+                   _id: order._id,
+                   order: order.order,
+                   status: order.status,
+                   price: order.total,
+                   deliveryCharge: order.tableDeliveryCharge || 0,
+                 }))}
+                 onDispatchAll={handleDispatchAll}
+                 onFulfillAll={handleFulfillAll}
+                 onRejectAll={handleRejectAll}
+                 activeTab={activeTab}
+                 onToggle={(isExpanded) =>
+                   handleOrderToggle(phoneNumber, isExpanded)
+                 }
+                 initialExpanded={initialExpanded}
+                 oldestOrderTime={oldestOrderTime} // Pass the oldest order time
+                 oldestDispatchTime={oldestDispatchTime} // Pass the oldest dispatch time
+                 location={slug}
+               />
+               {expandedOrders[phoneNumber] && (
+                 <>
+                   {singleItemOrders.length > 0 && (
+                     <div className="mt-4">
+                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                         {sortOrders(singleItemOrders).map((order) => (
+                           <SingleItemOrder
+                             key={order._id}
+                             order={order}
+                             onDispatch={handleDispatchSms}
+                             onPayment={handlePayment}
+                           />
+                         ))}
+                       </div>
+                     </div>
+                   )}
 
-                    {multiItemOrders.length > 0 && (
-                      <div className="mt-4">
-                        <div className="space-y-4">
-                          {sortOrders(multiItemOrders).map((order) => (
-                            <MultiItemOrder
-                              key={order._id}
-                              order={order}
-                              onDispatch={handleDispatchSms}
-                              onPayment={handlePayment}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      );
-    };
+                   {multiItemOrders.length > 0 && (
+                     <div className="mt-4">
+                       <div className="space-y-4">
+                         {sortOrders(multiItemOrders).map((order) => (
+                           <MultiItemOrder
+                             key={order._id}
+                             order={order}
+                             onDispatch={handleDispatchSms}
+                             onPayment={handlePayment}
+                           />
+                         ))}
+                       </div>
+                     </div>
+                   )}
+                 </>
+               )}
+             </div>
+           );
+         })}
+       </div>
+     );
+   };
   const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
