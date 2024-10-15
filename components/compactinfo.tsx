@@ -61,10 +61,33 @@ const [showPhoneNumber, setShowPhoneNumber] = useState(false);
  const handleExtraPaymentTypeSelect = (type: "cash" | "upi") => {
    setExtraPaymentType(type);
  };
-const togglePhoneNumber = () => {
+const togglePhoneNumber = async () => {
   setShowPhoneNumber(true);
   setTimeout(() => setShowPhoneNumber(false), 10000); // 10 seconds
+
+  // Send email notification
+  try {
+    const response = await fetch("/api/sendNumberEmail", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        customerName,
+        phoneNumber,
+        location,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to send email notification");
+    }
+  } catch (error) {
+    console.error("Error sending email notification:", error);
+    // You might want to show an error message to the user here
+  }
 };
+
  const handleExtraPaymentAmountChange = (value: string) => {
    const cleanedValue = value.replace(/[^0-9]/g, "");
    setExtraPaymentAmount(cleanedValue === "" ? "" : cleanedValue);
