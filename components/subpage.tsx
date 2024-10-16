@@ -82,7 +82,7 @@ export default function OrderPage() {
       return cabinOptions.every((cabin) => occupiedCabins.has(cabin));
     };
 
-    const sendHousefullEmail = async (location: string) => {
+   const sendHousefullEmail = async (location: string) => {
       const now = Date.now();
       const lastSentTime = localStorage.getItem("lastHousefullEmailSent");
       const thirtyMinutesInMs = 30 * 60 * 1000;
@@ -92,8 +92,7 @@ export default function OrderPage() {
           "Housefull email was sent less than 30 minutes ago. Skipping."
         );
         return;
-      }
-
+     }
       try {
         const response = await fetch("/api/sendHousefullEmail", {
           method: "POST",
@@ -220,9 +219,9 @@ export default function OrderPage() {
          );
          setAllCabinsOccupied(newAllCabinsOccupied);
 
-         if (newAllCabinsOccupied) {
-           await sendHousefullEmail(slug);
-         }
+        //  if (newAllCabinsOccupied) {
+        //    await sendHousefullEmail(slug);
+        //  }
 
          setLoading(false);
          setNetworkError(false);
