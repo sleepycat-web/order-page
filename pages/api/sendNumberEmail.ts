@@ -10,7 +10,10 @@ function formatLocation(location: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 }
-
+function getAdjustedTime(): Date {
+  const now = new Date();
+  return new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+}
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -40,7 +43,7 @@ Phone Number Checked:
 - Customer Name: ${customerName}
 - Phone Number: ${phoneNumber}
 - Location: ${formattedLocation}
-- Time: ${new Date().toLocaleString("en-IN", {
+- Time: ${getAdjustedTime().toLocaleString("en-IN", {
     dateStyle: "medium",
     timeStyle: "medium",
   })}

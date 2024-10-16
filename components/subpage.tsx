@@ -47,7 +47,72 @@ export default function OrderPage() {
     }
   }, []);
   const [payLaterExpanded, setPayLaterExpanded] = useState(false);
+  const [allCabinsOccupied, setAllCabinsOccupied] = useState(false);
+ 
 
+  const getCabinOptions = (location: string) => {
+    if (location === "dagapur") {
+      return ["Cabin 1", "Cabin 2", "Cabin 3", "High Chair"];
+    } else if (location === "sevoke") {
+      return [
+        "Cabin 4",
+        "Cabin 5",
+        "Cabin 6",
+        "Cabin 7",
+        "Cabin 8",
+        "Cabin 9",
+        "Cabin 10",
+        "Cabin 11",
+      ];
+    }
+    return [];
+  };
+  const checkAllCabinsOccupied = (orders: Order[], location: string) => {
+    const cabinOptions = getCabinOptions(location);
+    const occupiedCabins = new Set(
+      orders
+        .filter(
+          (order) =>
+            (order.order !== "fulfilled" && order.status !== "fulfilled") ||
+            (order.order !== "rejected" && order.status !== "rejected")
+        )
+        .map((order) => order.selectedCabin)
+    );
+
+      return cabinOptions.every((cabin) => occupiedCabins.has(cabin));
+    };
+
+    const sendHousefullEmail = async (location: string) => {
+      const now = Date.now();
+      const lastSentTime = localStorage.getItem("lastHousefullEmailSent");
+      const thirtyMinutesInMs = 30 * 60 * 1000;
+
+      if (lastSentTime && now - parseInt(lastSentTime) < thirtyMinutesInMs) {
+        console.log(
+          "Housefull email was sent less than 30 minutes ago. Skipping."
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/sendHousefullEmail", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ location }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to send housefull email");
+        }
+
+        console.log("Housefull email sent successfully");
+        localStorage.setItem("lastHousefullEmailSent", now.toString());
+      } catch (error) {
+        console.error("Error sending housefull email:", error);
+      }
+    };
 
 
   const handleTabChange = (tab: "new" | "active" | "previous") => {
@@ -131,34 +196,48 @@ export default function OrderPage() {
     return {};
   };
 
-  useEffect(() => {
-    if (!slug) return;
-    const fetchOrders = async () => {
-      try {
-        const response = await fetch(`/api/getOrders?slug=${slug}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch orders");
-        }
-        const data = await response.json();
+   useEffect(() => {
+     if (!slug) return;
+     const fetchOrders = async () => {
+       try {
+         const response = await fetch(`/api/getOrders?slug=${slug}`);
+         if (!response.ok) {
+           throw new Error("Failed to fetch orders");
+         }
+         const data = await response.json();
 
-        // Ensure data.currentOrders and data.payLaterOrders are arrays
-        setOrders(Array.isArray(data.currentOrders) ? data.currentOrders : []);
-        setPayLaterOrders(
-          Array.isArray(data.payLaterOrders) ? data.payLaterOrders : []
-        );
+         const currentOrders = Array.isArray(data.currentOrders)
+           ? data.currentOrders
+           : [];
+         setOrders(currentOrders);
+         setPayLaterOrders(
+           Array.isArray(data.payLaterOrders) ? data.payLaterOrders : []
+         );
 
-        setLoading(false);
-        setNetworkError(false);
-      } catch (err) {
-        console.error("Error fetching orders:", err);
-        setNetworkError(true);
-        setLoading(false);
-      }
-    };
-    fetchOrders();
-    const intervalId = setInterval(fetchOrders, 3000);
-    return () => clearInterval(intervalId);
-  }, [slug]);
+         const newAllCabinsOccupied = checkAllCabinsOccupied(
+           currentOrders,
+           slug
+         );
+         setAllCabinsOccupied(newAllCabinsOccupied);
+
+         if (newAllCabinsOccupied) {
+           await sendHousefullEmail(slug);
+         }
+
+         setLoading(false);
+         setNetworkError(false);
+       } catch (err) {
+         console.error("Error fetching orders:", err);
+         setNetworkError(true);
+         setLoading(false);
+       }
+     };
+     fetchOrders();
+     const intervalId = setInterval(fetchOrders, 3000);
+     return () => clearInterval(intervalId);
+   }, [slug]);
+
+  
   useEffect(() => {
     if (lastUpdatedOrderId && orderRefs.current[lastUpdatedOrderId]) {
       const ref = orderRefs.current[lastUpdatedOrderId];

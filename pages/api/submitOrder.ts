@@ -123,7 +123,10 @@ async function sendNotifications(
     console.error("Error sending notifications:", error);
   }
 }
-
+function getAdjustedTime(): Date {
+  const now = new Date();
+  return new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+}
 async function sendEmailConfirmation(orderDetails: any): Promise<void> {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -184,7 +187,7 @@ ${
       }`
     : ""
 }
-Order Time: ${new Date(orderDetails.createdAt).toLocaleString("en-IN", {
+Order Time: ${getAdjustedTime().toLocaleString("en-IN", {
     dateStyle: "medium",
     timeStyle: "medium",
   })}
