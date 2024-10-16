@@ -67,20 +67,31 @@ export default function OrderPage() {
     }
     return [];
   };
-  const checkAllCabinsOccupied = (orders: Order[], location: string) => {
+  const checkAllCabinsOccupied = (
+    orders: Order[],
+    payLaterOrders: Order[],
+    location: string
+  ) => {
     const cabinOptions = getCabinOptions(location);
     const occupiedCabins = new Set(
       orders
         .filter(
           (order) =>
-            (order.order !== "fulfilled" && order.status !== "fulfilled") ||
-            (order.order !== "rejected" && order.status !== "rejected")
+            order.order !== "fulfilled" &&
+            order.status !== "fulfilled" &&
+            order.order !== "rejected" &&
+            order.status !== "rejected"
         )
         .map((order) => order.selectedCabin)
     );
 
-      return cabinOptions.every((cabin) => occupiedCabins.has(cabin));
-    };
+    // Remove pay later orders from occupied cabins
+    payLaterOrders.forEach((order) => {
+      occupiedCabins.delete(order.selectedCabin);
+    });
+
+    return cabinOptions.every((cabin) => occupiedCabins.has(cabin));
+  };
 
    const sendHousefullEmail = async (location: string) => {
       const now = Date.now();
@@ -88,9 +99,9 @@ export default function OrderPage() {
       const thirtyMinutesInMs = 30 * 60 * 1000;
 
       if (lastSentTime && now - parseInt(lastSentTime) < thirtyMinutesInMs) {
-        console.log(
-          "Housefull email was sent less than 30 minutes ago. Skipping."
-        );
+        // console.log(
+        //   "Housefull email was sent less than 30 minutes ago. Skipping."
+        // );
         return;
      }
       try {
@@ -215,13 +226,14 @@ export default function OrderPage() {
 
          const newAllCabinsOccupied = checkAllCabinsOccupied(
            currentOrders,
+           data.payLaterOrders || [], // Add this line
            slug
          );
          setAllCabinsOccupied(newAllCabinsOccupied);
 
-        //  if (newAllCabinsOccupied) {
-        //    await sendHousefullEmail(slug);
-        //  }
+         if (newAllCabinsOccupied) {
+           await sendHousefullEmail(slug);
+         }
 
          setLoading(false);
          setNetworkError(false);
