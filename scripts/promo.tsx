@@ -31,6 +31,7 @@ export const promos: Promo[] = [
   { code: "CMNALENDU", percentage: 10 },
   { code: "CMPARVEZ", percentage: 10 },
   { code: "CMSNEHA", percentage: 10 },
+  { code: "RISHIKA30", percentage: 5 },
   { code: "SHATRU", percentage: 5 },
   { code: "CMSTAFF", percentage: 50 },
   { code: "CMOWNER", percentage: 100 },
