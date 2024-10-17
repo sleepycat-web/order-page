@@ -51,6 +51,7 @@ const Checkout: React.FC<CheckoutProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isOtpLoading, setIsOtpLoading] = useState(false);
 const [isAutoPlacingOrder, setIsAutoPlacingOrder] = useState(false);
+  const [pendingUserData, setPendingUserData] = useState<UserData | null>(null);
 
   const [otpState, setOtpState] = useState<"idle" | "loading" | "sent">("idle");
   const [isOtpRequested, setIsOtpRequested] = useState(false);
@@ -234,36 +235,32 @@ const [isAutoPlacingOrder, setIsAutoPlacingOrder] = useState(false);
     }
   };
 
-  const handleUserDataSubmit = async () => {
-    if (userData.name) {
-      try {
-        setOtpState("loading");
-        await addNewUser(phoneNumber, userData.name, userData.email);
-        setCustomerName(userData.name.split(" ")[0]);
-        setShowUserModal(false);
+   const handleUserDataSubmit = async () => {
+     if (userData.name) {
+       try {
+         setOtpState("loading");
+         setPendingUserData(userData);
+         setShowUserModal(false);
 
-        // Send OTP for the new user
-        const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
+         // Send OTP for the new user
+         const otpResponse = await axios.post("/api/sendOtp", { phoneNumber });
 
-        if (otpResponse.status === 200) {
-          const { otp } = otpResponse.data;
-          setGeneratedOtp(otp);
-          setOtpState("sent");
-          setIsOtpSent(true);
-          setTimer(30);
-          //  setOtpMessage(
-          //    `OTP sent successfully to ${phoneNumber}. Please check your SMS for order updates`
-          //  );
-        } else {
-          setOtpMessage("Failed to send OTP. Please try again.");
-          setOtpState("idle");
-        }
-      } catch (error) {
-        console.error("Error adding new user or sending OTP:", error);
-        setOtpMessage("An error occurred. Please try again.");
-      }
-    }
-  };
+         if (otpResponse.status === 200) {
+           const { otp } = otpResponse.data;
+           setGeneratedOtp(otp);
+           setOtpState("sent");
+           setIsOtpSent(true);
+           setTimer(30);
+         } else {
+           setOtpMessage("Failed to send OTP. Please try again.");
+           setOtpState("idle");
+         }
+       } catch (error) {
+         console.error("Error sending OTP:", error);
+         setOtpMessage("An error occurred. Please try again.");
+       }
+     }
+   };
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length <= 1) {
@@ -349,6 +346,22 @@ const [isAutoPlacingOrder, setIsAutoPlacingOrder] = useState(false);
    const enteredOtp = otpInputs.join("");
    if (enteredOtp === generatedOtp) {
      setOtpVerified(true);
+
+     if (pendingUserData) {
+       try {
+         await addNewUser(
+           phoneNumber,
+           pendingUserData.name,
+           pendingUserData.email
+         );
+         setCustomerName(pendingUserData.name.split(" ")[0]);
+       } catch (error) {
+         console.error("Error adding new user:", error);
+         setOtpMessage("Failed to add user. Please try again.");
+         return;
+       }
+     }
+
      localStorage.setItem(
        "otpVerified",
        JSON.stringify({
@@ -356,7 +369,6 @@ const [isAutoPlacingOrder, setIsAutoPlacingOrder] = useState(false);
          phoneNumber: phoneNumber,
        })
      );
-
      // Fetch and save user name
      const userData = await getUserData(phoneNumber);
      const userName = userData.name.split(" ")[0];
@@ -370,6 +382,7 @@ const [isAutoPlacingOrder, setIsAutoPlacingOrder] = useState(false);
      setOtpMessage("Incorrect OTP. Please try again.");
    }
  };
+
 
  const handleConfirmOrder = async () => {
    if (isSubmitting) return; // Prevent double submission
