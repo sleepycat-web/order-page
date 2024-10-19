@@ -73,12 +73,14 @@ export const menuItems: MenuItem[] = [
           { label: "Raw", price: "30.00" },
           { label: "Butter Toast", price: "60.00" },
           { label: "GingerGarlic Toast", price: "80.00" },
+          { label: "Cheese Chilli Toast", price: "100.00" },
+
           { label: "Milk Toast", price: "100.00" },
           { label: "Caramel Toast", price: "130.00" },
           { label: "Strawberry Toast", price: "130.00" },
           { label: "Chocolate Toast", price: "130.00" },
+
           { label: "French Toast", price: "150.00" },
-          { label: "Cheese Chilli Toast", price: "150.00" },
         ],
       },
       {
@@ -745,7 +747,7 @@ export const menuItems: MenuItem[] = [
           { label: "White Sauce", price: "200.00" },
           { label: "Red Sauce", price: "200.00" },
           { label: "Masala Penne", price: "200.00" },
-         ],
+        ],
       },
       {
         name: "Extras",
