@@ -34,6 +34,19 @@ export default function Home() {
   const [isBillSectionOpen, setIsBillSectionOpen] = useState(false); // New state for BillSection visibility
   const [isHomepage, setIsHomepage] = useState(true);
   const [tableDeliveryCharge, setTableDeliveryCharge] = useState(0);
+ const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+  
+  const getWarning = () => {
+    if (!selectedLocation && !selectedCabin) {
+      return "Please select both location and cabin. ";
+    } else if (!selectedLocation) {
+      return "Please select a location.";
+    } else if (!selectedCabin) {
+      return "Please select a cabin.";
+    }
+    return "";
+  };
  const shouldHideFooter = () => {
    return (
      isBillSectionOpen ||
@@ -52,6 +65,13 @@ export default function Home() {
       return !prev;
     });
   };
+ const showTemporaryWarning = () => {
+   setWarningMessage(getWarning());
+   setShowWarning(true);
+   setTimeout(() => {
+     setShowWarning(false);
+   }, 5000); // Hide warning after 3 seconds
+ };
 
   useEffect(() => {
    let timer: NodeJS.Timeout;
@@ -204,8 +224,7 @@ const handleAddToCart = (
           <div className="fixed inset-0 bg-black opacity-50 z-40"></div>
         )}
         <main className="p-4 relative z-30 flex-grow pb-28">
-          {" "}
-          {/* Add pb-20 for bottom padding */}{" "}
+          {showWarning && <p className="text-red-500 mb-4">{warningMessage}</p>}
           <LocationSelector
             onLocationSelect={handleLocationSelect}
             selectedLocation={selectedLocation}
@@ -228,7 +247,6 @@ const handleAddToCart = (
               onOrderSuccess={handleOrderSuccess}
               onResetCart={handleOrderSuccess}
               tableDelivery={tableDelivery}
-              
               onTableDeliveryChange={handleTableDeliveryChange}
             />
           </div>
@@ -243,7 +261,14 @@ const handleAddToCart = (
               {orderStatus}
             </p>
           )}
-          <Menu items={menuItems} onSelectItem={setSelectedItem} />
+          <Menu
+            items={menuItems}
+            onSelectItem={setSelectedItem}
+            selectedLocation={selectedLocation}
+            selectedCabin={selectedCabin}
+            setShowWarning={showTemporaryWarning}
+            getWarning={getWarning}
+          />
           {cartItems.length > 0 && (
             <div className="absolute bottom-8 md:bottom-4 left-4 right-4">
               <div className="max-w-lg mx-auto">

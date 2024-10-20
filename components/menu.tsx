@@ -1,4 +1,3 @@
-// @/components/menu.tsx
 import React, { useState } from "react";
 import Popup from "@/components/popup";
 
@@ -22,7 +21,11 @@ export interface CustomizationOption {
 
 interface MenuProps {
   items: MenuItem[];
-  onSelectItem: (item: MenuItem) => void; // Add this line to define the onSelectItem prop
+  onSelectItem: (item: MenuItem) => void;
+  selectedLocation: string;
+  selectedCabin: string;
+  setShowWarning: () => void; // Changed to a function with no parameters
+  getWarning: () => string;
 }
 
 export const MenuItemComponent: React.FC<MenuItem> = ({
@@ -31,7 +34,7 @@ export const MenuItemComponent: React.FC<MenuItem> = ({
   description,
   soldOut,
 }) => (
-  <div className="p-4 bg-neutral-950 rounded-lg  hover:cursor-pointer ">
+  <div className="p-4 bg-neutral-950 rounded-lg hover:cursor-pointer">
     <h3 className="text-base font-semibold">{name}</h3>
     <p className={`text-base ${soldOut ? "text-red-500" : "text-green-600"}`}>
       ₹{price} {soldOut && "Unavailable"}
@@ -40,14 +43,22 @@ export const MenuItemComponent: React.FC<MenuItem> = ({
   </div>
 );
 
-export const Menu: React.FC<MenuProps> = ({ items, onSelectItem }) => {
-  // Updated to use MenuProps
+export const Menu: React.FC<MenuProps> = ({
+  items,
+  onSelectItem,
+  selectedLocation,
+  selectedCabin,
+  setShowWarning,
+  getWarning,
+}) => {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
   const handleItemClick = (item: MenuItem) => {
-    if (!item.soldOut) {
+    if (!selectedLocation || !selectedCabin) {
+      setShowWarning(); // Call the function to show the warning
+    } else if (!item.soldOut) {
       setSelectedItem(item);
-      onSelectItem(item); // Invoke onSelectItem when an item is clicked
+      onSelectItem(item);
     }
   };
 
@@ -55,19 +66,20 @@ export const Menu: React.FC<MenuProps> = ({ items, onSelectItem }) => {
     setSelectedItem(null);
   };
 
-const handleAddToOrder = (
-  item: MenuItem,
-  selectedOptions: Record<string, string[]>,
-  quantity: number,
-  specialRequests: string,
-  totalPrice: number // Add this parameter
-) => {
-  console.log("Added to order:", item, selectedOptions, quantity, totalPrice);
-  // You might want to do something with this data, like adding it to a cart state
-};
+  const handleAddToOrder = (
+    item: MenuItem,
+    selectedOptions: Record<string, string[]>,
+    quantity: number,
+    specialRequests: string,
+    totalPrice: number
+  ) => {
+    console.log("Added to order", {
+    });
+    // You might want to do something with this data, like adding it to a cart state
+  };
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+    <div className="grid bg-red-500y grid-cols-3 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
       {items.map((item, index) => (
         <div key={index} onClick={() => handleItemClick(item)}>
           <MenuItemComponent {...item} />

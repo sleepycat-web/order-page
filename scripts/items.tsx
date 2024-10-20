@@ -572,7 +572,7 @@ export const menuItems: MenuItem[] = [
 
           { label: "Grilled Chicken Sausages", price: "220.00" },
 
-          { label: "Chicken Wings", price: "280.00" },
+          { label: "Chicken Wings", price: "250.00" },
 
           { label: "Grilled Bacon", price: "280.00" },
         ],
