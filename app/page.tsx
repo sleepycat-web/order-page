@@ -39,11 +39,11 @@ export default function Home() {
   
   const getWarning = () => {
     if (!selectedLocation && !selectedCabin) {
-      return "Please select both location and cabin. ";
+      return "Please select both location and cabin to view menu. ";
     } else if (!selectedLocation) {
-      return "Please select a location.";
+      return "Please select a location to view menu.";
     } else if (!selectedCabin) {
-      return "Please select a cabin.";
+      return "Please select a cabin to view menu.";
     }
     return "";
   };
@@ -65,14 +65,21 @@ export default function Home() {
       return !prev;
     });
   };
- const showTemporaryWarning = () => {
-   setWarningMessage(getWarning());
-   setShowWarning(true);
-   setTimeout(() => {
-     setShowWarning(false);
-   }, 5000); // Hide warning after 3 seconds
- };
-
+const showWarningMessage = () => {
+  const warning = getWarning();
+  if (warning) {
+    setWarningMessage(warning);
+    setShowWarning(true);
+  }
+};
+useEffect(() => {
+  if (selectedLocation && selectedCabin) {
+    setShowWarning(false);
+  } else if (showWarning) {
+    showWarningMessage();
+  }
+}, [selectedLocation, selectedCabin, showWarning]);
+  
   useEffect(() => {
    let timer: NodeJS.Timeout;
    if (showError) {
@@ -224,12 +231,15 @@ const handleAddToCart = (
           <div className="fixed inset-0 bg-black opacity-50 z-40"></div>
         )}
         <main className="p-4 relative z-30 flex-grow pb-28">
-          {showWarning && <p className="text-red-500 mb-4">{warningMessage}</p>}
           <LocationSelector
             onLocationSelect={handleLocationSelect}
             selectedLocation={selectedLocation}
             selectedCabin={selectedCabin}
           />
+          {showWarning && (
+            <p className="text-red-500 text-lg mt-4">{warningMessage}</p>
+          )}
+
           <div className="fixed top-4 right-4 z-50 w-1/2">
             <Cart
               items={cartItems}
@@ -263,10 +273,16 @@ const handleAddToCart = (
           )}
           <Menu
             items={menuItems}
-            onSelectItem={setSelectedItem}
+            onSelectItem={(item) => {
+              if (!selectedLocation || !selectedCabin) {
+                showWarningMessage();
+              } else {
+                setSelectedItem(item);
+              }
+            }}
             selectedLocation={selectedLocation}
             selectedCabin={selectedCabin}
-            setShowWarning={showTemporaryWarning}
+            setShowWarning={showWarningMessage}
             getWarning={getWarning}
           />
           {cartItems.length > 0 && (
@@ -314,7 +330,7 @@ const handleAddToCart = (
             onResetCart={handleOrderSuccess}
             tableDelivery={tableDelivery}
             tableDeliveryCharge={tableDeliveryCharge}
-           />
+          />
         )}
       </div>
       {!shouldHideFooter() && (
