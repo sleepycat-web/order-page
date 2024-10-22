@@ -44,7 +44,7 @@ const ChangeHandler: React.FC<ChangeHandlerProps> = ({ slug }) => {
       }
     };
 
-    const intervalId = setInterval(checkAndUpdateOrders, 3000);
+    const intervalId = setInterval(checkAndUpdateOrders, 5000);
 
     return () => clearInterval(intervalId);
   }, [slug]);

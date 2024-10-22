@@ -100,7 +100,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
         {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
       </button>
       {isOpen && (
-        <div className="absolute z-10 bg-neutral-800 text-white rounded-lg p-4 shadow-lg max-h-96 overflow-y-auto mt-2 w-full max-w-lg">
+        <div className="absolute z-10 bg-neutral-800 text-white rounded-lg p-4 shadow-lg max-h-96 overflow-y-auto mt-2 w-full max-w-xl">
           <div className="mb-4">
             <h3 className="font-bold text-lg">Cabin Status</h3>
           </div>
@@ -108,21 +108,19 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
             {availableCabins.map((cabin) => {
               const isVacant = vacantCabins.includes(cabin);
               const oldestOrderTime = getOldestOrderTime(cabin);
+
               return (
-                <div
-                  key={cabin}
-                  className="flex items-center space-x-2 whitespace-nowrap overflow-hidden"
-                >
+                <div key={cabin} className="flex items-center gap-2 min-w-0">
                   <span className="flex-shrink-0">{cabin}:</span>
                   <span
-                    className={`px-2 py-1 rounded ${
+                    className={`px-2 py-1 rounded text-sm font-semibold ${
                       isVacant ? "bg-green-500" : "bg-red-500"
                     }`}
                   >
                     {isVacant ? "Vacant" : "Occupied"}
                   </span>
                   {!isVacant && oldestOrderTime && (
-                    <span className="px-2 py-1 rounded bg-orange-500">
+                    <span className="px-2 py-1 rounded text-sm font-semibold bg-orange-500">
                       {formatElapsedTime(oldestOrderTime)}
                     </span>
                   )}
