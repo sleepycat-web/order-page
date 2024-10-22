@@ -568,9 +568,10 @@ const [isAutoPlacingOrder, setIsAutoPlacingOrder] = useState(false);
                     placeholder="Name"
                     className="input w-full mb-4 bg-neutral-800"
                     value={userData.name}
-                    onChange={(e) =>
-                      setUserData({ ...userData, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newName = e.target.value.replace(/[^a-zA-Z ]/g, "");
+                      setUserData({ ...userData, name: newName });
+                    }}
                     required
                   />
                   <button

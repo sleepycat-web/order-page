@@ -30,14 +30,6 @@ useEffect(() => {
     optionRefs.current = new Array(item.customizationOptions.length).fill(null);
   }
 }, [item.customizationOptions]);
-  
-useEffect(() => {
-  if (item.customizationOptions) {
-    optionRefs.current = new Array(item.customizationOptions.length).fill(null);
-  }
-}, [item.customizationOptions]);
-
-  
   const calculateTotalPrice = (): number => {
     let total = 0;
     Object.entries(selectedOptions).forEach(([optionName, selectedValues]) => {
@@ -54,6 +46,10 @@ useEffect(() => {
       }
     });
     return total * quantity;
+  };
+
+const validateSpecialRequests = (input: string): string => {
+  return input.replace(/[^a-zA-Z0-9?.! ]/g, '');  // Added '\s' to allow spaces
   };
 
   const hasSelectedOptionsWithPrice = (): boolean => {
@@ -212,6 +208,13 @@ const handleAddToOrderWithCleanup = () => {
     setQuantity(newQuantity);
   };
 
+  const handleSpecialRequestsChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const validatedInput = validateSpecialRequests(e.target.value);
+    setSpecialRequests(validatedInput);
+  };
+
   const hasSelectedOptions = Object.keys(selectedOptions).length > 0;
 
   return (
@@ -354,7 +357,20 @@ const handleAddToOrderWithCleanup = () => {
               rows={3}
               placeholder="Enter any special requests here..."
               value={specialRequests}
-              onChange={(e) => setSpecialRequests(e.target.value)}
+              onChange={handleSpecialRequestsChange}
+              onPaste={(e) => {
+                e.preventDefault();
+                const text = e.clipboardData.getData("text");
+                const validatedText = validateSpecialRequests(text);
+                setSpecialRequests((prev) => prev + validatedText);
+              }}
+              onKeyPress={(e) => {
+                const char = String.fromCharCode(e.charCode);
+                if (!/[a-zA-Z0-9?.! ]/.test(char)) {
+                  // Added '0-9' here too
+                  e.preventDefault();
+                }
+              }}
             ></textarea>
           </div>
         </div>
