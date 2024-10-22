@@ -17,12 +17,27 @@ function formatBranchName(slug: string): string {
   return slug; // fallback case
 }
 
+// Helper function to check if email should be sent
+function shouldSendEmail(category: string): boolean {
+  const excludedCategories = [
+    "UPI Payment",
+    "Extra UPI Payment",
+    "Extra Cash Payment",
+  ];
+  return !excludedCategories.includes(category);
+}
+
 async function sendExpenseEmail(
   slug: string,
   category: string,
   amount: number,
   comment: string
 ): Promise<void> {
+  // Skip email if category is in excluded list
+  if (!shouldSendEmail(category)) {
+    return;
+  }
+
   const branchName = formatBranchName(slug);
 
   const transporter = nodemailer.createTransport({
@@ -88,7 +103,7 @@ export default async function handler(
         createdAt: istTime,
       });
 
-      // Send email notification with proper branch name formatting
+      // Send email notification only if category is not in excluded list
       await sendExpenseEmail(slug, category, parseFloat(amount), comment);
 
       res

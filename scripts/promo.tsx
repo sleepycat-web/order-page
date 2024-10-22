@@ -34,6 +34,7 @@ export const promos: Promo[] = [
   { code: "RISHIKA30", percentage: 5 },
   { code: "SHATRU", percentage: 5 },
   { code: "PRATU", percentage: 5 },
+  { code: "AVIK", percentage: 5 },
 
   { code: "CMSTAFF", percentage: 50 },
   { code: "CMOWNER", percentage: 100 },
