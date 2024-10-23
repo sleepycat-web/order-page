@@ -349,10 +349,7 @@ const togglePhoneNumber = async () => {
               {showPhoneNumber ? (
                 <a href={`tel:${phoneNumber}`}>{phoneNumber}</a>
               ) : (
-                <button
-                  onClick={togglePhoneNumber}
-                  className="text-blue-400 "
-                >
+                <button onClick={togglePhoneNumber} className="text-blue-400 ">
                   Show Number
                 </button>
               )}
@@ -629,7 +626,9 @@ const togglePhoneNumber = async () => {
               <div className="flex space-x-4 mb-2">
                 <button
                   className={`btn btn-sm ${
-                    extraPaymentType === "cash" ? "btn-primary" : "btn-outline"
+                    extraPaymentType === "cash"
+                      ? "btn-primary"
+                      : "btn-outline btn-secondary"
                   }`}
                   onClick={() => handleExtraPaymentTypeSelect("cash")}
                 >
@@ -637,7 +636,9 @@ const togglePhoneNumber = async () => {
                 </button>
                 <button
                   className={`btn btn-sm ${
-                    extraPaymentType === "upi" ? "btn-primary" : "btn-outline"
+                    extraPaymentType === "upi"
+                      ? "btn-primary"
+                      : "btn-outline btn-secondary"
                   }`}
                   onClick={() => handleExtraPaymentTypeSelect("upi")}
                 >

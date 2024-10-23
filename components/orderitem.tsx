@@ -79,33 +79,29 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
   <div className="bg-neutral-700 p-3 rounded-lg flex flex-col h-full">
     <div className="flex flex-col">
       <div className="flex justify-between items-start mb-2">
-        <span className="bg-purple-700 px-2 py-1 rounded font-bold text-lg ">
+        <span className="bg-purple-700 px-2 py-1 rounded font-bold text-lg">
           {item.name}
         </span>
-        <span className="bg-orange-500 px-2 py-1  rounded-full text-lg  font-semibold ml-2">
+        <span className="bg-orange-500 px-2 py-1 rounded-full text-lg font-semibold ml-2">
           {item.quantity}
         </span>
       </div>
       <p className="font-semibold mb-2">₹{item.totalPrice}</p>
     </div>
     <div className="space-y-1 flex-grow">
-      {Object.entries(item.selectedOptions).map(
-        ([optionName, selectedValues]) => (
-          <div key={optionName} className="flex items-start ">
-            {/* <p className="font-bold text-sm mr-1">{optionName}:</p> */}
-            <div className="grid grid-cols-2 gap-1">
-              {selectedValues.map((value, index) => (
-                <div
-                  key={index}
-                  className="bg-blue-500 text-white text-sm px-1 rounded"
-                >
-                  {value}
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      )}
+      <div className="grid grid-cols-3 gap-2">
+        {Object.entries(item.selectedOptions).map(
+          ([optionName, selectedValues]) =>
+            selectedValues.map((value, index) => (
+              <div
+                key={`${optionName}-${index}`}
+                className="bg-blue-500 text-white text-sm py-0.5 px-2 rounded text-left"
+              >
+                {value}
+              </div>
+            ))
+        )}
+      </div>
       {item.specialRequests && (
         <div className=" flex items-start">
           <p className="font-bold text-sm mr-1 ">Special Requests:</p>
@@ -703,7 +699,7 @@ const [isProcessing, setIsProcessing] = useState(false);
               className={`p-2 border rounded ${
                 selectedMethods.cash
                   ? "border-blue-500 border-2"
-                  : "border-gray-500"
+                  : "border-gray-500 "
               }`}
               onClick={() => toggleMethod("cash")}
             >

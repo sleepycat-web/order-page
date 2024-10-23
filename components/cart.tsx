@@ -104,31 +104,34 @@ const Cart: React.FC<CartProps> = ({
     }
   };
 
-  const calculateTotal = () => {
-    const newSubtotal = items.reduce(
-      (total, item) => total + item.totalPrice,
-      0
-    );
-    setSubtotal(newSubtotal);
+const calculateTotal = () => {
+  // Calculate subtotal from items
+  const newSubtotal = items.reduce((total, item) => total + item.totalPrice, 0);
+  setSubtotal(newSubtotal);
 
-    const newTableDeliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
-    setTableDeliveryCharge(newTableDeliveryCharge);
+  // Calculate delivery charge
+  const newTableDeliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
+  setTableDeliveryCharge(newTableDeliveryCharge);
 
-    const discountableTotal = newSubtotal;
-    const discount = appliedPromo
-      ? discountableTotal * (appliedPromo.percentage / 100)
-      : 0;
+  // Calculate total before discount (subtotal + delivery charge)
+  const totalBeforeDiscount = newSubtotal + newTableDeliveryCharge;
 
-    return discountableTotal - discount + newTableDeliveryCharge;
-  };
+  // Apply discount to the total amount if there's a promo
+  const finalTotal = appliedPromo
+    ? totalBeforeDiscount * (1 - appliedPromo.percentage / 100)
+    : totalBeforeDiscount;
 
-  useEffect(() => {
-    const newTotal = calculateTotal();
-    setUltraGrandTotal(newTotal);
-    setTotal(newTotal);
-  }, [items, appliedPromo, tableDelivery, setTotal, selectedLocation]);
+  return finalTotal;
+};
 
-  const deliveryCharge = subtotal * 0.05;
+ useEffect(() => {
+   const newTotal = calculateTotal();
+   setUltraGrandTotal(newTotal);
+   setTotal(newTotal);
+ }, [items, appliedPromo, tableDelivery, setTotal, selectedLocation]);
+
+ const deliveryCharge = subtotal * 0.05;
+
   return (
     <>
       {!isOpen && (
