@@ -140,8 +140,9 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
           (status as OccupiedStatus).totalOrders /
           (status as OccupiedStatus).minimumRequired,
       }))
-      .sort((a, b) => b.ratio - a.ratio); // Sort by ratio in descending order
-
+      .sort((a, b) => a.ratio - b.ratio); // Changed from b.ratio - a.ratio
+    
+    
     if (occupiedStatuses.length === 0) return;
 
     let currentRank = 1;
@@ -149,7 +150,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     let skippedRanks = 0;
 
     occupiedStatuses.forEach((item, index) => {
-      if (item.ratio < previousRatio) {
+   if (item.ratio > previousRatio)  {
         currentRank = index + 1 - skippedRanks;
         previousRatio = item.ratio;
       } else if (index > 0) {
@@ -242,12 +243,12 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                   </span>
                   {!status.isVacant && (
                     <>
-                      <span className="px-2 py-1 rounded text-sm font-semibold bg-orange-500">
+                      {/* <span className="px-2 py-1 rounded text-sm font-semibold bg-orange-500">
                         {formatElapsedTime(getOldestOrderTime(cabin)!)}
-                      </span>
-                      {/* <span className="px-2 py-1 rounded text-xs font-semibold bg-purple-500">
-                        ₹{status.totalOrders}/₹{status.minimumRequired}
                       </span> */}
+                      <span className="px-2 py-1 rounded text-xs font-semibold bg-purple-500">
+                        ₹{status.totalOrders}/₹{status.minimumRequired}
+                      </span>
                        
                       {status.rank && (
                         <span className="px-2 py-1 rounded text-sm font-semibold bg-blue-500">
