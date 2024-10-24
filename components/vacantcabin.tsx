@@ -247,7 +247,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                         {formatElapsedTime(getOldestOrderTime(cabin)!)}
                       </span> */}
                       <span className="px-2 py-1 rounded text-xs font-semibold bg-purple-500">
-                        ₹{status.totalOrders}/₹{status.minimumRequired}
+                        ₹{status.totalOrders}
                       </span>
                        
                       {status.rank && (
