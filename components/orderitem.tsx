@@ -212,14 +212,14 @@ const OrderStatus: React.FC<OrderComponentProps> = ({
             >
               {order.status === "fulfilled" ? "Fulfilled" : "Pending"}
             </span>
-            {/* {order.status !== "fulfilled" && (
+            {order.status !== "fulfilled" && (
               <button
                 className="btn btn-primary btn-sm ml-1"
                 onClick={() => onPayment(order._id)}
               >
                 Fulfill
               </button>
-            )} */}
+            )}
           </div>
         )}
         
