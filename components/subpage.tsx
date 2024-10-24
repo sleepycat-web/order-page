@@ -446,23 +446,24 @@ const calculateTotalSales = (orders: Order[]) => {
   };
 
  const renderOrders = (orders: Order[], isPayLater: boolean = false) => {
-   const groupedOrders = orders.reduce((acc, order) => {
-     if (order.customerName === "Manual Order") {
-       const key = `${order.customerName}-${order.selectedCabin}`;
-       if (!acc[key]) {
-         acc[key] = [];
-       }
-       acc[key].push(order);
-     } else {
-       const key = order.customerName;
-       if (!acc[key]) {
-         acc[key] = [];
-       }
-       acc[key].push(order);
-     }
-     return acc;
-   }, {} as { [key: string]: Order[] });
-
+  const groupedOrders = orders.reduce((acc, order) => {
+    if (order.customerName === "Manual Order") {
+      const key = `${order.customerName}-${order.selectedCabin}`;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(order);
+    } else {
+      // Group by phone number instead of customer name
+      const key = order.phoneNumber;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(order);
+    }
+    return acc;
+  }, {} as { [key: string]: Order[] });
+   
    const sortOrderEntries = (
      entries: [string, Order[]][]
    ): [string, Order[]][] => {
