@@ -22,6 +22,7 @@ type OccupiedStatus = BaseStatus & {
   totalOrders: number;
   minimumRequired: number;
   rank?: number;
+  hasUndispatchedOrders?: boolean;
 };
 
 type CabinStatus = VacantStatus | OccupiedStatus;
@@ -73,6 +74,14 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     });
   };
 
+const hasUndispatchedOrders = (cabin: string): boolean => {
+  return Object.values(orders)
+    .flat()
+    .some(
+      (order) => order.selectedCabin === cabin && order.order === "pending"
+    );
+};
+
   const getLastFulfilledTime = (cabin: string): string | undefined => {
     const validOldOrders = getValidOldOrders();
 
@@ -99,7 +108,6 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     );
   };
 
-  // Keep useMemo for occupiedCabins since it involves potentially expensive array operations
   const occupiedCabins = useMemo(() => {
     return Object.values(orders)
       .flat()
@@ -200,6 +208,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     );
     const totalOrders = getCabinOrderTotal(cabin);
     const minimumRequired = getMinimumOrderValue(elapsedMinutes);
+    const hasUndispatched = hasUndispatchedOrders(cabin);
 
     if (
       elapsedMinutes > TIME_THRESHOLD_MINUTES &&
@@ -211,6 +220,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
         isVacant: false,
         totalOrders,
         minimumRequired,
+        hasUndispatchedOrders: hasUndispatched,
       };
     }
 
@@ -220,6 +230,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
       isVacant: false,
       totalOrders,
       minimumRequired,
+      hasUndispatchedOrders: hasUndispatched,
     };
   };
 
@@ -299,12 +310,17 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                   )}
                   {!status.isVacant && (
                     <>
-                      <span className="px-2 py-1 rounded text-xs font-semibold bg-purple-500">
+                      <span className="px-2 py-1 rounded text-sm font-semibold bg-purple-500">
                         ₹{status.totalOrders}
                       </span>
                       {status.rank && (
                         <span className="px-2 py-1 rounded text-sm font-semibold bg-blue-500">
                           {status.rank}
+                        </span>
+                      )}
+                      {status.hasUndispatchedOrders && (
+                        <span className="px-2 py-1 rounded text-sm font-semibold bg-cyan-500">
+                          R
                         </span>
                       )}
                     </>
