@@ -726,6 +726,7 @@ const calculateTotalSales = (orders: Order[]) => {
               ...Object.values(groupedOrders.new).flat(),
               ...Object.values(groupedOrders.active).flat(),
             ])}
+            oldOrders={groupedOrders.previous}
             slug={slug}
           />
         </div>

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Order } from "@/scripts/interface";
 
 interface VacantCabinDropdownProps {
   orders: { [key: string]: Order[] };
   slug: string;
+  oldOrders: Order[];
 }
 
-// Define status types
 type BaseStatus = {
   status: string;
   bgColor: string;
@@ -14,59 +14,36 @@ type BaseStatus = {
 
 type VacantStatus = BaseStatus & {
   isVacant: true;
+  lastFulfilledTime?: string;
 };
 
 type OccupiedStatus = BaseStatus & {
   isVacant: false;
   totalOrders: number;
   minimumRequired: number;
-  rank?: number; // Added rank property
+  rank?: number;
 };
 
 type CabinStatus = VacantStatus | OccupiedStatus;
 
+const BASE_MINIMUM_ORDER = 150;
+const TIME_THRESHOLD_MINUTES = 60;
+
 const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
   orders,
   slug,
+  oldOrders,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [cabinStatuses, setCabinStatuses] = useState<{
     [key: string]: CabinStatus;
   }>({});
 
-  const BASE_MINIMUM_ORDER = 150;
-  const TIME_THRESHOLD_MINUTES = 60;
-
-  useEffect(() => {
-    const handleClick = () => {
-      if (isOpen) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("click", handleClick);
-
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-      updateCabinStatuses();
-    }, 1000);
-
-    return () => {
-      document.removeEventListener("click", handleClick);
-      clearInterval(timer);
-    };
-  }, [isOpen]);
-
-  const toggleDropdown = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    setIsOpen(!isOpen);
-  };
-
-  const getCabinOptions = (location: string) => {
-    if (location === "dagapur") {
+  const getCabinOptions = () => {
+    if (slug === "dagapur") {
       return ["Cabin 1", "Cabin 2", "Cabin 3", "High Chair"];
-    } else if (location === "sevoke") {
+    } else if (slug === "sevoke") {
       return [
         "Cabin 4",
         "Cabin 5",
@@ -81,18 +58,56 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     return [];
   };
 
-  const availableCabins = getCabinOptions(slug);
+  const getValidOldOrders = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  const occupiedCabins = Object.values(orders)
-    .flat()
-    .filter((order) => order.selectedCabin)
-    .map((order) => order.selectedCabin);
+    return oldOrders.filter((order) => {
+      const orderDate = new Date(order.createdAt);
+      orderDate.setHours(0, 0, 0, 0);
+      return (
+        orderDate.getTime() === today.getTime() &&
+        order.order !== "rejected" &&
+        order.status !== "rejected"
+      );
+    });
+  };
 
-  const vacantCabins = availableCabins.filter(
-    (cabin) => !occupiedCabins.includes(cabin)
-  );
+  const getLastFulfilledTime = (cabin: string): string | undefined => {
+    const validOldOrders = getValidOldOrders();
 
-  const getOldestOrderTime = (cabin: string) => {
+    const cabinOrders = validOldOrders.filter(
+      (order) =>
+        order.selectedCabin === cabin &&
+        order.status === "fulfilled" &&
+        order.fulfilledAt
+    );
+
+    if (cabinOrders.length === 0) return undefined;
+
+    const fulfilledTimes = cabinOrders
+      .map((order) => {
+        if (!order.fulfilledAt) return null;
+        return new Date(order.fulfilledAt).toISOString();
+      })
+      .filter((date): date is string => date !== null);
+
+    if (fulfilledTimes.length === 0) return undefined;
+
+    return fulfilledTimes.reduce((latest, current) =>
+      latest > current ? latest : current
+    );
+  };
+
+  // Keep useMemo for occupiedCabins since it involves potentially expensive array operations
+  const occupiedCabins = useMemo(() => {
+    return Object.values(orders)
+      .flat()
+      .filter((order) => order.selectedCabin)
+      .map((order) => order.selectedCabin);
+  }, [orders]);
+
+  const getOldestOrderTime = (cabin: string): Date | null => {
     const cabinOrders = Object.values(orders)
       .flat()
       .filter((order) => order.selectedCabin === cabin);
@@ -106,31 +121,19 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     );
   };
 
-  const getCabinOrderTotal = (cabin: string) => {
+  const getCabinOrderTotal = (cabin: string): number => {
     return Object.values(orders)
       .flat()
       .filter((order) => order.selectedCabin === cabin)
       .reduce((sum, order) => sum + (order.total || 0), 0);
   };
 
-  const formatElapsedTime = (startTime: Date) => {
-    const elapsed = Math.floor(
-      (currentTime.getTime() - startTime.getTime()) / 1000
-    );
-    const minutes = Math.floor(elapsed / 60);
-    const seconds = elapsed % 60;
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  const getMinimumOrderValue = (elapsedMinutes: number) => {
+  const getMinimumOrderValue = (elapsedMinutes: number): number => {
     const hoursElapsed = Math.floor(elapsedMinutes / 60);
     return BASE_MINIMUM_ORDER + hoursElapsed * 150;
   };
 
   const calculateRanks = (statuses: { [key: string]: CabinStatus }) => {
-    // Get only occupied cabins and their ratios
     const occupiedStatuses = Object.entries(statuses)
       .filter(([_, status]) => !status.isVacant)
       .map(([cabin, status]) => ({
@@ -140,9 +143,8 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
           (status as OccupiedStatus).totalOrders /
           (status as OccupiedStatus).minimumRequired,
       }))
-      .sort((a, b) => a.ratio - b.ratio); // Changed from b.ratio - a.ratio
-    
-    
+      .sort((a, b) => a.ratio - b.ratio);
+
     if (occupiedStatuses.length === 0) return;
 
     let currentRank = 1;
@@ -150,15 +152,33 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     let skippedRanks = 0;
 
     occupiedStatuses.forEach((item, index) => {
-   if (item.ratio > previousRatio)  {
+      if (item.ratio > previousRatio) {
         currentRank = index + 1 - skippedRanks;
         previousRatio = item.ratio;
       } else if (index > 0) {
-        // Same ratio as previous, increment skipped ranks
         skippedRanks++;
       }
       (statuses[item.cabin] as OccupiedStatus).rank = currentRank;
     });
+  };
+
+  const formatElapsedTime = (startTimeStr: string): string => {
+    const startTime = new Date(startTimeStr);
+    const elapsed = Math.floor(
+      (currentTime.getTime() - startTime.getTime()) / 1000
+    );
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
+        .toString()
+        .padStart(2, "0")}`;
+    }
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const getCabinStatus = (
@@ -166,7 +186,13 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     oldestOrderTime: Date | null
   ): CabinStatus => {
     if (!oldestOrderTime) {
-      return { status: "Vacant", bgColor: "bg-green-500", isVacant: true };
+      const lastFulfilledTime = getLastFulfilledTime(cabin);
+      return {
+        status: "Vacant",
+        bgColor: "bg-green-500",
+        isVacant: true,
+        ...(lastFulfilledTime ? { lastFulfilledTime } : {}),
+      };
     }
 
     const elapsedMinutes = Math.floor(
@@ -199,8 +225,9 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
 
   const updateCabinStatuses = () => {
     const newStatuses: { [key: string]: CabinStatus } = {};
+    const cabinOptions = getCabinOptions();
 
-    availableCabins.forEach((cabin) => {
+    cabinOptions.forEach((cabin) => {
       const oldestOrderTime = getOldestOrderTime(cabin);
       newStatuses[cabin] = getCabinStatus(cabin, oldestOrderTime);
     });
@@ -209,10 +236,34 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     setCabinStatuses(newStatuses);
   };
 
-  // Initial status calculation
+  useEffect(() => {
+    const handleClick = (event: MouseEvent) => {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+      updateCabinStatuses();
+    }, 1000);
+
+    return () => {
+      document.removeEventListener("click", handleClick);
+      clearInterval(timer);
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     updateCabinStatuses();
   }, [orders, slug]);
+
+  const toggleDropdown = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    setIsOpen(!isOpen);
+  };
 
   return (
     <div className="relative mb-4 block w-full">
@@ -228,7 +279,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
             <h3 className="font-bold text-lg">Cabin Status</h3>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            {availableCabins.map((cabin) => {
+            {getCabinOptions().map((cabin) => {
               const status =
                 cabinStatuses[cabin] ||
                 getCabinStatus(cabin, getOldestOrderTime(cabin));
@@ -241,18 +292,19 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                   >
                     {status.status}
                   </span>
+                  {status.isVacant && status.lastFulfilledTime && (
+                    <span className="px-2 py-1 rounded text-sm font-semibold bg-orange-500">
+                      {formatElapsedTime(status.lastFulfilledTime)}
+                    </span>
+                  )}
                   {!status.isVacant && (
                     <>
-                      {/* <span className="px-2 py-1 rounded text-sm font-semibold bg-orange-500">
-                        {formatElapsedTime(getOldestOrderTime(cabin)!)}
-                      </span> */}
                       <span className="px-2 py-1 rounded text-xs font-semibold bg-purple-500">
                         ₹{status.totalOrders}
                       </span>
-                       
                       {status.rank && (
                         <span className="px-2 py-1 rounded text-sm font-semibold bg-blue-500">
-                           {status.rank}
+                          {status.rank}
                         </span>
                       )}
                     </>
