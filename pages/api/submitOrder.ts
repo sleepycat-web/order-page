@@ -45,6 +45,9 @@ export default async function handler(
     // Get current date and time
     const now = new Date();
 
+    // Check if the order name starts with "Manual" (case insensitive)
+    const isManualOrder = customerName.toLowerCase().startsWith("manual");
+
     const orderDocument = {
       items,
       selectedLocation,
@@ -57,10 +60,11 @@ export default async function handler(
         ? tableDeliveryCharge
         : undefined,
       status: "pending",
-      order: "pending",
+      order: isManualOrder ? "dispatched" : "pending",
       createdAt: now,
       _id: new ObjectId(),
       load: "pending",
+      ...(isManualOrder && { dispatchedAt: now }), // Add dispatchedAt only for manual orders
     };
 
     const result = await collection.insertOne(orderDocument);
@@ -192,6 +196,11 @@ Order Time: ${getAdjustedTime().toLocaleString("en-IN", {
     timeStyle: "medium",
   })}
 Total: ₹${orderDetails.total}
+${
+  orderDetails.order === "dispatched"
+    ? "\nNote: This is a manual order and has been auto-dispatched."
+    : ""
+}
   `.trim();
 
   const mailOptions = {

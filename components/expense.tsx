@@ -374,7 +374,7 @@ const toggleCashBalance = () => {
             <button
               className="btn btn-primary text-black w-full sm:w-auto"
               onClick={handleSubmit}
-              disabled={ !amount || !comment || !paycategory}
+              disabled={!amount || !comment || !paycategory}
             >
               {isSubmitting ? (
                 <>
@@ -391,39 +391,41 @@ const toggleCashBalance = () => {
           </div>
 
           {dailyExpenses.length > 0 && (
-  <div>
-    {calculateTotalExpenses() > 0 && (
-      <h3 className="font-semibold mb-2">Extra Payments for the day</h3>
-    )}
-    <ul className="space-y-2">
-      {dailyExpenses
-        .filter(
-          (expense) =>
-            expense.category === "Extra Cash Payment" ||
-            expense.category === "Extra UPI Payment"
-        )
-        .map((expense) => (
-          <li
-            key={expense._id}
-            className="flex justify-between items-center"
-          >
-            <span className="font-medium">{expense.category}</span>
-            <span className="flex items-center">
-              <span className="p-1 bg-neutral-800 rounded mr-2">
-                ₹{expense.amount.toFixed(2)}
-              </span>
-              <span className="text-sm text-gray-400">
-                {expense.comment}
-              </span>
-            </span>
-          </li>
-        ))}
-    </ul>
-  </div>
-)}
+            <div>
+              <h3 className="font-semibold mb-2">Extra Payments for the day</h3>
+              <ul className="space-y-2">
+                {dailyExpenses
+                  .filter(
+                    (expense) =>
+                      expense.category === "Extra Cash Payment" ||
+                      expense.category === "Extra UPI Payment"
+                  )
+                  .map((expense) => (
+                    <li
+                      key={expense._id}
+                      className="flex justify-between items-center"
+                    >
+                      <span className="font-medium">{expense.category}</span>
+                      <span className="flex items-center">
+                        <span className="text-sm text-gray-400 mr-2">
+                          {expense.comment}
+                        </span>
+                        <span className="p-1 bg-neutral-800 rounded mr-2">
+                          ₹{expense.amount.toFixed(2)}
+                        </span>
+
+                        <span className="text-sm text-gray-400">
+                          {formatDateNew(new Date(expense.createdAt))}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
-      
+
       {isExpensesExpanded && (
         <div className="rounded-lg relative p-4 bg-neutral-900 mb-4">
           <button
@@ -558,11 +560,15 @@ const toggleCashBalance = () => {
                   >
                     <span className="font-medium">Extra Cash Payment</span>
                     <span className="flex items-center">
+                      <span className="text-sm text-gray-400 mr-2">
+                        {expense.comment}
+                      </span>
                       <span className="p-1 bg-neutral-800 rounded mr-2">
                         ₹{expense.amount.toFixed(2)}
                       </span>
+
                       <span className="text-sm text-gray-400">
-                        {expense.comment}
+                        {formatDateNew(new Date(expense.createdAt))}
                       </span>
                     </span>
                   </li>
@@ -599,13 +605,16 @@ const toggleCashBalance = () => {
                         : expense.comment}
                     </span>
                     <span className="flex items-center">
+                      <span className="text-sm text-gray-400 mr-2">
+                        {expense.category === "Extra UPI Payment"
+                          ? expense.comment
+                          : null}
+                      </span>
                       <span className="p-1 bg-neutral-800 rounded mr-2">
                         ₹{expense.amount.toFixed(2)}
                       </span>
                       <span className="text-sm text-gray-400">
-                        {expense.category === "Extra UPI Payment"
-                          ? expense.comment
-                          : formatDateNew(new Date(expense.createdAt))}
+                        {formatDateNew(new Date(expense.createdAt))}
                       </span>
                     </span>
                   </li>

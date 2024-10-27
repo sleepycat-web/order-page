@@ -169,10 +169,10 @@ const locationDropdownRef = useRef<HTMLDivElement>(null);
           Failed to detect location. Please input manually.
         </p>
       )}
-      <div className="flex flex-row space-x-4 mt-4 sm:mt-0">
+      <div className=" dark flex flex-row space-x-4 mt-4 sm:mt-0">
         <div className="relative" ref={locationDropdownRef}>
           <button
-            className="btn text-left"
+            className="btn text-left bg-neutral-900"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
             {selectedLocation || "Select Location"}
@@ -186,7 +186,7 @@ const locationDropdownRef = useRef<HTMLDivElement>(null);
             </svg>
           </button>
           {isDropdownOpen && (
-            <ul className="menu bg-base-100 rounded-box absolute z-10 mt-1 p-2 w-52">
+            <ul className="menu text-white rounded-box absolute z-10 mt-1 p-2 w-52 bg-neutral-800">
               {locations.map((location) => (
                 <li key={location.name}>
                   <Link
@@ -207,7 +207,7 @@ const locationDropdownRef = useRef<HTMLDivElement>(null);
 
         <div className="relative" ref={cabinDropdownRef}>
           <button
-            className={`btn text-left disabled:text-neutral-200/40 ${
+            className={`btn text-left bg-neutral-900 disabled:text-neutral-200/40 ${
               !selectedLocation ? "btn-disabled" : ""
             }`}
             onClick={() => setIsCabinDropdownOpen(!isCabinDropdownOpen)}
@@ -224,7 +224,7 @@ const locationDropdownRef = useRef<HTMLDivElement>(null);
             </svg>
           </button>
           {isCabinDropdownOpen && selectedLocation && (
-            <ul className="menu bg-base-100 rounded-box absolute z-10 mt-1 p-2 w-52">
+            <ul className="menu bg-neutral-800 text-white rounded-box absolute z-10 mt-1 p-2 w-52">
               {getCabinOptions().map((cabin) => (
                 <li key={cabin}>
                   <Link
