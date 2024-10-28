@@ -202,6 +202,19 @@ const toggleAdd = () => {
 
     return `${day} ${month} ${year} at ${formattedHours}:${formattedMinutes} ${ampm}`;
   };
+
+const formatDateNonRound = (date: Date) => {
+  const day = date.getDate();
+  const month = date.toLocaleString("default", { month: "long" });
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "pm" : "am";
+  const formattedHours = hours % 12 || 12;
+  const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
+
+  return `${day} ${month} ${year} at ${formattedHours}:${formattedMinutes} ${ampm}`;
+};
   
  const calculateTotalSales = () => {
    const regularSales = totalSales;
@@ -534,7 +547,7 @@ const toggleCashBalance = () => {
                           ₹{expense.amount.toFixed(2)}
                         </span>
                         <span className="text-sm text-gray-400 m ">
-                          {formatDateNew(new Date(expense.createdAt))}
+                          {formatDateNonRound(new Date(expense.createdAt))}
                         </span>
                       </span>
                     </li>
