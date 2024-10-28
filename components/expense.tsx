@@ -318,11 +318,11 @@ const toggleCashBalance = () => {
           >
             <p className="text-3xl">&times;</p>
           </button>
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="flex flex-wrap  items-center gap-2 mb-4">
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="btn bg-neutral-800 border-none hover:bg-neutral-800 px-6 p-3 w-full sm:w-auto flex items-center justify-left"
+                className="btn bg-neutral-800 border-none hover:bg-neutral-800 text-neutral-200 px-6 p-3 w-full sm:w-auto flex items-center justify-left"
               >
                 {paycategory || "Select Category"}
                 <svg
@@ -434,11 +434,11 @@ const toggleCashBalance = () => {
           >
             <p className="text-3xl">&times;</p>
           </button>
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="flex flex-wrap items-center   gap-2 mb-4">
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="btn bg-neutral-800 border-none hover:bg-neutral-800 p-3 w-full sm:w-auto flex items-center justify-between"
+                className="btn bg-neutral-800 border-none hover:bg-neutral-800 text-neutral-200 p-3 w-full sm:w-auto flex items-center justify-between"
               >
                 {category || "Select Category"}
                 <svg

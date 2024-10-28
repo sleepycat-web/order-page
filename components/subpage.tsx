@@ -52,7 +52,15 @@ export default function OrderPage() {
 
   const getCabinOptions = (location: string) => {
     if (location === "dagapur") {
-      return ["Cabin 1", "Cabin 2", "Cabin 3", "High Chair"];
+      return [
+        "Cabin 1",
+        "Cabin 2",
+        "Cabin 3",
+        "High Chair 1",
+        "High Chair 2",
+        "High Chair 3",
+        "High Chair 4",
+      ];
     } else if (location === "sevoke") {
       return [
         "Cabin 4",

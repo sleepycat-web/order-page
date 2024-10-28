@@ -117,7 +117,7 @@ const locationDropdownRef = useRef<HTMLDivElement>(null);
 
   const getCabinOptions = () => {
     if (selectedLocation === "Dagapur") {
-      return ["Cabin 1", "Cabin 2", "Cabin 3", "High Chair"];
+      return ["Cabin 1", "Cabin 2", "Cabin 3", "High Chair 1", "High Chair 2", "High Chair 3", "High Chair 4"];
     } else if (selectedLocation === "Sevoke Road") {
       return [
         "Cabin 4",

@@ -15,6 +15,7 @@ type BaseStatus = {
 type VacantStatus = BaseStatus & {
   isVacant: true;
   lastFulfilledTime?: string;
+  rank?: number;
 };
 
 type OccupiedStatus = BaseStatus & {
@@ -41,24 +42,81 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     [key: string]: CabinStatus;
   }>({});
 
-  const getCabinOptions = () => {
-    if (slug === "dagapur") {
-      return ["Cabin 1", "Cabin 2", "Cabin 3", "High Chair"];
-    } else if (slug === "sevoke") {
-      return [
-        "Cabin 4",
-        "Cabin 5",
-        "Cabin 6",
-        "Cabin 7",
-        "Cabin 8",
-        "Cabin 9",
-        "Cabin 10",
-        "Cabin 11",
-      ];
-    }
-    return [];
-  };
+const getCabinOptions = () => {
+  if (slug === "dagapur") {
+    return [
+      "Cabin 1",
+      "Cabin 2",
+      "Cabin 3",
+      "High Chair 1",
+      "High Chair 2",
+      "High Chair 3",
+      "High Chair 4",
+    ].sort((a, b) => {
+      const aStatus = cabinStatuses[a] || {
+        isVacant: true,
+        bgColor: "bg-green-500",
+      }; // Add null check
+      const bStatus = cabinStatuses[b] || {
+        isVacant: true,
+        bgColor: "bg-green-500",
+      }; // Add null check
 
+      // Prioritize occupied cabins over vacant ones
+      if (!aStatus.isVacant && bStatus.isVacant) return -1;
+      if (aStatus.isVacant && !bStatus.isVacant) return 1;
+
+      // Sort by rank
+      if (aStatus.rank && bStatus.rank) {
+        return aStatus.rank - bStatus.rank;
+      } else if (aStatus.rank) {
+        return -1;
+      } else if (bStatus.rank) {
+        return 1;
+      }
+
+      // Fall back to cabin name if no rank is available
+      return a.localeCompare(b);
+    });
+  } else if (slug === "sevoke") {
+    return [
+      "Cabin 4",
+      "Cabin 5",
+      "Cabin 6",
+      "Cabin 7",
+      "Cabin 8",
+      "Cabin 9",
+      "Cabin 10",
+      "Cabin 11",
+    ].sort((a, b) => {
+      const aStatus = cabinStatuses[a] || {
+        isVacant: true,
+        bgColor: "bg-green-500",
+      }; // Add null check
+      const bStatus = cabinStatuses[b] || {
+        isVacant: true,
+        bgColor: "bg-green-500",
+      }; // Add null check
+
+      // Prioritize occupied cabins over vacant ones
+      if (!aStatus.isVacant && bStatus.isVacant) return -1;
+      if (aStatus.isVacant && !bStatus.isVacant) return 1;
+
+      // Sort by rank
+      if (aStatus.rank && bStatus.rank) {
+        return aStatus.rank - bStatus.rank;
+      } else if (aStatus.rank) {
+        return -1;
+      } else if (bStatus.rank) {
+        return 1;
+      }
+
+      // Fall back to cabin name if no rank is available
+      return a.localeCompare(b);
+    });
+  }
+  return [];
+};
   const getValidOldOrders = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
