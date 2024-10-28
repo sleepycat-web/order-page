@@ -203,19 +203,26 @@ const toggleAdd = () => {
     return `${day} ${month} ${year} at ${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
-const formatDateNonRound = (date: Date) => {
-  const day = date.getDate();
-  const month = date.toLocaleString("default", { month: "long" });
-  const year = date.getFullYear();
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
+const formatDateNonRound = (date: Date): string => {
+  // Create a new date instance to avoid modifying the original date
+  const adjustedDate = new Date(date.getTime());
+
+  // Subtract 5 hours and 30 minutes
+  adjustedDate.setHours(adjustedDate.getHours() - 5);
+  adjustedDate.setMinutes(adjustedDate.getMinutes() - 30);
+
+  const day = adjustedDate.getDate();
+  const month = adjustedDate.toLocaleString("default", { month: "long" });
+  const year = adjustedDate.getFullYear();
+  const hours = adjustedDate.getHours();
+  const minutes = adjustedDate.getMinutes();
   const ampm = hours >= 12 ? "pm" : "am";
   const formattedHours = hours % 12 || 12;
   const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
 
   return `${day} ${month} ${year} at ${formattedHours}:${formattedMinutes} ${ampm}`;
 };
-  
+
  const calculateTotalSales = () => {
    const regularSales = totalSales;
    const extraCashPayments = dailyExpenses
