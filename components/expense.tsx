@@ -526,11 +526,15 @@ const toggleCashBalance = () => {
                     >
                       <span className="font-medium">{expense.category}</span>
                       <span className="flex items-center">
+                        <span className="text-sm text-gray-400 mr-2">
+                          {expense.comment}
+                        </span>
+
                         <span className="p-1 bg-neutral-800 rounded mr-2">
                           ₹{expense.amount.toFixed(2)}
                         </span>
-                        <span className="text-sm text-gray-400">
-                          {expense.comment}
+                        <span className="text-sm text-gray-400 m ">
+                          {formatDateNew(new Date(expense.createdAt))}
                         </span>
                       </span>
                     </li>
