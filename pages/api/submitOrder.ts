@@ -32,7 +32,6 @@ export default async function handler(
       tableDeliveryCharge,
     } = req.body;
 
-    // Check database for user name
     const userData = await db.collection("UserData").findOne({ phoneNumber });
     if (userData && userData.name) {
       customerName = userData.name;
@@ -42,14 +41,51 @@ export default async function handler(
       ? db.collection("OrderSevoke")
       : db.collection("OrderDagapur");
 
-    // Get current date and time
     const now = new Date();
-
-    // Check if the order name starts with "Manual" (case insensitive)
     const isManualOrder = customerName.toLowerCase().startsWith("manual");
 
-    const orderDocument = {
-      items,
+    if (isManualOrder) {
+      const existingOrder = await collection.findOne(
+        {
+          selectedCabin,
+          status: { $nin: ["fulfilled", "rejected"] },
+        },
+        { sort: { createdAt: -1 } }
+      );
+
+      if (existingOrder) {
+        const updatedItems = [
+          ...existingOrder.items,
+          ...items.map((item: any) => ({
+            ...item,
+            item: { ...item.item, name: `${item.item.name} (Manual Order)` },
+          })),
+        ];
+        const updatedTotal = existingOrder.total + total;
+
+        await collection.updateOne(
+          { _id: existingOrder._id },
+          { $set: { items: updatedItems, total: updatedTotal } }
+        );
+
+        res.status(200).json({
+          message: "Order updated successfully",
+          orderDate: now.toISOString(),
+        });
+        return;
+      }
+    }
+
+   const orderDocument = {
+     items: items.map((item: any) => ({
+       ...item,
+       item: {
+         ...item.item,
+         name: isManualOrder
+           ? `${item.item.name} (Manual Order)`
+           : item.item.name,
+       },
+     })),
       selectedLocation,
       selectedCabin,
       total,
@@ -65,17 +101,15 @@ export default async function handler(
       _id: new ObjectId(),
       load: "pending",
       ...(isManualOrder && { dispatchedAt: now }), // Add dispatchedAt only for manual orders
-    };
+   };
 
     const result = await collection.insertOne(orderDocument);
 
-    // Send the response immediately after submitting the order
     res.status(200).json({
       message: "Order submitted successfully",
       orderDate: now.toISOString(),
     });
 
-    // Perform the following operations asynchronously
     sendNotifications(db, orderDocument, selectedLocation).catch(console.error);
   } catch (error) {
     console.error("Error submitting order:", error);
@@ -89,7 +123,6 @@ async function sendNotifications(
   selectedLocation: string
 ) {
   try {
-    // Get the active caller for the branch
     let branch;
     if (selectedLocation.includes("Sevoke Road")) {
       branch = "Sevoke Road";
@@ -108,12 +141,9 @@ async function sendNotifications(
     }
 
     const callerPhoneNumber = `${selectedCaller.phoneNumber}`;
-
     const firstName = orderDocument.customerName.split(" ")[0];
 
-    // Check if the first name is not "Manual" before sending SMS
     if (firstName.toLowerCase() !== "manual") {
-      // Send SMS to the active caller
       await sendSMSNotification(
         selectedLocation,
         orderDocument.customerName,
@@ -121,7 +151,6 @@ async function sendNotifications(
       );
     }
 
-    // Send email confirmation
     await sendEmailConfirmation(orderDocument);
   } catch (error) {
     console.error("Error sending notifications:", error);
@@ -140,7 +169,6 @@ async function sendEmailConfirmation(orderDetails: any): Promise<void> {
     },
   });
 
-  // Generate items list handling dynamic parameters
   const itemsList = orderDetails.items
     .map((orderItem: any) => {
       const itemName = orderItem.item?.name || "Item";
