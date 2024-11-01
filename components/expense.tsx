@@ -435,7 +435,7 @@ const toggleCashBalance = () => {
                         </span>
 
                         <span className="text-sm text-gray-400">
-                          {formatDateNew(new Date(expense.createdAt))}
+                          {formatDateNonRound(new Date(expense.createdAt))}
                         </span>
                       </span>
                     </li>
@@ -592,7 +592,7 @@ const toggleCashBalance = () => {
                       </span>
 
                       <span className="text-sm text-gray-400">
-                        {formatDateNew(new Date(expense.createdAt))}
+                        {formatDateNonRound(new Date(expense.createdAt))}
                       </span>
                     </span>
                   </li>
@@ -638,7 +638,7 @@ const toggleCashBalance = () => {
                         ₹{expense.amount.toFixed(2)}
                       </span>
                       <span className="text-sm text-gray-400">
-                        {formatDateNew(new Date(expense.createdAt))}
+                        {formatDateNonRound(new Date(expense.createdAt))}
                       </span>
                     </span>
                   </li>
