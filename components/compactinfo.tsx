@@ -551,10 +551,9 @@ const togglePhoneNumber = async () => {
                 {order.items.map((item: OrderItem, index: number) => (
                   <div
                     key={`${order._id}-${index}`}
-                    className=" border-b border-gray-700 pb-2 hover:bg-neutral-700 cursor-pointer  flex items-center gap-2 p-3"
-                    onClick={() => toggleItemSelection(order._id, index)}
+                    className="border-b border-gray-700 pb-2 hover:bg-neutral-700 cursor-pointer flex items-center gap-2 p-3"
                   >
-                    {/* Checkbox Wrapper */}
+                    {/* Checkbox */}
                     <input
                       type="checkbox"
                       checked={selectedItems.some(
@@ -562,15 +561,17 @@ const togglePhoneNumber = async () => {
                           sel.orderId === order._id && sel.itemIndex === index
                       )}
                       onChange={(e) => {
-                        e.stopPropagation(); // Stop checkbox click from bubbling up
+                        e.stopPropagation(); // Stop event propagation for checkbox
                         toggleItemSelection(order._id, index);
                       }}
                       className="checkbox"
-                      
                     />
 
-                    {/* Item Details */}
-                    <div className="flex-1">
+                    {/* Item Details (Clickable Area) */}
+                    <div
+                      className="flex-1"
+                      onClick={() => toggleItemSelection(order._id, index)}
+                    >
                       <span className="font-medium">
                         {item.item.name} - ₹{item.totalPrice} (Qty:{" "}
                         {item.quantity})
@@ -588,6 +589,8 @@ const togglePhoneNumber = async () => {
               </div>
             ))}
           </div>
+
+          {/* Modal Actions */}
           <div className="modal-action">
             <button
               className="btn btn-error text-white"
