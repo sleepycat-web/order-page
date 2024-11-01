@@ -82,6 +82,14 @@ const Cart: React.FC<CartProps> = ({
       setPromoError("");
     }
   };
+const calculatePotentialDeliveryCharge = (baseAmount: number) => {
+  // If there's a promo, calculate 5% of discounted amount
+  const discountedAmount = appliedPromo
+    ? baseAmount * (1 - appliedPromo.percentage / 100)
+    : baseAmount;
+
+  return discountedAmount * 0.05;
+};
 
   const handleUpdateQuantity = (index: number, newQuantity: number) => {
     onUpdateQuantity(index, newQuantity);
@@ -103,26 +111,31 @@ const Cart: React.FC<CartProps> = ({
       onToggle(); // This will open the cart if it's closed
     }
   };
+  const calculateTotal = () => {
+    // Calculate subtotal from items
+    const newSubtotal = items.reduce(
+      (total, item) => total + item.totalPrice,
+      0
+    );
+    setSubtotal(newSubtotal);
 
-const calculateTotal = () => {
-  // Calculate subtotal from items
-  const newSubtotal = items.reduce((total, item) => total + item.totalPrice, 0);
-  setSubtotal(newSubtotal);
+    // Calculate discounted subtotal if promo is applied
+    const discountedSubtotal = appliedPromo
+      ? newSubtotal * (1 - appliedPromo.percentage / 100)
+      : newSubtotal;
 
-  // Calculate delivery charge
-  const newTableDeliveryCharge = tableDelivery ? newSubtotal * 0.05 : 0;
-  setTableDeliveryCharge(newTableDeliveryCharge);
+    // Calculate delivery charge only if table delivery is selected
+    const newTableDeliveryCharge = tableDelivery
+      ? calculatePotentialDeliveryCharge(newSubtotal)
+      : 0;
+    setTableDeliveryCharge(newTableDeliveryCharge);
 
-  // Calculate total before discount (subtotal + delivery charge)
-  const totalBeforeDiscount = newSubtotal + newTableDeliveryCharge;
+    // Final total is discounted subtotal plus delivery charge
+    const finalTotal = discountedSubtotal + newTableDeliveryCharge;
 
-  // Apply discount to the total amount if there's a promo
-  const finalTotal = appliedPromo
-    ? totalBeforeDiscount * (1 - appliedPromo.percentage / 100)
-    : totalBeforeDiscount;
+    return finalTotal;
+  };
 
-  return finalTotal;
-};
 
  useEffect(() => {
    const newTotal = calculateTotal();
@@ -289,7 +302,9 @@ const calculateTotal = () => {
                         <label className="flex items-center justify-between w-full max-w-xs">
                           <span className="label-text">
                             Select Table Delivery (5% charge) - ₹
-                            {deliveryCharge.toFixed(2)}
+                            {calculatePotentialDeliveryCharge(subtotal).toFixed(
+                              2
+                            )}
                           </span>
                           <input
                             type="checkbox"

@@ -49,6 +49,7 @@ export interface CompactInfoProps {
 
   total: number;
   orders: {
+    items: any;
     _id: string;
     order: string;
     status: string;

@@ -103,9 +103,9 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => (
         )}
       </div>
       {item.specialRequests && (
-        <div className=" flex items-start">
+        <div className=" flex items-start pt-0.5">
           <p className="font-bold text-sm mr-1 ">Special Requests:</p>
-          <span className="bg-blue-500 text-white text-sm px-1 rounded">
+          <span className="bg-blue-500 text-white text-sm px-2 py-0.5 rounded">
             {item.specialRequests}
           </span>
         </div>

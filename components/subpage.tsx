@@ -251,7 +251,7 @@ export default function OrderPage() {
        }
      };
      fetchOrders();
-     const intervalId = setInterval(fetchOrders, 5000);
+     const intervalId = setInterval(fetchOrders, 3000);
      return () => clearInterval(intervalId);
    }, [slug]);
 
@@ -578,6 +578,7 @@ const calculateTotalSales = (orders: Order[]) => {
                      status: order.status,
                      price: order.total,
                      deliveryCharge: order.tableDeliveryCharge || 0,
+                     items: order.items,
                    }))}
                    onDispatchAll={handleDispatchAll}
                    onFulfillAll={handleFulfillAll}
@@ -639,6 +640,7 @@ const calculateTotalSales = (orders: Order[]) => {
                      status: order.status,
                      price: order.total,
                      deliveryCharge: order.tableDeliveryCharge || 0,
+                     items: order.items,
                    }))}
                    onDispatchAll={handleDispatchAll}
                    onFulfillAll={handleFulfillAll}
