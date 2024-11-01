@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { MongoClient, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
+import { connectToDatabase } from "../../lib/mongodb";
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,13 +16,9 @@ export default async function handler(
     return res.status(400).json({ message: "Invalid slug" });
   }
 
-  const dbName = "ChaiMine";
-
   try {
-    const client = new MongoClient(process.env.MONGODB_URI as string);
-    await client.connect();
+    const { db } = await connectToDatabase();
 
-    const db = client.db(dbName);
     const collection = db.collection(
       slug === "sevoke" ? "OrderSevoke" : "OrderDagapur"
     );
@@ -38,8 +35,6 @@ export default async function handler(
     );
 
     await Promise.all(updatePromises);
-
-    await client.close();
 
     res.status(200).json({
       message: "Orders processed successfully",

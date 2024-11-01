@@ -1,12 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { MongoClient } from "mongodb";
-
-const uri = process.env.MONGODB_URI as string;
-const dbName = "ChaiMine";
-
-if (!uri) {
-  throw new Error("Please define the MONGODB_URI environment variable");
-}
+import { connectToDatabase } from "../../lib/mongodb";
+   
+ 
 
 export default async function handler(
   req: NextApiRequest,
@@ -26,12 +21,9 @@ export default async function handler(
     return res.status(400).json({ error: "Invalid location slug" });
   }
 
-  const client = new MongoClient(uri);
-
+  
   try {
-    await client.connect();
-    const db = client.db(dbName);
-
+     const { db } = await connectToDatabase();
     const collection = slug === "sevoke" ? "OrderSevoke" : "OrderDagapur";
 
     // Get the current date in IST
@@ -63,7 +55,5 @@ export default async function handler(
   } catch (error) {
     console.error("Database error:", error);
     res.status(500).json({ error: "Failed to fetch orders" });
-  } finally {
-    await client.close();
-  }
+  } 
 }

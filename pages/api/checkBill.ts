@@ -1,14 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { MongoClient, Document } from "mongodb";
-
-const uri = process.env.MONGODB_URI;
-const dbName = "ChaiMine";
-
-if (!uri) {
-  throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env.local"
-  );
-}
+import { Document } from "mongodb";
+import { connectToDatabase } from "@/lib/mongodb";
+ 
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,11 +13,10 @@ export default async function handler(
       return res.status(400).json({ error: "Phone number is required" });
     }
 
-    const client = new MongoClient(uri!);
+   
 
     try {
-      await client.connect();
-      const db = client.db(dbName);
+        const { db } = await connectToDatabase();
       const collections = ["OrderSevoke", "OrderDagpaur"];
       let allOrders: Document[] = [];
 
@@ -63,9 +55,7 @@ export default async function handler(
     } catch (error) {
       console.error("Database error:", error);
       return res.status(500).json({ error: "Error connecting to database" });
-    } finally {
-      await client.close();
-    }
+    }  
   } else {
     res.setHeader("Allow", ["POST"]);
     res.status(405).end(`Method ${req.method} Not Allowed`);
