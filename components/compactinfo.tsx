@@ -1,7 +1,9 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
-import { CompactInfoProps } from "@/scripts/interface";
+import { OrderItem,  CompactInfoProps } from "@/scripts/interface";
+import axios from "axios";
+
 
 const CompactInfo: React.FC<CompactInfoProps> = ({
   customerName,
@@ -60,6 +62,78 @@ const [showPhoneNumber, setShowPhoneNumber] = useState(false);
     };
  const handleExtraPaymentTypeSelect = (type: "cash" | "upi") => {
    setExtraPaymentType(type);
+  };
+   const [selectedItems, setSelectedItems] = useState<
+     Array<{ orderId: string; itemIndex: number }>
+   >([]);
+   const [isRejecting, setIsRejecting] = useState(false);
+
+   const toggleItemSelection = (orderId: string, itemIndex: number) => {
+     setSelectedItems((prev) => {
+       const existingIndex = prev.findIndex(
+         (item) => item.orderId === orderId && item.itemIndex === itemIndex
+       );
+
+       if (existingIndex >= 0) {
+         return prev.filter((_, index) => index !== existingIndex);
+       } else {
+         return [...prev, { orderId, itemIndex }];
+       }
+     });
+   };
+
+   // New function to handle partial rejection
+   const handlePartialReject = async () => {
+     if (isRejecting || selectedItems.length === 0) return;
+
+     try {
+       setIsRejecting(true);
+
+       // Group selected items by order ID
+       const itemsByOrder = selectedItems.reduce(
+         (acc, { orderId, itemIndex }) => {
+           if (!acc[orderId]) {
+             acc[orderId] = [];
+           }
+           acc[orderId].push(itemIndex);
+           return acc;
+         },
+         {} as Record<string, number[]>
+       );
+
+       // Process each order's rejections
+       await Promise.all(
+         Object.entries(itemsByOrder).map(([orderId, itemsToRemove]) =>
+           axios.post("/api/updateOrderStatus", {
+             orderId,
+             type: "/remove",
+             itemsToRemove,
+           })
+         )
+       );
+
+       setIsRejectModalOpen(false);
+       setSelectedItems([]);
+
+       // Refresh the orders list or update the UI as needed
+       // You might want to add a prop for this: onOrdersUpdate()
+     } catch (error) {
+       console.error("Error rejecting items:", error);
+     } finally {
+       setIsRejecting(false);
+     }
+   };
+const renderSelectedOptions = (item: any) => {
+  if (!item.selectedOptions) return null;
+
+  return Object.entries(item.selectedOptions).map(
+    ([category, options]: [string, any]) => (
+      <div key={category} className="ml-6 text-sm text-gray-400">
+        <span className="font-medium"></span>{" "}
+        {Array.isArray(options) ? options.join(", ") : options}
+      </div>
+    )
+  );
  };
 const togglePhoneNumber = async () => {
   setShowPhoneNumber(true);
@@ -468,25 +542,77 @@ const togglePhoneNumber = async () => {
         checked={isRejectModalOpen}
         onChange={() => setIsRejectModalOpen(!isRejectModalOpen)}
       />
-      <div className="modal ">
+      <div className="modal">
         <div className="modal-box bg-neutral-800">
-          <h3 className="font-bold text-lg">Confirm Rejection</h3>
-          <p className="py-4">
-            Are you sure you want to reject all orders for this customer?
-          </p>
+          <h3 className="font-bold text-lg">Select Items to Reject</h3>
+          <div className="py-4">
+            {orders.map((order) => (
+              <div key={order._id} className="mb-4">
+                {order.items.map((item: OrderItem, index: number) => (
+                  <div
+                    key={`${order._id}-${index}`}
+                    className=" border-b border-gray-700 pb-2 hover:bg-neutral-700 cursor-pointer  flex items-center gap-2 p-3"
+                    onClick={() => toggleItemSelection(order._id, index)}
+                  >
+                    {/* Checkbox Wrapper */}
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.some(
+                        (sel) =>
+                          sel.orderId === order._id && sel.itemIndex === index
+                      )}
+                      onChange={(e) => {
+                        e.stopPropagation(); // Stop checkbox click from bubbling up
+                        toggleItemSelection(order._id, index);
+                      }}
+                      className="checkbox"
+                      
+                    />
+
+                    {/* Item Details */}
+                    <div className="flex-1">
+                      <span className="font-medium">
+                        {item.item.name} - ₹{item.totalPrice} (Qty:{" "}
+                        {item.quantity})
+                      </span>
+                      {renderSelectedOptions(item)}
+                      {item.specialRequests && (
+                        <div className="ml-6 text-sm text-gray-400">
+                          <span className="font-medium">Special Requests:</span>{" "}
+                          {item.specialRequests}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
           <div className="modal-action">
             <button
               className="btn btn-error text-white"
-              onClick={confirmReject}
+              onClick={handlePartialReject}
+              disabled={selectedItems.length === 0 || isRejecting}
             >
-              Confirm
+              {isRejecting ? (
+                <span className="loading loading-spinner loading-xs"></span>
+              ) : (
+                "Reject"
+              )}
             </button>
-            <button className="btn" onClick={() => setIsRejectModalOpen(false)}>
+            <button
+              className="btn"
+              onClick={() => {
+                setIsRejectModalOpen(false);
+                setSelectedItems([]);
+              }}
+            >
               Cancel
             </button>
           </div>
         </div>
       </div>
+
       <input
         type="checkbox"
         id="fulfill-modal"

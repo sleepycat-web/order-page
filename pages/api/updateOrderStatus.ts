@@ -11,6 +11,8 @@ interface UpdateFields {
   fulfilledAt?: Date;
   rejectedAt?: Date;
   total?: number;
+  items?: any[];
+  tableDeliveryCharge?: number;
 }
 
 interface Fast2SMSResponse {
@@ -63,7 +65,10 @@ async function sendSMS(order: any) {
   }
 }
 
-async function sendRejectionEmail(orders: any[]): Promise<void> {
+async function sendRejectionEmail(
+  orders: any[],
+  isPartial: boolean = false
+): Promise<void> {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -72,9 +77,8 @@ async function sendRejectionEmail(orders: any[]): Promise<void> {
     },
   });
 
-  // Function to generate items list for a single order
-  const generateOrderDetails = (orderDetails: any) => {
-    const itemsList = orderDetails.items
+  const generateOrderDetails = (orderDetails: any, rejectedItems?: any[]) => {
+    const itemsList = (rejectedItems || orderDetails.items)
       .map((orderItem: any) => {
         const itemName = orderItem.item?.name || "Item";
         const options = Object.entries(orderItem.selectedOptions || {})
@@ -104,41 +108,55 @@ Order Details:
 - Location: ${orderDetails.selectedLocation}
 ${orderDetails.selectedCabin ? `- Cabin: ${orderDetails.selectedCabin}` : ""}
 
-Items:
+${isPartial ? "Rejected Items:" : "Items:"}
 ${itemsList}
 
 ${
   orderDetails.tableDeliveryCharge
     ? `Table Delivery Charge: ₹${orderDetails.tableDeliveryCharge}`
-    : ""}
+    : ""
+}
 ${
   orderDetails.appliedPromo
     ? `Applied Promo: ${
         typeof orderDetails.appliedPromo === "object"
           ? `${orderDetails.appliedPromo.code} (${orderDetails.appliedPromo.percentage}% off)`
-          : orderDetails.appliedPromo}`: "" } `; };
+          : orderDetails.appliedPromo
+      }`
+    : ""
+}`;
+  };
 
   const emailContent = `
-Orders Rejected! (${orders.length} ${orders.length === 1 ? "order" : "orders"})
+${isPartial ? "Orders Partially Rejected!" : "Orders Rejected!"} (${
+    orders.length
+  } ${orders.length === 1 ? "order" : "orders"})
 Rejection Time: ${new Date().toLocaleString("en-IN", {
     dateStyle: "medium",
     timeStyle: "medium",
   })}${orders
-  .map(
-    (order, index) => `
+    .map(
+      (order, index) => `
 Order #${index + 1}:
-${generateOrderDetails(order)}
+${generateOrderDetails(order, order.rejectedItems)}
 ${index < orders.length - 1 ? "-------------------" : ""}`
-  )
-  .join("\n")}
+    )
+    .join("\n")}
 
-Total Orders Rejected: ${orders.length}
- `.trim();
+Total ${isPartial ? "Partial " : ""}Orders Rejected: ${orders.length}
+${
+  isPartial
+    ? "\nNote: The remaining items in these orders will be processed as usual."
+    : ""
+}
+`.trim();
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.NOTIFICATION_EMAIL,
-    subject: `Order${orders.length > 1 ? "s" : ""} Rejected at Chai Mine`,
+    subject: `Order${orders.length > 1 ? "s" : ""} ${
+      isPartial ? "Partially " : ""
+    }Rejected at Chai Mine`,
     text: emailContent,
   };
 
@@ -161,29 +179,20 @@ export default async function handler(
   try {
     const { db } = await connectToDatabase();
 
-    const { orderId, orderIds, type } = req.body;
+    const { orderId, orderIds, type, itemsToRemove } = req.body;
 
     if ((!orderId && !orderIds) || !type) {
       return res.status(400).json({ message: "Missing required parameters" });
     }
 
     let collection;
-    let orderIdsToUpdate: ObjectId[];
+    let orderIdObj: ObjectId;
 
     if (orderId) {
-      const orderIdObj = new ObjectId(orderId);
+      orderIdObj = new ObjectId(orderId);
       const sevokeOrder = await db
         .collection("OrderSevoke")
         .findOne({ _id: orderIdObj });
-      collection = sevokeOrder
-        ? db.collection("OrderSevoke")
-        : db.collection("OrderDagapur");
-      orderIdsToUpdate = [orderIdObj];
-    } else if (orderIds) {
-      orderIdsToUpdate = orderIds.map((id: string) => new ObjectId(id));
-      const sevokeOrder = await db
-        .collection("OrderSevoke")
-        .findOne({ _id: orderIdsToUpdate[0] });
       collection = sevokeOrder
         ? db.collection("OrderSevoke")
         : db.collection("OrderDagapur");
@@ -194,64 +203,156 @@ export default async function handler(
     const updateFields: UpdateFields = {};
     const now = new Date();
 
-    if (type === "/dispatch") {
-      updateFields.order = "dispatched";
-      updateFields.dispatchedAt = now;
-    } else if (type === "/payment") {
-      updateFields.status = "fulfilled";
-      updateFields.fulfilledAt = now;
-    } else if (type === "/reject") {
-      updateFields.order = "rejected";
-      updateFields.status = "rejected";
-      updateFields.rejectedAt = now;
-      updateFields.total = 0;
+   if (type === "/remove" && itemsToRemove) {
+     // Fetch the original order
+     const originalOrder = await collection.findOne({ _id: orderIdObj });
+     if (!originalOrder) {
+       return res.status(404).json({ message: "Order not found" });
+     }
 
-      // Fetch all rejected orders
-      const rejectedOrders = await collection
-        .find({ _id: { $in: orderIdsToUpdate } })
-        .toArray();
+     // If order has only one item, or all items are being removed, reject the entire order
+     if (
+       originalOrder.items.length === 1 ||
+       itemsToRemove.length === originalOrder.items.length
+     ) {
+       updateFields.order = "rejected";
+       updateFields.status = "rejected";
+       updateFields.rejectedAt = now;
+       updateFields.total = 0;
+       updateFields.tableDeliveryCharge = 0;
 
-      if (rejectedOrders.length > 0) {
-        try {
-          // Send a single email for all rejected orders
-          await sendRejectionEmail(rejectedOrders);
-        } catch (error) {
-          console.error("Failed to send rejection email:", error);
-          // Continue with the update even if email fails
-        }
-      }
-    } else {
-      return res.status(400).json({ message: "Invalid type parameter" });
-    }
+       const result = await collection.updateOne(
+         { _id: orderIdObj },
+         { $set: updateFields }
+       );
 
-    const result = await collection.updateMany(
-      { _id: { $in: orderIdsToUpdate } },
+       // Send rejection email for the fully rejected order
+       try {
+         await sendRejectionEmail([originalOrder], false);
+       } catch (error) {
+         console.error("Failed to send rejection email:", error);
+       }
+
+       return res.status(200).json({
+         message: "Order rejected successfully",
+         updatedFields: updateFields,
+         modifiedCount: result.modifiedCount,
+       });
+     }
+
+     // For multiple items, handle partial removal
+     const remainingItems = originalOrder.items.filter(
+       (item: any, index: number) => !itemsToRemove.includes(index)
+     );
+
+     const rejectedItems = originalOrder.items.filter(
+       (item: any, index: number) => itemsToRemove.includes(index)
+     );
+
+     // Calculate subtotal before any charges or discounts
+     let subtotal = remainingItems.reduce(
+       (sum: number, item: any) => sum + item.totalPrice,
+       0
+     );
+
+     let newTotal = subtotal;
+
+     // Handle promo adjustment if exists
+     if (originalOrder.appliedPromo) {
+       const discount =
+         (newTotal * originalOrder.appliedPromo.percentage) / 100;
+       newTotal = Math.max(0, newTotal - discount);
+     }
+
+     // Calculate table delivery charge (5% of total after promo)
+     let newTableDeliveryCharge = 0;
+     if (originalOrder.tableDeliveryCharge) {
+       newTableDeliveryCharge = (newTotal * 0.05);
+     }
+
+     // Add table delivery charge to final total
+     newTotal += newTableDeliveryCharge;
+
+     // Create rejected order entry for removed items
+     const rejectedOrder = {
+       ...originalOrder,
+       _id: new ObjectId(),
+       items: rejectedItems,
+       total: 0,
+       tableDeliveryCharge: 0,
+       order: "rejected",
+       status: "rejected",
+       rejectedAt: now,
+       dispatchedAt: undefined,
+       fulfilledAt: undefined,
+     };
+
+     await collection.insertOne(rejectedOrder);
+
+     // Send partial rejection email
+     try {
+       await sendRejectionEmail([{ ...originalOrder, rejectedItems }], true);
+     } catch (error) {
+       console.error("Failed to send partial rejection email:", error);
+     }
+
+     // Update original order
+     updateFields.items = remainingItems;
+     updateFields.total = newTotal;
+     updateFields.tableDeliveryCharge = newTableDeliveryCharge;
+   } else if (type === "/dispatch") {
+     updateFields.order = "dispatched";
+     updateFields.dispatchedAt = now;
+   } else if (type === "/payment") {
+     updateFields.status = "fulfilled";
+     updateFields.fulfilledAt = now;
+   } else if (type === "/reject") {
+     updateFields.order = "rejected";
+     updateFields.status = "rejected";
+     updateFields.rejectedAt = now;
+     updateFields.total = 0;
+     updateFields.tableDeliveryCharge = 0;
+
+     const rejectedOrders = await collection
+       .find({ _id: orderIdObj })
+       .toArray();
+
+     if (rejectedOrders.length > 0) {
+       try {
+         await sendRejectionEmail(rejectedOrders, false);
+       } catch (error) {
+         console.error("Failed to send rejection email:", error);
+       }
+     }
+   } else {
+     return res.status(400).json({ message: "Invalid type parameter" });
+   }
+
+    const result = await collection.updateOne(
+      { _id: orderIdObj },
       { $set: updateFields }
     );
 
     if (result.modifiedCount === 0) {
       return res
         .status(404)
-        .json({ message: "Order(s) not found or status not updated" });
+        .json({ message: "Order not found or status not updated" });
     }
 
-    // Original SMS logic for payment remains unchanged
     if (type === "/payment") {
-      for (const orderId of orderIdsToUpdate) {
-        const order = await collection.findOne({ _id: orderId });
-        if (order) {
-          setTimeout(() => sendSMS(order), 600000); // 600,000 milliseconds = 10 minutes
-        }
+      const order = await collection.findOne({ _id: orderIdObj });
+      if (order) {
+        setTimeout(() => sendSMS(order), 600000);
       }
     }
 
     res.status(200).json({
-      message: "Order status updated successfully",
+      message: "Order updated successfully",
       updatedFields: updateFields,
       modifiedCount: result.modifiedCount,
     });
   } catch (error) {
-    console.error("Error updating order status:", error);
-    res.status(500).json({ message: "Error updating order status" });
+    console.error("Error updating order:", error);
+    res.status(500).json({ message: "Error updating order" });
   }
 }
