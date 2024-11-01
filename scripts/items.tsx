@@ -480,6 +480,7 @@ export const menuItems: MenuItem[] = [
           { label: "Veg", price: "100.00" },
 
           { label: "Chicken ", price: "130.00" },
+          { label: "Chicken & Corainder ", price: "130.00" },
         ],
       },
 
