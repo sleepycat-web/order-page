@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Order } from "@/scripts/interface";
 
 interface VacantCabinDropdownProps {
@@ -292,42 +292,42 @@ const hasUndispatchedOrders = (cabin: string): boolean => {
     };
   };
 
-  const updateCabinStatuses = () => {
-    const newStatuses: { [key: string]: CabinStatus } = {};
-    const cabinOptions = getCabinOptions();
+ const updateCabinStatuses = useCallback(() => {
+   const newStatuses: { [key: string]: CabinStatus } = {};
+   const cabinOptions = getCabinOptions();
 
-    cabinOptions.forEach((cabin) => {
-      const oldestOrderTime = getOldestOrderTime(cabin);
-      newStatuses[cabin] = getCabinStatus(cabin, oldestOrderTime);
-    });
+   cabinOptions.forEach((cabin) => {
+     const oldestOrderTime = getOldestOrderTime(cabin);
+     newStatuses[cabin] = getCabinStatus(cabin, oldestOrderTime);
+   });
 
-    calculateRanks(newStatuses);
-    setCabinStatuses(newStatuses);
+   calculateRanks(newStatuses);
+   setCabinStatuses(newStatuses);
+ }, [getCabinStatus, getOldestOrderTime]);
+
+useEffect(() => {
+  const handleClick = (event: MouseEvent) => {
+    if (isOpen) {
+      setIsOpen(false);
+    }
   };
 
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      if (isOpen) {
-        setIsOpen(false);
-      }
-    };
+  document.addEventListener("click", handleClick);
 
-    document.addEventListener("click", handleClick);
-
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-      updateCabinStatuses();
-    }, 1000);
-
-    return () => {
-      document.removeEventListener("click", handleClick);
-      clearInterval(timer);
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentTime(new Date());
     updateCabinStatuses();
-  }, [orders, slug]);
+  }, 1000);
+
+  return () => {
+    document.removeEventListener("click", handleClick);
+    clearInterval(timer);
+  };
+}, [isOpen, updateCabinStatuses]);
+
+useEffect(() => {
+  updateCabinStatuses();
+}, [orders, slug, updateCabinStatuses]);
 
   const toggleDropdown = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -343,7 +343,7 @@ const hasUndispatchedOrders = (cabin: string): boolean => {
         {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
       </button>
       {isOpen && (
-        <div className="absolute z-10 bg-neutral-800 text-white rounded-lg p-4 shadow-lg max-h-96 overflow-y-auto mt-2 w-full max-w-3xl">
+        <div className="absolute z-10 bg-neutral-800 text-white rounded-lg p-4 shadow-lg max-h-96 overflow-y-auto mt-2 w-full max-w-4xl">
           <div className="mb-4">
             <h3 className="font-bold text-lg">Cabin Status</h3>
           </div>
@@ -362,14 +362,18 @@ const hasUndispatchedOrders = (cabin: string): boolean => {
                     {status.status}
                   </span>
                   {status.isVacant && status.lastFulfilledTime && (
-                    <span className="px-2 py-1 rounded text-sm font-semibold bg-orange-500">
+                    <span className="px-2 py-1 rounded text-sm font-semibold bg-yellow-500">
                       {formatElapsedTime(status.lastFulfilledTime)}
                     </span>
                   )}
+
                   {!status.isVacant && (
                     <>
                       <span className="px-2 py-1 rounded text-sm font-semibold bg-purple-500">
                         ₹{status.totalOrders}
+                      </span>
+                      <span className="px-2 py-1 rounded text-sm font-semibold bg-orange-500">
+                        {formatElapsedTime(getOldestOrderTime(cabin)!.toISOString())}
                       </span>
                       {status.rank && (
                         <span className="px-2 py-1 rounded text-sm font-semibold bg-blue-500">
@@ -377,7 +381,7 @@ const hasUndispatchedOrders = (cabin: string): boolean => {
                         </span>
                       )}
                       {status.hasUndispatchedOrders && (
-                        <span className="px-2 py-1 rounded text-sm font-semibold bg-cyan-500">
+                        <span className="px-2 py-1 rounded text-sm font-semibold bg-teal-500">
                           R
                         </span>
                       )}

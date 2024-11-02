@@ -75,30 +75,30 @@ export default function OrderPage() {
     }
     return [];
   };
- const checkAllCabinsOccupied = (
-   orders: Order[],
-   payLaterOrders: Order[],
-   location: string
- ) => {
-   const cabinOptions = getCabinOptions(location);
-   const occupiedCabins = new Set(
-     orders
-       .filter(
-         (order) =>
-           order.order !== "fulfilled" &&
-           order.status !== "fulfilled" &&
-           order.order !== "rejected" &&
-           order.status !== "rejected"
-       )
-       .map((order) => order.selectedCabin)
-   );
-    // Remove pay later orders from occupied cabins
-   payLaterOrders.forEach((order) => {
-     occupiedCabins.delete(order.selectedCabin);
-   });
+const checkAllCabinsOccupied = useCallback(
+  (orders: Order[], payLaterOrders: Order[], location: string) => {
+    const cabinOptions = getCabinOptions(location);
+    const occupiedCabins = new Set(
+      orders
+        .filter(
+          (order) =>
+            order.order !== "fulfilled" &&
+            order.status !== "fulfilled" &&
+            order.order !== "rejected" &&
+            order.status !== "rejected"
+        )
+        .map((order) => order.selectedCabin)
+    );
 
-   return cabinOptions.every((cabin) => occupiedCabins.has(cabin));
- };
+    // Remove pay later orders from occupied cabins
+    payLaterOrders.forEach((order) => {
+      occupiedCabins.delete(order.selectedCabin);
+    });
+
+    return cabinOptions.every((cabin) => occupiedCabins.has(cabin));
+  },
+  [] // No dependencies needed as getCabinOptions is stable
+);
 
    const sendHousefullEmail = async (location: string) => {
       const now = Date.now();
@@ -213,47 +213,47 @@ export default function OrderPage() {
     return {};
   };
 
-   useEffect(() => {
-     if (!slug) return;
-     const fetchOrders = async () => {
-       try {
-         const response = await fetch(`/api/getOrders?slug=${slug}`);
-         if (!response.ok) {
-           throw new Error("Failed to fetch orders");
-         }
-         const data = await response.json();
+  useEffect(() => {
+    if (!slug) return;
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch(`/api/getOrders?slug=${slug}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch orders");
+        }
+        const data = await response.json();
 
-         const currentOrders = Array.isArray(data.currentOrders)
-           ? data.currentOrders
-           : [];
-         setOrders(currentOrders);
-         setPayLaterOrders(
-           Array.isArray(data.payLaterOrders) ? data.payLaterOrders : []
-         );
+        const currentOrders = Array.isArray(data.currentOrders)
+          ? data.currentOrders
+          : [];
+        setOrders(currentOrders);
+        setPayLaterOrders(
+          Array.isArray(data.payLaterOrders) ? data.payLaterOrders : []
+        );
 
-         const newAllCabinsOccupied = checkAllCabinsOccupied(
-           currentOrders,
-           data.payLaterOrders || [], // Add this line
-           slug
-         );
-         setAllCabinsOccupied(newAllCabinsOccupied);
+        const newAllCabinsOccupied = checkAllCabinsOccupied(
+          currentOrders,
+          data.payLaterOrders || [],
+          slug
+        );
+        setAllCabinsOccupied(newAllCabinsOccupied);
 
-         if (newAllCabinsOccupied) {
-           await sendHousefullEmail(slug);
-         }
+        if (newAllCabinsOccupied) {
+          await sendHousefullEmail(slug);
+        }
 
-         setLoading(false);
-         setNetworkError(false);
-       } catch (err) {
-         console.error("Error fetching orders:", err);
-         setNetworkError(true);
-         setLoading(false);
-       }
-     };
-     fetchOrders();
-     const intervalId = setInterval(fetchOrders, 3000);
-     return () => clearInterval(intervalId);
-   }, [slug]);
+        setLoading(false);
+        setNetworkError(false);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        setNetworkError(true);
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+    const intervalId = setInterval(fetchOrders, 3000);
+    return () => clearInterval(intervalId);
+  }, [slug, checkAllCabinsOccupied]); 
 
   
   useEffect(() => {
