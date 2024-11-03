@@ -40,7 +40,7 @@ export default async function handler(
       let extraUpiPayments = 0; // For tracking ignored UPI payments
 
       expenses.forEach((expense) => {
-        if (expense.category === "Extra Cash Payment") {
+        if (expense.category === "Extra Cash Payment" || expense.category === "Opening Cash") {
           extraCashPayments += expense.amount;
         } else if (expense.category === "Extra UPI Payment") {
           // Ignore UPI payments for expense calculation

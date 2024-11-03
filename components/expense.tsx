@@ -1,5 +1,5 @@
 import { is } from "date-fns/locale";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 
 interface ExpenseProps {
   slug: string;
@@ -61,11 +61,12 @@ const toggleAdd = () => {
   const categories = [
     "Supplier",
     "Drawings",
+    "Opening Cash",
     "Suspense",
     "Salary",
     "Rent",
     "Electricity",
-     "Others",
+    "Others",
   ];
  const paycategories = [
    "Extra UPI Payment",
@@ -108,7 +109,7 @@ const toggleAdd = () => {
     }
   };
 
-  const fetchDailyExpenses = async () => {
+  const fetchDailyExpenses = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/expenseHandler?slug=${slug}`);
@@ -122,9 +123,9 @@ const toggleAdd = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [slug]);
 
-  const fetchAllTimeData = async () => {
+  const fetchAllTimeData = useCallback(async () => {
     try {
       const response = await fetch(`/api/allTimeData?slug=${slug}`);
       if (!response.ok) {
@@ -135,32 +136,32 @@ const toggleAdd = () => {
     } catch (error) {
       console.error("Error fetching all-time data:", error);
     }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 60000);
-
-    fetchDailyExpenses();
-    fetchAllTimeData();
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      clearInterval(timer);
-    };
   }, [slug]);
+
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsDropdownOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+
+      const timer = setInterval(() => {
+        setCurrentDateTime(new Date());
+      }, 60000);
+
+      fetchDailyExpenses();
+      fetchAllTimeData();
+
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        clearInterval(timer);
+      };
+    }, [fetchDailyExpenses, fetchAllTimeData]);
 
   const handleCategorySelect = (cat: string) => {
     setCategory(cat);
@@ -242,7 +243,8 @@ const formatDateNonRound = (date: Date): string => {
         (expense) =>
           expense.category !== "UPI Payment" &&
           expense.category !== "Extra Cash Payment" &&
-          expense.category !== "Extra UPI Payment"
+          expense.category !== "Extra UPI Payment" &&
+          expense.category !== "Opening Cash" 
       )
       .reduce((total, expense) => total + expense.amount, 0);
   };
@@ -259,22 +261,24 @@ const calculateCashBalance = () => {
   return regularCashBalance  ;
   };
   
-const calculateOnlineBalance = () => {
-  const upiPayments = dailyExpenses
-    .filter((expense) => expense.category === "UPI Payment")
-    .reduce((total, expense) => total + expense.amount, 0);
-  const extraUpiPayments = dailyExpenses
-    .filter((expense) => expense.category === "Extra UPI Payment")
-    .reduce((total, expense) => total + expense.amount, 0);
-  return upiPayments + extraUpiPayments;
-};
+ const calculateOnlineBalance = useCallback(() => {
+   const upiPayments = dailyExpenses
+     .filter((expense) => expense.category === "UPI Payment")
+     .reduce((total, expense) => total + expense.amount, 0);
+   const extraUpiPayments = dailyExpenses
+     .filter((expense) => expense.category === "Extra UPI Payment")
+     .reduce((total, expense) => total + expense.amount, 0);
+   return upiPayments + extraUpiPayments;
+ }, [dailyExpenses]);
+
   
 const toggleCashBalance = () => {
   setIsCashBalanceExpanded(!isCashBalanceExpanded);
 };
   useEffect(() => {
     setOnlineBalance(calculateOnlineBalance());
-  }, [dailyExpenses]);
+  }, [calculateOnlineBalance]);
+
 
   const toggleUPIPayments = () => {
     setIsUPIPaymentsExpanded(!isUPIPaymentsExpanded);
@@ -537,7 +541,8 @@ const toggleCashBalance = () => {
                     (expense) =>
                       expense.category !== "UPI Payment" &&
                       expense.category !== "Extra Cash Payment" &&
-                      expense.category !== "Extra UPI Payment"
+                      expense.category !== "Extra UPI Payment" &&
+                      expense.category !== "Opening Cash"
                   )
                   .map((expense) => (
                     <li
@@ -576,13 +581,17 @@ const toggleCashBalance = () => {
             <h3 className="font-semibold mb-2">Cash Balance Details</h3>
             <ul className="space-y-2">
               {dailyExpenses
-                .filter((expense) => expense.category === "Extra Cash Payment")
+                .filter(
+                  (expense) =>
+                    expense.category === "Extra Cash Payment" ||
+                    expense.category === "Opening Cash"
+                )
                 .map((expense) => (
                   <li
                     key={expense._id}
                     className="flex justify-between items-center"
                   >
-                    <span className="font-medium">Extra Cash Payment</span>
+                    <span className="font-medium">{expense.category}</span>
                     <span className="flex items-center">
                       <span className="text-sm text-gray-400 mr-2">
                         {expense.comment}

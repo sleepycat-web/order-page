@@ -247,88 +247,92 @@ const hasUndispatchedOrders = (cabin: string): boolean => {
       .padStart(2, "0")}`;
   };
 
-  const getCabinStatus = (
-    cabin: string,
-    oldestOrderTime: Date | null
-  ): CabinStatus => {
-    if (!oldestOrderTime) {
-      const lastFulfilledTime = getLastFulfilledTime(cabin);
-      return {
-        status: "Vacant",
-        bgColor: "bg-green-500",
-        isVacant: true,
-        ...(lastFulfilledTime ? { lastFulfilledTime } : {}),
-      };
-    }
+  const getCabinStatus = useCallback(
+    (cabin: string, oldestOrderTime: Date | null): CabinStatus => {
+      if (!oldestOrderTime) {
+        const lastFulfilledTime = getLastFulfilledTime(cabin);
+        return {
+          status: "Vacant",
+          bgColor: "bg-green-500",
+          isVacant: true,
+          ...(lastFulfilledTime ? { lastFulfilledTime } : {}),
+        };
+      }
 
-    const elapsedMinutes = Math.floor(
-      (currentTime.getTime() - oldestOrderTime.getTime()) / (1000 * 60)
-    );
-    const totalOrders = getCabinOrderTotal(cabin);
-    const minimumRequired = getMinimumOrderValue(elapsedMinutes);
-    const hasUndispatched = hasUndispatchedOrders(cabin);
+      const elapsedMinutes = Math.floor(
+        (currentTime.getTime() - oldestOrderTime.getTime()) / (1000 * 60)
+      );
+      const totalOrders = getCabinOrderTotal(cabin);
+      const minimumRequired = getMinimumOrderValue(elapsedMinutes);
+      const hasUndispatched = hasUndispatchedOrders(cabin);
 
-    if (
-      elapsedMinutes > TIME_THRESHOLD_MINUTES &&
-      totalOrders < minimumRequired
-    ) {
+      if (
+        elapsedMinutes > TIME_THRESHOLD_MINUTES &&
+        totalOrders < minimumRequired
+      ) {
+        return {
+          status: "Occupied (Critical)",
+          bgColor: "bg-red-500",
+          isVacant: false,
+          totalOrders,
+          minimumRequired,
+          hasUndispatchedOrders: hasUndispatched,
+        };
+      }
+
       return {
-        status: "Occupied (Critical)",
-        bgColor: "bg-red-500",
+        status: "Occupied",
+        bgColor: "bg-yellow-500",
         isVacant: false,
         totalOrders,
         minimumRequired,
         hasUndispatchedOrders: hasUndispatched,
       };
-    }
+    },
+    [currentTime] // Add currentTime as dependency
+  );
 
-    return {
-      status: "Occupied",
-      bgColor: "bg-yellow-500",
-      isVacant: false,
-      totalOrders,
-      minimumRequired,
-      hasUndispatchedOrders: hasUndispatched,
-    };
-  };
+  const updateCabinStatuses = useCallback(() => {
+    const newStatuses: { [key: string]: CabinStatus } = {};
+    const cabinOptions = getCabinOptions();
 
- const updateCabinStatuses = useCallback(() => {
-   const newStatuses: { [key: string]: CabinStatus } = {};
-   const cabinOptions = getCabinOptions();
+    cabinOptions.forEach((cabin) => {
+      const oldestOrderTime = getOldestOrderTime(cabin);
+      newStatuses[cabin] = getCabinStatus(cabin, oldestOrderTime);
+    });
 
-   cabinOptions.forEach((cabin) => {
-     const oldestOrderTime = getOldestOrderTime(cabin);
-     newStatuses[cabin] = getCabinStatus(cabin, oldestOrderTime);
-   });
+    calculateRanks(newStatuses);
+    setCabinStatuses(newStatuses);
+  }, [getCabinStatus, orders, slug]); // Add orders and slug as dependencies
 
-   calculateRanks(newStatuses);
-   setCabinStatuses(newStatuses);
- }, [getCabinStatus, getOldestOrderTime]);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
 
-useEffect(() => {
-  const handleClick = (event: MouseEvent) => {
-    if (isOpen) {
-      setIsOpen(false);
-    }
-  };
+    return () => clearInterval(timer);
+  }, []); // Separate timer for updating currentTime
 
-  document.addEventListener("click", handleClick);
-
-  const timer = setInterval(() => {
-    setCurrentTime(new Date());
+  // Separate effect for updating cabin statuses when time changes
+  useEffect(() => {
     updateCabinStatuses();
-  }, 1000);
+  }, [currentTime, updateCabinStatuses]);
 
-  return () => {
-    document.removeEventListener("click", handleClick);
-    clearInterval(timer);
-  };
-}, [isOpen, updateCabinStatuses]);
+  useEffect(() => {
+    const handleClick = (event: MouseEvent) => {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    };
 
-useEffect(() => {
-  updateCabinStatuses();
-}, [orders, slug, updateCabinStatuses]);
+    document.addEventListener("click", handleClick);
 
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, [isOpen]);
+
+ 
   const toggleDropdown = (event: React.MouseEvent) => {
     event.stopPropagation();
     setIsOpen(!isOpen);
