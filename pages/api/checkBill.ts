@@ -17,7 +17,7 @@ export default async function handler(
 
     try {
         const { db } = await connectToDatabase();
-      const collections = ["OrderSevoke", "OrderDagpaur"];
+      const collections = ["OrderSevoke", "OrderDagapur"];
       let allOrders: Document[] = [];
 
       for (const collectionName of collections) {
