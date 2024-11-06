@@ -61,7 +61,7 @@ const toggleAdd = () => {
   const categories = [
     "Supplier",
     "Drawings",
-    "Opening Cash",
+   
     "Suspense",
     "Salary",
     "Rent",
@@ -71,6 +71,7 @@ const toggleAdd = () => {
  const paycategories = [
    "Extra UPI Payment",
    "Extra Cash Payment",
+   "Opening Cash",
  ];
   const handleSubmit = async () => {
     if (isSubmitting) return;
