@@ -31,11 +31,9 @@ interface Order {
   appliedPromo: string | { code: string; percentage: number } | null;
 }
 
-interface BillSectionProps {
-  onClose: () => void;
-}
+ 
 
-const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
+const BillSection = ()=>  {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState("");
@@ -122,8 +120,7 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Check Bills</h2>
         
-        </div>
-{/* bill */}
+        </div> 
         <div className="flex flex-col lg:w-1/3 w-auto mb-4">
           <div className="flex">
             <input
