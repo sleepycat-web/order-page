@@ -123,7 +123,7 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
           <h2 className="text-2xl font-bold">Check Bills</h2>
         
         </div>
-
+{/* bill */}
         <div className="flex flex-col lg:w-1/3 w-auto mb-4">
           <div className="flex">
             <input
