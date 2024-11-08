@@ -9,7 +9,6 @@ import OrderTabs from "@/components/tabview"; // Adjust the import path as neede
 import OrderSearch from "@/components/searchbox"; // Adjust the import path as needed
 import { Order } from "@/scripts/interface";
 import Expense from "@/components/expense";
-import ChangeHandler from "@/components/changehandler";
 import CallStaff from "./callstaff";
 
 export default function OrderPage() {
@@ -48,7 +47,8 @@ export default function OrderPage() {
   }, []);
   const [payLaterExpanded, setPayLaterExpanded] = useState(false);
   const [allCabinsOccupied, setAllCabinsOccupied] = useState(false);
- 
+    const audioRef = useRef<HTMLAudioElement>(null);
+
 
   const getCabinOptions = (location: string) => {
     if (location === "dagapur") {
@@ -99,7 +99,11 @@ const checkAllCabinsOccupied = useCallback(
   },
   [] // No dependencies needed as getCabinOptions is stable
 );
-
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission();
+    }
+  }, []);
    const sendHousefullEmail = async (location: string) => {
       const now = Date.now();
       const lastSentTime = localStorage.getItem("lastHousefullEmailSent");
@@ -213,49 +217,72 @@ const checkAllCabinsOccupied = useCallback(
     return {};
   };
 
-  useEffect(() => {
-    if (!slug) return;
-    const fetchOrders = async () => {
-      try {
-        const response = await fetch(`/api/getOrders?slug=${slug}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch orders");
-        }
-        const data = await response.json();
-
-        const currentOrders = Array.isArray(data.currentOrders)
-          ? data.currentOrders
-          : [];
-        setOrders(currentOrders);
-        setPayLaterOrders(
-          Array.isArray(data.payLaterOrders) ? data.payLaterOrders : []
-        );
-
-        const newAllCabinsOccupied = checkAllCabinsOccupied(
-          currentOrders,
-          data.payLaterOrders || [],
-          slug
-        );
-        setAllCabinsOccupied(newAllCabinsOccupied);
-
-        if (newAllCabinsOccupied) {
-          await sendHousefullEmail(slug);
-        }
-
-        setLoading(false);
-        setNetworkError(false);
-      } catch (err) {
-        console.error("Error fetching orders:", err);
-        setNetworkError(true);
-        setLoading(false);
+useEffect(() => {
+  if (!slug) return;
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(`/api/getOrders?slug=${slug}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch orders");
       }
-    };
-    fetchOrders();
-    const intervalId = setInterval(fetchOrders, 3000);
-    return () => clearInterval(intervalId);
-  }, [slug, checkAllCabinsOccupied]); 
+      const data = await response.json();
+      const currentOrders = Array.isArray(data.currentOrders)
+        ? data.currentOrders
+        : [];
+      setOrders(currentOrders);
+      setPayLaterOrders(
+        Array.isArray(data.payLaterOrders) ? data.payLaterOrders : []
+      );
 
-  
+      // Handle processedOrders
+      if (
+        Array.isArray(data.processedOrders) &&
+        data.processedOrders.length > 0
+      ) {
+        playAlarm();
+        data.processedOrders.forEach((order:any) => {
+          sendNotification(order);
+        });
+      }
+
+      // Existing logic
+      const newAllCabinsOccupied = checkAllCabinsOccupied(
+        currentOrders,
+        data.payLaterOrders || [],
+        slug
+      );
+      setAllCabinsOccupied(newAllCabinsOccupied);
+      if (newAllCabinsOccupied) {
+        await sendHousefullEmail(slug);
+      }
+      setLoading(false);
+      setNetworkError(false);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setNetworkError(true);
+      setLoading(false);
+    }
+  };
+  fetchOrders();
+  const intervalId = setInterval(fetchOrders, 3000);
+  return () => clearInterval(intervalId);
+}, [slug, checkAllCabinsOccupied]); 
+
+const playAlarm = () => {
+  if (audioRef.current) {
+    audioRef.current.play().catch((error) => {
+      console.error("Error playing audio:", error);
+    });
+  }
+};
+
+const sendNotification = (order: Order) => {
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("New Order Received", {
+      body: "1 new order has been placed",
+    });
+  }
+};
   useEffect(() => {
     if (lastUpdatedOrderId && orderRefs.current[lastUpdatedOrderId]) {
       const ref = orderRefs.current[lastUpdatedOrderId];
@@ -787,7 +814,7 @@ const calculateTotalSales = (orders: Order[]) => {
             )}
           </div>
         )}
-        <ChangeHandler slug={slug} />
+        <audio ref={audioRef} src="/alarm3.mp3" style={{ display: "none" }} />
         {counts.new === 0 && counts.active === 0 && counts.previous === 0 && (
           <p className="text-center text-xl">No orders at the moment.</p>
         )}
