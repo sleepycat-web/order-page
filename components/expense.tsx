@@ -31,9 +31,15 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [onlineBalance, setOnlineBalance] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allTimeCounterBalance, setAllTimeCounterBalance] = useState(0);
-const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
+  const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
+  const [isVerifyCounterBalanceExpanded, setIsVerifyCounterBalanceExpanded] = useState(false);
+  const [cashBalance, setCashBalance] = useState(0);
+
   const [isAddExpanded, setIsAddExpanded] = useState(false);
-  
+    const [addMoneyAmount, setAddMoneyAmount] = useState("");
+    const [isSubmittingAddMoney, setIsSubmittingAddMoney] = useState(false);
+  const [isBalanceModalShown, setIsBalanceModalShown] = useState(false);
+
 const toggleExpenses = () => {
   setIsExpensesExpanded(!isExpensesExpanded);
  
@@ -109,7 +115,10 @@ const toggleAdd = () => {
       setIsSubmitting(false);
     }
   };
-
+const calculateCashBalance = () => {
+  const regularCashBalance = allTimeCounterBalance; 
+  return regularCashBalance  ;
+  };
   const fetchDailyExpenses = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -126,6 +135,42 @@ const toggleAdd = () => {
     }
   }, [slug]);
 
+  const balancedata = calculateCashBalance();
+
+const handleAddMoneySubmit = async () => {
+  if (isSubmittingAddMoney) return;
+
+  setIsSubmittingAddMoney(true);
+  try {
+        const amountNumber = parseFloat(addMoneyAmount);
+  
+    const response = await fetch("/api/cashBalanceHandler", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        slug,
+        amountEntered: amountNumber,
+        actualAmount: balancedata,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to verify cash balance");
+    }
+
+    // Handle success (e.g., reset the amount, show a confirmation)
+    setAddMoneyAmount("");
+    setIsBalanceModalShown(true);
+  } catch (error) {
+    console.error(error);
+    alert("Error verifying cash balance");
+  } finally {
+    setIsSubmittingAddMoney(false);
+  }
+};
+
   const fetchAllTimeData = useCallback(async () => {
     try {
       const response = await fetch(`/api/allTimeData?slug=${slug}`);
@@ -134,6 +179,7 @@ const toggleAdd = () => {
       }
       const data = await response.json();
       setAllTimeCounterBalance(data.allTimeCounterBalance);
+      
     } catch (error) {
       console.error("Error fetching all-time data:", error);
     }
@@ -192,18 +238,7 @@ const toggleAdd = () => {
     return `${day} ${month} ${year} ${formattedHours}:${formattedMinutes} ${ampm}`;
   };
 
-  const formatDateNew = (date: Date) => {
-    const day = date.getDate();
-    const month = date.toLocaleString("default", { month: "long" });
-    const year = date.getFullYear();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? "pm" : "am";
-    const formattedHours = hours % 12 || 12;
-    const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
-
-    return `${day} ${month} ${year} at ${formattedHours}:${formattedMinutes} ${ampm}`;
-  };
+ 
 
 const formatDateNonRound = (date: Date): string => {
   // Create a new date instance to avoid modifying the original date
@@ -251,16 +286,7 @@ const formatDateNonRound = (date: Date): string => {
   };
 
 
-const calculateCashBalance = () => {
-  const regularCashBalance = allTimeCounterBalance;
 
-  const extraCashPayments = dailyExpenses
-    .filter((expense) => expense.category === "Extra Cash Payment")
-    .reduce((total, expense) => total + expense.amount, 0);
-
- 
-  return regularCashBalance  ;
-  };
   
  const calculateOnlineBalance = useCallback(() => {
    const upiPayments = dailyExpenses
@@ -272,13 +298,18 @@ const calculateCashBalance = () => {
    return upiPayments + extraUpiPayments;
  }, [dailyExpenses]);
 
-  
+  const toggleVerifyCounterBalance = () => {
+    setIsVerifyCounterBalanceExpanded(!isVerifyCounterBalanceExpanded);
+  };
 const toggleCashBalance = () => {
   setIsCashBalanceExpanded(!isCashBalanceExpanded);
 };
   useEffect(() => {
     setOnlineBalance(calculateOnlineBalance());
   }, [calculateOnlineBalance]);
+  useEffect(() => { 
+    setCashBalance(calculateCashBalance());
+  },[calculateCashBalance])
 
 
   const toggleUPIPayments = () => {
@@ -320,16 +351,25 @@ const toggleCashBalance = () => {
                 className="bg-blue-600 p-2 rounded cursor-pointer"
                 onClick={toggleUPIPayments}
               >
-                <span className="font-semibold">Online Balance: </span>
-                <span>₹{onlineBalance.toFixed(2)}</span>
+                <span className="font-semibold">Online Payments </span>
+                {/* <span>₹{onlineBalance.toFixed(2)}</span> */}
+              </div>
+            )}
+
+            {cashBalance > 0 && (
+              <div
+                className="bg-purple-600 p-2 rounded cursor-pointer"
+                onClick={toggleCashBalance}
+              >
+                <span className="font-semibold">Cash Payments </span>
+                {/* <span>₹{calculateCashBalance().toFixed(2)}</span> */}
               </div>
             )}
             <div
-              className="bg-purple-600 p-2 rounded cursor-pointer"
-              onClick={toggleCashBalance}
+              className="bg-rose-600 p-2 rounded cursor-pointer"
+              onClick={toggleVerifyCounterBalance}
             >
-              <span className="font-semibold">Cash Balance: </span>
-              <span>₹{calculateCashBalance().toFixed(2)}</span>
+              <span className="font-semibold">Verify Counter Balance</span>
             </div>
           </div>
         )}
@@ -657,6 +697,68 @@ const toggleCashBalance = () => {
           </div>
         )}
       </div>
+
+      <div className="mb-4">
+        {isVerifyCounterBalanceExpanded && (
+          <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+            <button
+              onClick={toggleVerifyCounterBalance}
+              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+            >
+              <p className="text-3xl">&times;</p>
+            </button>
+            <div className="flex flex-wrap items-center   gap-2 mb-4">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={addMoneyAmount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*\.?\d*$/.test(value)) {
+                    setAddMoneyAmount(value);
+                  }
+                }}
+                placeholder="Enter amount"
+                className="input bg-neutral-800 w-full max-w-xs mr-2"
+              />
+              <button
+                onClick={handleAddMoneySubmit}
+                className="btn btn-primary"
+                disabled={!addMoneyAmount || isSubmittingAddMoney}
+              >
+                {isSubmittingAddMoney ? (
+                  <span className="loading loading-spinner loading-sm"></span>
+                ) : (
+                  "Submit"
+                )}
+              </button>
+            </div>
+            <div className="text-sm text-gray-400 mb-4">
+              {formatDate(currentDateTime)}
+            </div>
+          </div>
+        )}
+      </div>
+      {isBalanceModalShown && (
+        <dialog id="my_modal_1" className="modal modal-open">
+          <div className="modal-box bg-neutral-800">
+            <h3 className="font-bold text-lg">Confirmation </h3>
+            <p className="py-4">
+              Counter Balance has been sucessfully registered.
+            </p>
+            <div className="modal-action">
+              <form method="dialog">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setIsBalanceModalShown(false)}
+                >
+                  Close
+                </button>
+              </form>
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 };

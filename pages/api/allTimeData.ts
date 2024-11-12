@@ -28,13 +28,21 @@ export default async function handler(
         orderCollection
           .aggregate([
             { $match: { status: "fulfilled" } },
-            { $group: { _id: null, total: { $sum: "$total" } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: "$total" },
+                tableDeliveryChargeTotal: { $sum: "$tableDeliveryCharge" },
+              },
+            },
           ])
           .toArray(),
         expenseCollection.find({}).toArray(),
       ]);
 
       let totalOrders = orderTotals.length > 0 ? orderTotals[0].total : 0;
+      let tableDeliveryChargeTotal =
+        orderTotals.length > 0 ? orderTotals[0].tableDeliveryChargeTotal : 0;
       let totalExpenses = 0;
       let extraCashPayments = 0;
       let extraUpiPayments = 0; // For tracking ignored UPI payments
@@ -50,8 +58,7 @@ export default async function handler(
         }
       });
 
-      // Add extra cash payments to total orders
-      totalOrders += extraCashPayments;
+   totalOrders = totalOrders - tableDeliveryChargeTotal + extraCashPayments;
 
       // Calculate all-time counter balance excluding UPI payments from expenses
       const allTimeCounterBalance = totalOrders - totalExpenses;
