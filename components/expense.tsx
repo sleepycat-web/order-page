@@ -28,13 +28,11 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [isExpensesExpanded, setIsExpensesExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUPIPaymentsExpanded, setIsUPIPaymentsExpanded] = useState(false);
-  const [onlineBalance, setOnlineBalance] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allTimeCounterBalance, setAllTimeCounterBalance] = useState(0);
   const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
   const [isVerifyCounterBalanceExpanded, setIsVerifyCounterBalanceExpanded] = useState(false);
-  const [cashBalance, setCashBalance] = useState(0);
-
+  
   const [isAddExpanded, setIsAddExpanded] = useState(false);
     const [addMoneyAmount, setAddMoneyAmount] = useState("");
     const [isSubmittingAddMoney, setIsSubmittingAddMoney] = useState(false);
@@ -304,13 +302,13 @@ const formatDateNonRound = (date: Date): string => {
 const toggleCashBalance = () => {
   setIsCashBalanceExpanded(!isCashBalanceExpanded);
 };
-  useEffect(() => {
-    setOnlineBalance(calculateOnlineBalance());
-  }, [calculateOnlineBalance]);
-  useEffect(() => { 
-    setCashBalance(calculateCashBalance());
-  },[calculateCashBalance])
+const [balances, setBalances] = useState({ online: 0, cash: 0 });
 
+useEffect(() => {
+  const online = calculateOnlineBalance();
+  const cash = calculateCashBalance();
+  setBalances({ online, cash });
+}, [calculateOnlineBalance, calculateCashBalance]);
 
   const toggleUPIPayments = () => {
     setIsUPIPaymentsExpanded(!isUPIPaymentsExpanded);
@@ -346,7 +344,7 @@ const toggleCashBalance = () => {
             >
               <span className="font-semibold">Add Cash/UPI</span>
             </div>
-            {onlineBalance > 0 && (
+            {balances.online > 0 && (
               <div
                 className="bg-blue-600 p-2 rounded cursor-pointer"
                 onClick={toggleUPIPayments}
@@ -356,7 +354,7 @@ const toggleCashBalance = () => {
               </div>
             )}
 
-            {cashBalance > 0 && (
+            {balances.cash > 0 && (
               <div
                 className="bg-purple-600 p-2 rounded cursor-pointer"
                 onClick={toggleCashBalance}

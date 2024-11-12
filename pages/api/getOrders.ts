@@ -27,8 +27,8 @@ export default async function handler(
 
     // Existing logic to get current and pay later orders
    const now = new Date();
-  //  now.setHours(now.getHours() + 5); // Add 5 hours for IST
-  //  now.setMinutes(now.getMinutes() + 30); // Add 30 minutes for IST
+   now.setHours(now.getHours() + 5); // Add 5 hours for IST
+   now.setMinutes(now.getMinutes() + 30); // Add 30 minutes for IST
 
    // Set the start of the day (midnight) in IST
    const startOfDay = new Date(now);
