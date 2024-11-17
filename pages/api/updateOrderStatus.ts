@@ -341,7 +341,7 @@ export default async function handler(
 
     if (type === "/payment") {
       const order = await collection.findOne({ _id: orderIdObj });
-      if (order) {
+      if (order && order.customerName !== "Manual Order") {
         setTimeout(() => sendSMS(order), 600000);
       }
     }
