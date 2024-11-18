@@ -319,10 +319,10 @@ useEffect(() => {
       <div className="flex flex-row gap-1 mb-2">
         {isLoading ? null : (
           <div className="flex flex-wrap gap-2">
-            <div className="bg-lime-600 p-2 rounded">
+            {/* <div className="bg-lime-600 p-2 rounded">
               <span className="font-semibold">Total sales: </span>
               <span>₹{calculateTotalSales().toFixed(2)}</span>
-            </div>
+            </div> */}
 
             {totalTips > 0 && (
               <div className="bg-teal-600 p-2 rounded">
