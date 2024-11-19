@@ -264,7 +264,7 @@ useEffect(() => {
     }
   };
   fetchOrders();
-  const intervalId = setInterval(fetchOrders, 3000);
+  const intervalId = setInterval(fetchOrders, 10000);
   return () => clearInterval(intervalId);
 }, [slug, checkAllCabinsOccupied]); 
 
