@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from "react";
 
 interface CartItem {
@@ -31,7 +32,7 @@ interface Order {
 }
 
 interface BillSectionProps {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
@@ -115,14 +116,20 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
 
   const hasOrders = Object.keys(filteredOrders).length > 0;
 
+  const totalActiveOrders = orders
+    .filter(order => order.status === "pending")
+    .reduce((sum, order) => sum + order.total, 0).toFixed(2);
+
   return (
     <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50 overflow-y-auto">
       <div className="container bg-neutral-900 rounded-lg px-4 py-8 pb-16 md:pb-12 w-full h-full relative">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Check Bills</h2>
-          <button onClick={onClose} className="text-3xl">
-            &times;
-          </button>
+          {onClose && (  
+            <button onClick={onClose} className="text-3xl">
+              &times;
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col lg:w-1/3 w-auto mb-4">
@@ -180,6 +187,14 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
                 </div>
               )}
             </div>
+            {activeTab === "active" && (
+              <div className="mt-4 text-white text-lg">
+                Total of pending orders:
+                <span className="bg-primary p-2 ml-1 rounded">
+                  ₹{totalActiveOrders}
+                </span>
+              </div>
+            )}
           </>
         )}
       </div>

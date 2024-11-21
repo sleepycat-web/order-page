@@ -13,36 +13,46 @@ export default async function handler(
       return res.status(400).json({ error: "Phone number is required" });
     }
 
-   
-
     try {
-        const { db } = await connectToDatabase();
+      const { db } = await connectToDatabase();
       const collections = ["OrderSevoke", "OrderDagapur"];
       let allOrders: Document[] = [];
+      let pendingOrders: Document[] = [];
 
       for (const collectionName of collections) {
         const collection = db.collection(collectionName);
-        const orders = await collection
+
+        // Fetch pending orders first
+        const pendingOrdersInCollection = await collection
           .find({
             phoneNumber,
+            order: "pending",
           })
-          .sort({ createdAt: -1 }) // Sort by createdAt in descending order
-          .limit(10) // Limit to last 10 orders per collection
           .toArray();
-        allOrders = allOrders.concat(orders);
+
+        pendingOrders = pendingOrders.concat(pendingOrdersInCollection);
+
+        // Fetch past orders, ensuring at least 10 total orders
+        const pastOrders = await collection
+          .find({
+            phoneNumber,
+            order: { $ne: "pending" }, // Exclude pending orders
+          })
+          .sort({ createdAt: -1 })
+          .limit(Math.max(30 - pendingOrders.length, 0))
+          .toArray();
+
+        allOrders = allOrders.concat(pastOrders);
       }
+
+      // Combine and sort orders
+      allOrders = [...pendingOrders, ...allOrders];
 
       if (allOrders.length === 0) {
         return res
           .status(404)
           .json({ message: "No orders found for this phone number" });
       }
-
-      // Sort all orders by createdAt in descending order
-      allOrders.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
 
       // Ensure all required fields are present in the response
       const formattedOrders = allOrders.map((order) => ({
