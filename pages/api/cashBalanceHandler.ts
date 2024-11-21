@@ -22,9 +22,23 @@ export default async function handler(
     if (difference > 0) status = "surplus";
     else if (difference < 0) status = "deficit";
 
+    // Determine the expense collection
+    const expenseCollectionName =
+      location === "Sevoke Road" ? "ExpenseSevoke" : "ExpenseDagapur";
+    // If there's a surplus or deficit, add to the expense collection
+    if (status !== "match") {
+      const expenseEntry = {
+        category: status === "surplus" ? "Extra Cash Payment" : "Suspense",
+        amount: Math.abs(difference),
+        comment: status.charAt(0).toUpperCase() + status.slice(1),
+        createdAt: nowIST,
+      };
+
+      await db.collection(expenseCollectionName).insertOne(expenseEntry);
+    }
     // Create a new entry in the CashBalanceDetails collection
     await db.collection("CashBalanceDetails").insertOne({
-    //   slug,
+      //   slug,
       amountEntered,
       actualAmount,
       status,
