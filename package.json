@@ -1,5 +1,5 @@
 {
-  "name": "order-page",
+  "name": "my-next-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,32 +8,28 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.4.5",
+    "lucide-react": "^0.460.0",
+    "mongodb": "^6.11.0",
+    "next": "14.2.5",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^6.9.16",
+    "react": "^18",
+    "react-dom": "^18"
+  },
   "devDependencies": {
-    "@types/node": "^20.16.1",
-    "@types/nodemailer": "^6.4.15",
-    "@types/react": "^18.3.4",
-    "@types/react-dom": "^18.3.0",
-    "daisyui": "^4.12.10",
+    "@types/node": "^20",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "daisyui": "^4.12.14",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
-    "install": "^0.13.0",
-    "mongodb": "^6.8.0",
-    "next": "^15.0.3",
-    "npm": "^10.8.2",
     "postcss": "^8",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
-  },
-  "dependencies": {
-    "axios": "^1.7.4",
-    "date-fns": "^3.6.0",
-    "dotenv": "^16.4.5",
-    "lucide-react": "^0.441.0",
-    "node-fetch": "^3.3.2",
-    "nodemailer": "^6.9.15",
-    "sib-api-v3-sdk": "^8.5.0",
-    "sib-api-v3-typescript": "^2.2.2"
   }
 }
