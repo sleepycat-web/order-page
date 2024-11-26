@@ -372,7 +372,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
           <div className="mb-4">
             <h3 className="font-bold text-lg">Cabin Status</h3>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <div className="grid md:grid-cols-2 grid-cols-1 gap-x-4 gap-y-2">
             {getCabinOptions().map((cabin) => {
               const status =
                 cabinStatuses[cabin] ||
