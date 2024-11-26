@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface CartItem {
   item: {
@@ -33,14 +33,23 @@ interface Order {
 
 interface BillSectionProps {
   onClose?: () => void;
+  phone?: string;
 }
 
-const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
+const BillSection: React.FC<BillSectionProps> = ({ onClose, phone }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "previous">("active");
+
+useEffect(() => {
+  if (phone) {
+    const formattedPhone = phone.replace(/\D/g, "").slice(0, 10);
+    setPhoneNumber(formattedPhone);
+    handleCheck(formattedPhone);
+  }
+}, [phone]);
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -48,43 +57,41 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
     setError("");
   };
 
-  const handleCheck = async () => {
-    if (isLoading) return;
+const handleCheck = async (inputPhoneNumber?: string) => {
+  if (isLoading) return;
 
-    if (phoneNumber.length === 10) {
-      if (/^[6-9]\d{9}$/.test(phoneNumber)) {
-        setIsLoading(true);
-        try {
-          const response = await fetch("/api/checkBill", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ phoneNumber }),
-          });
+  const numberToCheck = inputPhoneNumber || phoneNumber;
 
-          if (response.ok) {
-            const result = await response.json();
-            setOrders(result);
-          } else if (response.status === 404) {
-            setError("No orders found for this phone number.");
-          } else {
-            throw new Error("Failed to fetch order details");
-          }
-        } catch (error) {
-          setError(
-            "An error occurred while checking the bill. Please try again."
-          );
-        } finally {
-          setIsLoading(false);
+  if (numberToCheck.length === 10) {
+    if (/^[6-9]\d{9}$/.test(numberToCheck)) {
+      setIsLoading(true);
+      try {
+        const response = await fetch("/api/checkBill", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ phoneNumber: numberToCheck }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setOrders(result);
+        } else {
+          setError("Invalid phone number");
         }
-      } else {
-        setError("Please enter a valid phone number");
+      } catch (error) {
+        setError("An error occurred");
+      } finally {
+        setIsLoading(false);
       }
     } else {
-      setError("Please enter a valid phone number");
+      setError("Invalid phone number");
     }
-  };
+  } else {
+    setError("Phone number must be 10 digits");
+  }
+};
 
   const groupOrdersByCustomer = (orders: Order[]) => {
     const groupedOrders: { [key: string]: Order[] } = {};
@@ -118,7 +125,7 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
 
   const totalActiveOrders = orders
     .filter(order => order.status === "pending")
-    .reduce((sum, order) => sum + order.total, 0).toFixed(2);
+    .reduce((sum, order) => sum + order.total, 0);
 
   return (
     <div className="fixed inset-0 bg-neutral-900 flex items-center justify-center z-50 overflow-y-auto">
@@ -146,7 +153,7 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
             />
             <button
               className="btn btn-primary rounded-l-none w-32 flex justify-center items-center"
-              onClick={handleCheck}
+              onClick={() => handleCheck()}
             >
               {isLoading ? (
                 <span className="loading loading-spinner loading-sm"></span>
@@ -187,11 +194,11 @@ const BillSection: React.FC<BillSectionProps> = ({ onClose }) => {
                 </div>
               )}
             </div>
-            {activeTab === "active" && (
+            {activeTab === "active" && totalActiveOrders > 0 && (
               <div className="mt-4 text-white text-lg">
                 Total of pending orders:
                 <span className="bg-primary p-2 ml-1 rounded">
-                  ₹{totalActiveOrders}
+                  ₹{totalActiveOrders.toFixed(2)}
                 </span>
               </div>
             )}
