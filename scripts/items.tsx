@@ -117,11 +117,11 @@ export const menuItems: MenuItem[] = [
     name: "Tea",
     price: "30.00",
     customizationOptions: [
-      {
-        name: "Choice of Tea",
-        type: "radio",
-        options: [{ label: "Assam" }, { label: "Darjeeling" }],
-      },
+      // {
+      //   name: "Choice of Tea",
+      //   type: "radio",
+      //   options: [{ label: "Assam" }, { label: "Darjeeling" }],
+      // },
       {
         name: "Appetite",
         type: "radio",
