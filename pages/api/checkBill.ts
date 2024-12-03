@@ -39,7 +39,7 @@ export default async function handler(
             order: { $ne: "pending" }, // Exclude pending orders
           })
           .sort({ createdAt: -1 })
-          .limit(Math.max(30 - pendingOrders.length, 0))
+          .limit(Math.max(50 - pendingOrders.length, 0))
           .toArray();
 
         allOrders = allOrders.concat(pastOrders);
