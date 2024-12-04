@@ -132,24 +132,24 @@ async function sendNotifications(
       throw new Error("Invalid location");
     }
 
-    const selectedCaller = await db
-      .collection("CallData")
-      .findOne({ branch, callerStatus: true }, { sort: { dateUpdated: -1 } });
+    // const selectedCaller = await db
+    //   .collection("CallData")
+    //   .findOne({ branch, callerStatus: true }, { sort: { dateUpdated: -1 } });
 
-    if (!selectedCaller) {
-      throw new Error("No available caller found");
-    }
+    // if (!selectedCaller) {
+    //   throw new Error("No available caller found");
+    // }
 
-    const callerPhoneNumber = `${selectedCaller.phoneNumber}`;
-    const firstName = orderDocument.customerName.split(" ")[0];
+    // const callerPhoneNumber = `${selectedCaller.phoneNumber}`;
+    // const firstName = orderDocument.customerName.split(" ")[0];
 
-    if (firstName.toLowerCase() !== "manual") {
-      await sendSMSNotification(
-        selectedLocation,
-        orderDocument.customerName,
-        callerPhoneNumber
-      );
-    }
+    // if (firstName.toLowerCase() !== "manual") {
+    //   await sendSMSNotification(
+    //     selectedLocation,
+    //     orderDocument.customerName,
+    //     callerPhoneNumber
+    //   );
+    // }
 
     await sendEmailConfirmation(orderDocument);
   } catch (error) {
@@ -246,45 +246,45 @@ ${
   }
 }
 
-async function sendSMSNotification(
-  selectedLocation: string,
-  customerName: string,
-  phoneNumber: string
-): Promise<void> {
-  const apiKey = process.env.FAST2SMS_API_KEY;
-  if (!apiKey) {
-    throw new Error("FAST2SMS API key is not configured");
-  }
+// async function sendSMSNotification(
+//   selectedLocation: string,
+//   customerName: string,
+//   phoneNumber: string
+// ): Promise<void> {
+//   const apiKey = process.env.FAST2SMS_API_KEY;
+//   if (!apiKey) {
+//     throw new Error("FAST2SMS API key is not configured");
+//   }
 
-  const url = "https://www.fast2sms.com/dev/bulkV2";
-  const headers = {
-    authorization: apiKey,
-    "Content-Type": "application/json",
-  };
+//   const url = "https://www.fast2sms.com/dev/bulkV2";
+//   const headers = {
+//     authorization: apiKey,
+//     "Content-Type": "application/json",
+//   };
 
-  const firstName = customerName.split(" ")[0];
-  const locationName = selectedLocation.includes("Sevoke Road")
-    ? "Sevoke Road"
-    : "Dagapur";
+//   const firstName = customerName.split(" ")[0];
+//   const locationName = selectedLocation.includes("Sevoke Road")
+//     ? "Sevoke Road"
+//     : "Dagapur";
 
-  const body = {
-    route: "dlt",
-    sender_id: "CHMINE",
-    message: "173671",
-    variables_values: `${firstName}|${locationName}|`,
-    flash: "0",
-    numbers: phoneNumber,
-  };
+//   const body = {
+//     route: "dlt",
+//     sender_id: "CHMINE",
+//     message: "173671",
+//     variables_values: `${firstName}|${locationName}|`,
+//     flash: "0",
+//     numbers: phoneNumber,
+//   };
 
-  try {
-    const response = await axios.post(url, body, { headers });
-    const data = response.data as Fast2SMSResponse;
+//   try {
+//     const response = await axios.post(url, body, { headers });
+//     const data = response.data as Fast2SMSResponse;
 
-    if (data.return !== true) {
-      throw new Error(data.message || "Failed to send SMS notification");
-    }
-  } catch (error) {
-    console.error("Error sending SMS notification:", error);
-    throw error;
-  }
-}
+//     if (data.return !== true) {
+//       throw new Error(data.message || "Failed to send SMS notification");
+//     }
+//   } catch (error) {
+//     console.error("Error sending SMS notification:", error);
+//     throw error;
+//   }
+// }
