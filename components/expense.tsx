@@ -14,6 +14,10 @@ interface DailyExpense {
   comment: string;
   createdAt: string;
 }
+interface CounterBalanceEntry {
+  _id: string;
+  createdAt: string;
+}
 
 const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [category, setCategory] = useState("");
@@ -31,12 +35,15 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allTimeCounterBalance, setAllTimeCounterBalance] = useState(0);
   const [isCashBalanceExpanded, setIsCashBalanceExpanded] = useState(false);
-  const [isVerifyCounterBalanceExpanded, setIsVerifyCounterBalanceExpanded] = useState(false);
-  
+  const [isVerifyCounterBalanceExpanded, setIsVerifyCounterBalanceExpanded] =
+    useState(false);
+  const [counterBalanceEntries, setCounterBalanceEntries] = useState<CounterBalanceEntry[]>([]);
+
   const [isAddExpanded, setIsAddExpanded] = useState(false);
-    const [addMoneyAmount, setAddMoneyAmount] = useState("");
-    const [isSubmittingAddMoney, setIsSubmittingAddMoney] = useState(false);
+  const [addMoneyAmount, setAddMoneyAmount] = useState("");
+  const [isSubmittingAddMoney, setIsSubmittingAddMoney] = useState(false);
   const [isBalanceModalShown, setIsBalanceModalShown] = useState(false);
+  const [isBalanceSubmitted, setIsBalanceSubmitted] = useState(false);
 
 const toggleExpenses = () => {
   setIsExpensesExpanded(!isExpensesExpanded);
@@ -72,11 +79,7 @@ const toggleAdd = () => {
     "Electricity",
     "Others",
   ];
- const paycategories = [
-   "Extra UPI Payment",
-   "Extra Cash Payment",
-   "Opening Cash",
- ];
+ const paycategories = ["Extra UPI Payment", "Extra Cash Payment", "Opening Cash"];
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
@@ -140,7 +143,7 @@ const handleAddMoneySubmit = async () => {
 
   setIsSubmittingAddMoney(true);
   try {
-        const amountNumber = parseFloat(addMoneyAmount);
+    const amountNumber = parseFloat(addMoneyAmount);
   
     const response = await fetch("/api/cashBalanceHandler", {
       method: "POST",
@@ -161,6 +164,8 @@ const handleAddMoneySubmit = async () => {
     // Handle success (e.g., reset the amount, show a confirmation)
     setAddMoneyAmount("");
     setIsBalanceModalShown(true);
+    setIsBalanceSubmitted(true); // Add this line
+    fetchCounterBalanceEntries(); // Re-fetch entries after submission
   } catch (error) {
     console.error(error);
     alert("Error verifying cash balance");
@@ -182,6 +187,19 @@ const handleAddMoneySubmit = async () => {
       console.error("Error fetching all-time data:", error);
     }
   }, [slug]);
+
+  const fetchCounterBalanceEntries = async () => {
+    try {
+      const response = await fetch(`/api/cashBalanceHandler?slug=${slug}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch counter balance entries');
+      }
+      const data = await response.json();
+      setCounterBalanceEntries(data);
+    } catch (error) {
+      console.error('Error fetching counter balance entries:', error);
+    }
+  };
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -207,6 +225,12 @@ const handleAddMoneySubmit = async () => {
         clearInterval(timer);
       };
     }, [fetchDailyExpenses, fetchAllTimeData]);
+
+  useEffect(() => {
+    if (isVerifyCounterBalanceExpanded) {
+      fetchCounterBalanceEntries();
+    }
+  }, [isVerifyCounterBalanceExpanded]);
 
   const handleCategorySelect = (cat: string) => {
     setCategory(cat);
@@ -267,7 +291,7 @@ const formatDateNonRound = (date: Date): string => {
      .filter((expense) => expense.category === "Extra UPI Payment")
      .reduce((total, expense) => total + expense.amount, 0);
    return regularSales + extraCashPayments + extraUPIPayments;
- };
+  };
 
 
 
@@ -285,7 +309,7 @@ const formatDateNonRound = (date: Date): string => {
 
 
 
-  
+
  const calculateOnlineBalance = useCallback(() => {
    const upiPayments = dailyExpenses
      .filter((expense) => expense.category === "UPI Payment")
@@ -734,6 +758,29 @@ useEffect(() => {
             <div className="text-sm text-gray-400 mb-4">
               {formatDate(currentDateTime)}
             </div>
+            
+            {counterBalanceEntries.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Counter Balance Entries</h3>
+                <ul className="space-y-2">
+                  {counterBalanceEntries.map((entry) => (
+                    <li
+                      key={entry._id}
+                      className="flex justify-between items-center"
+                    >
+                      <span className="font-medium">
+                        {formatDateNonRound(new Date(entry.createdAt))}
+                      </span>
+                      {/* <span className="flex items-center">
+                        <span className="text-sm text-gray-400">
+                        {slug ==="sevoke"?"Sevoke Road": "Dagapur"}
+                        </span>
+                      </span> */}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -9,7 +9,7 @@ import OrderTabs from "@/components/tabview"; // Adjust the import path as neede
 import OrderSearch from "@/components/searchbox"; // Adjust the import path as needed
 import { Order } from "@/scripts/interface";
 import Expense from "@/components/expense";
-import CallStaff from "./callstaff";
+// import CallStaff from "./callstaff";
 
 export default function OrderPage() {
   const [slug, setSlug] = useState<string>("");
@@ -818,7 +818,7 @@ const calculateTotalSales = (orders: Order[]) => {
         {counts.new === 0 && counts.active === 0 && counts.previous === 0 && (
           <p className="text-center text-xl">No orders at the moment.</p>
         )}
-        {activeTab === "previous" && <CallStaff slug={slug} />}
+        {/* {activeTab === "previous" && <CallStaff slug={slug} />} */}
       </div>
     </>
   );

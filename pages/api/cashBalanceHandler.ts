@@ -1,67 +1,88 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { connectToDatabase } from "../../lib/mongodb";
 import nodemailer from "nodemailer";
+import { isSameDay } from 'date-fns';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method Not Allowed" });
-  }
+ 
+  if (req.method === 'GET') {
+    try {
+      const { slug } = req.query;
+      const { db } = await connectToDatabase();
 
-  try {
-    const { slug, amountEntered, actualAmount } = req.body;
-    const { db } = await connectToDatabase();
+      const location = (slug as string).includes("sevoke") ? "Sevoke Road" : "Dagapur";
+       const entries = await db
+         .collection("CashBalanceDetails")
+         .find({ location })
+         .sort({ createdAt: -1 })
+         .limit(5)
+         .toArray();
+      res.status(200).json(entries);
 
-    const nowIST = getISTDate();
-    const location = slug.includes("sevoke") ? "Sevoke Road" : "Dagapur";
-
-    let status = "match";
-    const difference = amountEntered - actualAmount;
-    if (difference > 0) status = "surplus";
-    else if (difference < 0) status = "deficit";
-
-    // Determine the expense collection
-    const expenseCollectionName =
-      location === "Sevoke Road" ? "ExpenseSevoke" : "ExpenseDagapur";
-    // If there's a surplus or deficit, add to the expense collection
-    if (status !== "match") {
-      const expenseEntry = {
-        category: status === "surplus" ? "Extra Cash Payment" : "Suspense",
-        amount: Math.abs(difference),
-        comment: status.charAt(0).toUpperCase() + status.slice(1),
-        createdAt: nowIST,
-      };
-
-      await db.collection(expenseCollectionName).insertOne(expenseEntry);
+    } catch (error) {
+      console.error("Error fetching counter balance entries:", error);
+      res.status(500).json({ message: "Server Error" });
     }
-    // Create a new entry in the CashBalanceDetails collection
-    await db.collection("CashBalanceDetails").insertOne({
-      //   slug,
-      amountEntered,
-      actualAmount,
-      status,
-      difference,
-      createdAt: nowIST,
-      location,
-    });
+  } else if (req.method === 'POST') {
+    try {
+      const { slug, amountEntered, actualAmount } = req.body;
+      const { db } = await connectToDatabase();
 
-    // Send email notification
-    await sendEmailNotification({
-      slug,
-      amountEntered,
-      actualAmount,
-      status,
-      difference,
-      createdAt: nowIST,
-      location,
-    });
+      const nowIST = getISTDate();
+      const location = slug.includes("sevoke") ? "Sevoke Road" : "Dagapur";
 
-    res.status(200).json({ message: "Cash balance verified successfully" });
-  } catch (error) {
-    console.error("Error in addMoneyHandler:", error);
-    res.status(500).json({ message: "Server Error" });
+      let status = "match";
+      const difference = amountEntered - actualAmount;
+      if (difference > 0) status = "surplus";
+      else if (difference < 0) status = "deficit";
+
+      // Determine the expense collection
+      const expenseCollectionName =
+        location === "Sevoke Road" ? "ExpenseSevoke" : "ExpenseDagapur";
+      // If there's a surplus or deficit, add to the expense collection
+      if (status !== "match") {
+        const expenseEntry = {
+          category: status === "surplus" ? "Extra Cash Payment" : "Suspense",
+          amount: Math.abs(difference),
+          comment: status.charAt(0).toUpperCase() + status.slice(1),
+          createdAt: nowIST,
+        };
+
+        await db.collection(expenseCollectionName).insertOne(expenseEntry);
+      }
+      // Create a new entry in the CashBalanceDetails collection
+      await db.collection("CashBalanceDetails").insertOne({
+        //   slug,
+        amountEntered,
+        actualAmount,
+        status,
+        difference,
+        createdAt: nowIST,
+        location,
+      });
+
+      // Send email notification
+      await sendEmailNotification({
+        slug,
+        amountEntered,
+        actualAmount,
+        status,
+        difference,
+        createdAt: nowIST,
+        location,
+      });
+
+      res.status(200).json({ message: "Cash balance verified successfully" });
+    } catch (error) {
+      console.error("Error in addMoneyHandler:", error);
+      res.status(500).json({ message: "Server Error" });
+    }
+  } else {
+    res.setHeader('Allow', ['GET', 'POST']); // Specify allowed methods
+    res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 }
 
