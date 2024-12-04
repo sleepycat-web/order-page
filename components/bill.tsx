@@ -195,7 +195,7 @@ const handleCheck = async (inputPhoneNumber?: string) => {
               )}
             </div>
             {activeTab === "active" && totalActiveOrders > 0 && (
-              <div className="mt-4 text-white text-lg">
+              <div className="mt-4 mb-8 text-white text-lg">
                 Total of pending orders:
                 <span className="bg-primary p-2 ml-1 rounded">
                   ₹{totalActiveOrders.toFixed(2)}
