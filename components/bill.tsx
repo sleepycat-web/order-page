@@ -132,7 +132,7 @@ const handleCheck = async (inputPhoneNumber?: string) => {
       <div className="container bg-neutral-900 rounded-lg px-4 py-8 pb-16 md:pb-12 w-full h-full relative">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Check Bills</h2>
-          {onClose && (  
+          {onClose && (
             <button onClick={onClose} className="text-3xl">
               &times;
             </button>
@@ -167,8 +167,16 @@ const handleCheck = async (inputPhoneNumber?: string) => {
 
         {orders.length > 0 && (
           <>
-            <OrderTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-            <div className="overflow-y-auto overflow-x-hidden max-h-[calc(100vh-300px)]">
+            <OrderTabs activeTab={activeTab} setActiveTab={setActiveTab} />{" "}
+            {activeTab === "active" && totalActiveOrders > 0 && (
+              <div className="my-4 text-white text-lg">
+                Total of pending orders:
+                <span className="bg-primary p-2 ml-1 rounded">
+                  ₹{totalActiveOrders.toFixed(2)}
+                </span>
+              </div>
+            )}
+            <div className="overflow-y-auto overflow-x-hidden max-h-[calc(65vh)]">
               {hasOrders ? (
                 <div className="flex flex-wrap -mx-2">
                   {Object.entries(filteredOrders).flatMap(
@@ -194,14 +202,6 @@ const handleCheck = async (inputPhoneNumber?: string) => {
                 </div>
               )}
             </div>
-            {activeTab === "active" && totalActiveOrders > 0 && (
-              <div className="mt-4 mb-8 text-white text-lg">
-                Total of pending orders:
-                <span className="bg-primary p-2 ml-1 rounded">
-                  ₹{totalActiveOrders.toFixed(2)}
-                </span>
-              </div>
-            )}
           </>
         )}
       </div>
