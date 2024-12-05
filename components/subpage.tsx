@@ -1,12 +1,12 @@
 "use client";
 import VacantCabinDropdown from "@/components/vacantcabin";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import CompactOrderInfo from "@/components/compactinfo";
 import { SingleItemOrder, MultiItemOrder } from "@/components/orderitem";
-import OrderTabs from "@/components/tabview"; // Adjust the import path as needed
-import OrderSearch from "@/components/searchbox"; // Adjust the import path as needed
+ import OrderSearch from "@/components/searchbox"; // Adjust the import path as needed
 import { Order } from "@/scripts/interface";
 import Expense from "@/components/expense";
 // import CallStaff from "./callstaff";
@@ -49,7 +49,11 @@ export default function OrderPage() {
   const [allCabinsOccupied, setAllCabinsOccupied] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
 
-
+  const handleTabChange = (value: string) => {
+    if (value === "new" || value === "active" || value === "previous") {
+      setActiveTab(value);
+    }
+  };
   const getCabinOptions = (location: string) => {
     if (location === "dagapur") {
       return [
@@ -136,9 +140,7 @@ const checkAllCabinsOccupied = useCallback(
     };
 
 
-  const handleTabChange = (tab: "new" | "active" | "previous") => {
-    setActiveTab(tab);
-  };
+ 
   const handleOrderToggle = (phoneNumber: string, isExpanded: boolean) => {
     setExpandedOrders((prev) => ({
       ...prev,
@@ -767,13 +769,19 @@ const calculateTotalSales = (orders: Order[]) => {
             slug={slug}
           />
         </div>
-        <div className="mb-8">
-          <OrderTabs
-            activeTab={activeTab}
-            setActiveTab={handleTabChange}
-            counts={counts}
-          />
-        </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="mb-4"
+        >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="new">New ({counts.new})</TabsTrigger>
+            <TabsTrigger value="active">Active ({counts.active})</TabsTrigger>
+            <TabsTrigger value="previous">
+              Previous ({counts.previous})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
         {activeTab === "new" && (
           <div className="mb-8">{renderOrders(groupedOrders.new)}</div>
         )}
