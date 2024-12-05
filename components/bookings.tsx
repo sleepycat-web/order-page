@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Loader2 } from "lucide-react"; // Import Loader2
+import { X, Loader2, UserPen } from "lucide-react"; // Import Loader2
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format, isValid } from "date-fns";
@@ -28,10 +28,15 @@ const BookingList: React.FC<{ bookings: Booking[] }> = ({ bookings }) => {
 
         return (
           <Card key={booking._id.$oid} className="bg-neutral-800 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold text-white">
-                {booking.name}
-              </CardTitle>
+            <CardHeader className="flex justify-between items-left">
+              <div className="flex items-center">
+                <CardTitle className="text-xl font-semibold text-white">
+                  {booking.name}
+                </CardTitle>
+                <Button variant="ghost" className="ml-auto">
+                  <UserPen />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-6 gap-2 mb-4">
@@ -39,19 +44,24 @@ const BookingList: React.FC<{ bookings: Booking[] }> = ({ bookings }) => {
                   Date: <span className="text-white">{formattedDate}</span>
                 </p>
                 <p className="text-neutral-400 col-span-3">
-                  Location: <span className="text-white">{booking.location}</span>
+                  Location:{" "}
+                  <span className="text-white">{booking.location}</span>
                 </p>
                 <p className="text-neutral-400 col-span-3">
-                  Start Time: <span className="text-white">{booking.startTime}</span>
+                  Start Time:{" "}
+                  <span className="text-white">{booking.startTime}</span>
                 </p>
                 <p className="text-neutral-400 col-span-3">
-                  End Time: <span className="text-white">{booking.endTime}</span>
+                  End Time:{" "}
+                  <span className="text-white">{booking.endTime}</span>
                 </p>
                 <p className="text-neutral-400 col-span-6">
-                  Created at: <span className="text-white">{formattedCreatedAt}</span>
+                  Created at:{" "}
+                  <span className="text-white">{formattedCreatedAt}</span>
                 </p>
                 <div className="text-neutral-400 col-span-3">
-                  Price: <Badge className="text-sm">₹{booking.finalPrice}</Badge>
+                  Price:{" "}
+                  <Badge className="text-sm">₹{booking.finalPrice}</Badge>
                 </div>
                 {booking.promoCode && (
                   <p className="text-neutral-400 col-span-3">
@@ -64,7 +74,10 @@ const BookingList: React.FC<{ bookings: Booking[] }> = ({ bookings }) => {
                 {booking.finalPrice > 0 && (
                   <div className="text-neutral-400 col-span-3">
                     Payment:{" "}
-                    <Badge className="text-sm text-white bg-green-500" variant="accent">
+                    <Badge
+                      className="text-sm text-white bg-green-500"
+                      variant="accent"
+                    >
                       Fulfilled
                     </Badge>
                   </div>
@@ -152,7 +165,7 @@ const Bookings: React.FC<BookingsProps> = ({ slug, onClose }) => {
         ) : bookings.length === 0 ? (
           <p className="text-left text-neutral-500">No bookings found</p>
         ) : (
-          // Add Tabs component
+          
           <Tabs
             value={activeTab}
             onValueChange={(value: string) => {
