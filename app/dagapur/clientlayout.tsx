@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import Login from "./login";
+import Login from "../login";
 
 const ClientLayout = ({ children }: { children: React.ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
