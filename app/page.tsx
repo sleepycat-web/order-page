@@ -225,7 +225,7 @@ const handleAddToCart = (
 
   return (
     <div>
-      <div className="relative min-h-svh flex flex-col">
+      <div className="relative min-h-svh bg-black flex flex-col">
         {" "}
         {selectedItem && (
           <div className="fixed inset-0 bg-black opacity-50 z-40"></div>

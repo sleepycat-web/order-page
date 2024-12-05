@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ThemeProvider from "./themeprovider";
-
-const inter = Inter({ subsets: ["latin"] });
-
+import { ThemeProvider } from "@/components/ui/theme-provider";
+ 
 export const metadata: Metadata = {
   title: "Chai Mine Order",
   description: "",
@@ -17,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className="dark font-poppins">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
