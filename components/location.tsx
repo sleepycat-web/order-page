@@ -1,5 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ChevronDown } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alertloc";
 
 interface Location {
   name: string;
@@ -135,113 +152,89 @@ const locationDropdownRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
-      {isLocationPromptVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-neutral-900 p-6 rounded-lg ">
-            <h2 className="text-xl font-bold mb-4">Enable Location Services</h2>
-            <p className="mb-4">
+      <Dialog
+        open={isLocationPromptVisible}
+        onOpenChange={setIsLocationPromptVisible}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enable Location Services</DialogTitle>
+            <DialogDescription>
               Please enable location services to automatically detect your
               location.
-            </p>
-            <button
-              className="btn btn-primary mr-2 "
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
               onClick={() => {
                 setIsLocationPromptVisible(false);
                 detectLocation();
               }}
             >
               Enable Location
-            </button>
-            <button
-              className="btn"
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => setIsLocationPromptVisible(false)}
             >
               Cancel
-            </button>
-          </div>
-        </div>
-      )}
-      {locationDetected === true && (
-        <p className="text-green-500 mb-4">Location detected successfully</p>
-      )}
-      {showManualInputMessage && (
-        <p className="text-red-500 mb-4">
-          Failed to detect location. Please input manually.
-        </p>
-      )}
-      <div className=" dark flex flex-row space-x-4 mt-4 sm:mt-0">
-        <div className="relative" ref={locationDropdownRef}>
-          <button
-            className="btn text-left bg-neutral-900"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            {selectedLocation || "Select Location"}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 448 512"
-              className="ml-2 h-4 w-4 inline"
-              fill="currentColor"
-            >
-              <path d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
-            </svg>
-          </button>
-          {isDropdownOpen && (
-            <ul className="menu text-white rounded-box absolute z-10 mt-1 p-2 w-52 bg-neutral-800">
-              {locations.map((location) => (
-                <li key={location.name}>
-                  <Link
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onLocationSelect(location.name, "");
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    {location.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <div className="relative" ref={cabinDropdownRef}>
-          <button
-            className={`btn text-left bg-neutral-900 disabled:text-neutral-200/40 ${
-              !selectedLocation ? "btn-disabled" : ""
-            }`}
-            onClick={() => setIsCabinDropdownOpen(!isCabinDropdownOpen)}
-            disabled={!selectedLocation}
-          >
-            {selectedCabin || "Select Cabin"}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 448 512"
-              className="ml-2 h-4 w-4 inline"
-              fill="currentColor"
-            >
-              <path d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
-            </svg>
-          </button>
-          {isCabinDropdownOpen && selectedLocation && (
-            <ul className="menu bg-neutral-800 text-white rounded-box absolute z-10 mt-1 p-2 w-52">
-              {getCabinOptions().map((cabin) => (
-                <li key={cabin}>
-                  <Link
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onLocationSelect(selectedLocation, cabin);
-                      setIsCabinDropdownOpen(false);
-                    }}
-                  >
-                    {cabin}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      {locationDetected === true && (
+        <Alert variant="default" className="mb-4">
+          <AlertDescription>Location detected successfully</AlertDescription>
+        </Alert>
+      )}
+
+      {showManualInputMessage && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>
+            Failed to detect location. Please input manually.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="flex flex-row space-x-4 mt-4 sm:mt-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              {selectedLocation || "Select Location"}
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {locations.map((location) => (
+              <DropdownMenuItem
+                key={location.name}
+                onSelect={() => onLocationSelect(location.name, "")}
+              >
+                {location.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" disabled={!selectedLocation}>
+              {selectedCabin || "Select Cabin"}
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {getCabinOptions().map((cabin) => (
+              <DropdownMenuItem
+                key={cabin}
+                onSelect={() => onLocationSelect(selectedLocation, cabin)}
+              >
+                {cabin}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </>
   );
@@ -257,7 +250,7 @@ function calculateDistance(
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+  const Δλ = ((lon1 - lon2) * Math.PI) / 180;
 
   const a =
     Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
