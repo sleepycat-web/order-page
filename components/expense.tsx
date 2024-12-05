@@ -1,5 +1,22 @@
-import { is } from "date-fns/locale";
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface ExpenseProps {
   slug: string;
@@ -116,10 +133,10 @@ const toggleAdd = () => {
       setIsSubmitting(false);
     }
   };
-const calculateCashBalance = () => {
+const calculateCashBalance = useCallback(() => {
   const regularCashBalance = allTimeCounterBalance; 
   return regularCashBalance  ;
-  };
+}, [allTimeCounterBalance]);
   const fetchDailyExpenses = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -188,7 +205,7 @@ const handleAddMoneySubmit = async () => {
     }
   }, [slug]);
 
-  const fetchCounterBalanceEntries = async () => {
+  const fetchCounterBalanceEntries = useCallback(async () => {
     try {
       const response = await fetch(`/api/cashBalanceHandler?slug=${slug}`);
       if (!response.ok) {
@@ -199,7 +216,7 @@ const handleAddMoneySubmit = async () => {
     } catch (error) {
       console.error('Error fetching counter balance entries:', error);
     }
-  };
+  }, [slug]);
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -230,7 +247,7 @@ const handleAddMoneySubmit = async () => {
     if (isVerifyCounterBalanceExpanded) {
       fetchCounterBalanceEntries();
     }
-  }, [isVerifyCounterBalanceExpanded]);
+  }, [isVerifyCounterBalanceExpanded, fetchCounterBalanceEntries]);
 
   const handleCategorySelect = (cat: string) => {
     setCategory(cat);
@@ -339,63 +356,55 @@ useEffect(() => {
   };
 
   return (
-    <div className="">
-      <div className="flex flex-row gap-1 mb-2">
-        {isLoading ? null : (
-          <div className="flex flex-wrap gap-2">
-            {/* <div className="bg-lime-600 p-2 rounded">
-              <span className="font-semibold">Total sales: </span>
-              <span>₹{calculateTotalSales().toFixed(2)}</span>
-            </div> */}
-
-            {totalTips > 0 && (
-              <div className="bg-teal-600 p-2 rounded">
-                <span className="font-semibold">Total tips: </span>
-                <span>₹{totalTips.toFixed(2)}</span>
-              </div>
-            )}
-
-            <div
-              className="bg-amber-600 p-2 rounded cursor-pointer"
-              onClick={toggleExpenses}
+    <div className="space-y-4">
+      {isLoading ? null : (
+        <div className="flex flex-wrap gap-2">
+          {totalTips > 0 && (
+            <Button variant="accent" className="bg-teal-600 ">
+              Total tips: ₹{totalTips.toFixed(2)}
+            </Button>
+          )}
+          <Button
+            variant="accent"
+            className="bg-amber-600  cursor-pointer"
+            onClick={toggleExpenses}
+          >
+            Expenses: ₹{calculateTotalExpenses().toFixed(2)}
+          </Button>
+          <Button
+            variant="accent"
+            className="bg-indigo-600 cursor-pointer"
+            onClick={toggleAdd}
+          >
+            Add Cash/UPI
+          </Button>
+          {balances.online > 0 && (
+            <Button
+              variant="accent"
+              className="bg-blue-600 cursor-pointer"
+              onClick={toggleUPIPayments}
             >
-              <span className="font-semibold">Expenses: </span>
-              <span>₹{calculateTotalExpenses().toFixed(2)}</span>
-            </div>
-            <div
-              className="bg-indigo-600 p-2 rounded cursor-pointer"
-              onClick={toggleAdd}
+              Online Payments
+            </Button>
+          )}
+          {balances.cash > 0 && (
+            <Button
+              variant="accent"
+              className="bg-purple-600 cursor-pointer"
+              onClick={toggleCashBalance}
             >
-              <span className="font-semibold">Add Cash/UPI</span>
-            </div>
-            {balances.online > 0 && (
-              <div
-                className="bg-blue-600 p-2 rounded cursor-pointer"
-                onClick={toggleUPIPayments}
-              >
-                <span className="font-semibold">Online Payments </span>
-                {/* <span>₹{onlineBalance.toFixed(2)}</span> */}
-              </div>
-            )}
-
-            {balances.cash > 0 && (
-              <div
-                className="bg-purple-600 p-2 rounded cursor-pointer"
-                onClick={toggleCashBalance}
-              >
-                <span className="font-semibold">Cash Payments </span>
-                {/* <span>₹{calculateCashBalance().toFixed(2)}</span> */}
-              </div>
-            )}
-            <div
-              className="bg-rose-600 p-2 rounded cursor-pointer"
-              onClick={toggleVerifyCounterBalance}
-            >
-              <span className="font-semibold">Verify Counter Balance</span>
-            </div>
-          </div>
-        )}
-      </div>
+              Cash Payments
+            </Button>
+          )}
+          <Button
+            variant="accent"
+            className="bg-rose-600 cursor-pointer"
+            onClick={toggleVerifyCounterBalance}
+          >
+            Verify Counter Balance
+          </Button>
+        </div>
+      )}
 
       {isAddExpanded && (
         <div className="rounded-lg relative p-4 bg-neutral-900 mb-4">
@@ -632,158 +641,152 @@ useEffect(() => {
           )}
         </div>
       )}
-      <div className="mb-4">
-        {isCashBalanceExpanded && (
-          <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
-            <button
-              onClick={toggleCashBalance}
-              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
-            >
-              <p className="text-3xl">&times;</p>
-            </button>
-            <h3 className="font-semibold mb-2">Cash Balance Details</h3>
-            <ul className="space-y-2">
-              {dailyExpenses
-                .filter(
-                  (expense) =>
-                    expense.category === "Extra Cash Payment" ||
-                    expense.category === "Opening Cash"
-                )
-                .map((expense) => (
-                  <li
-                    key={expense._id}
-                    className="flex justify-between items-center"
-                  >
-                    <span className="font-medium">{expense.category}</span>
-                    <span className="flex items-center">
-                      <span className="text-sm text-gray-400 mr-2">
-                        {expense.comment}
-                      </span>
-                      <span className="p-1 bg-neutral-800 rounded mr-2">
-                        ₹{expense.amount.toFixed(2)}
-                      </span>
-
-                      <span className="text-sm text-gray-400">
-                        {formatDateNonRound(new Date(expense.createdAt))}
-                      </span>
+      {isCashBalanceExpanded && (
+        <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+          <button
+            onClick={toggleCashBalance}
+            className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+          >
+            <p className="text-3xl">&times;</p>
+          </button>
+          <h3 className="font-semibold mb-2">Cash Balance Details</h3>
+          <ul className="space-y-2">
+            {dailyExpenses
+              .filter(
+                (expense) =>
+                  expense.category === "Extra Cash Payment" ||
+                  expense.category === "Opening Cash"
+              )
+              .map((expense) => (
+                <li
+                  key={expense._id}
+                  className="flex justify-between items-center"
+                >
+                  <span className="font-medium">{expense.category}</span>
+                  <span className="flex items-center">
+                    <span className="text-sm text-gray-400 mr-2">
+                      {expense.comment}
                     </span>
-                  </li>
-                ))}
-            </ul>
-          </div>
-        )}
-      </div>
-      <div className="mb-4">
-        {isUPIPaymentsExpanded && (
-          <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+                    <span className="p-1 bg-neutral-800 rounded mr-2">
+                      ₹{expense.amount.toFixed(2)}
+                    </span>
+
+                    <span className="text-sm text-gray-400">
+                      {formatDateNonRound(new Date(expense.createdAt))}
+                    </span>
+                  </span>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+      {isUPIPaymentsExpanded && (
+        <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+          <button
+            onClick={toggleUPIPayments}
+            className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+          >
+            <p className="text-3xl">&times;</p>
+          </button>
+          <h3 className="font-semibold mb-2">UPI Payments for the day</h3>
+          <ul className="space-y-2">
+            {dailyExpenses
+              .filter(
+                (expense) =>
+                  expense.category === "UPI Payment" ||
+                  expense.category === "Extra UPI Payment"
+              )
+              .map((expense) => (
+                <li
+                  key={expense._id}
+                  className="flex justify-between items-center"
+                >
+                  <span className="font-medium">
+                    {expense.category === "Extra UPI Payment"
+                      ? "Extra UPI Payment"
+                      : expense.comment}
+                  </span>
+                  <span className="flex items-center">
+                    <span className="text-sm text-gray-400 mr-2">
+                      {expense.category === "Extra UPI Payment"
+                        ? expense.comment
+                        : null}
+                    </span>
+                    <span className="p-1 bg-neutral-800 rounded mr-2">
+                      ₹{expense.amount.toFixed(2)}
+                    </span>
+                    <span className="text-sm text-gray-400">
+                      {formatDateNonRound(new Date(expense.createdAt))}
+                    </span>
+                  </span>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {isVerifyCounterBalanceExpanded && (
+        <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+          <button
+            onClick={toggleVerifyCounterBalance}
+            className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+          >
+            <p className="text-3xl">&times;</p>
+          </button>
+          <div className="flex flex-wrap items-center   gap-2 mb-4">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={addMoneyAmount}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setAddMoneyAmount(value);
+                }
+              }}
+              placeholder="Enter amount"
+              className="input bg-neutral-800 w-full max-w-xs mr-2"
+            />
             <button
-              onClick={toggleUPIPayments}
-              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+              onClick={handleAddMoneySubmit}
+              className="btn btn-primary"
+              disabled={!addMoneyAmount || isSubmittingAddMoney}
             >
-              <p className="text-3xl">&times;</p>
+              {isSubmittingAddMoney ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                "Submit"
+              )}
             </button>
-            <h3 className="font-semibold mb-2">UPI Payments for the day</h3>
-            <ul className="space-y-2">
-              {dailyExpenses
-                .filter(
-                  (expense) =>
-                    expense.category === "UPI Payment" ||
-                    expense.category === "Extra UPI Payment"
-                )
-                .map((expense) => (
+          </div>
+          <div className="text-sm text-gray-400 mb-4">
+            {formatDate(currentDateTime)}
+          </div>
+
+          {counterBalanceEntries.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Counter Balance Entries</h3>
+              <ul className="space-y-2">
+                {counterBalanceEntries.map((entry) => (
                   <li
-                    key={expense._id}
+                    key={entry._id}
                     className="flex justify-between items-center"
                   >
                     <span className="font-medium">
-                      {expense.category === "Extra UPI Payment"
-                        ? "Extra UPI Payment"
-                        : expense.comment}
+                      {formatDateNonRound(new Date(entry.createdAt))}
                     </span>
-                    <span className="flex items-center">
-                      <span className="text-sm text-gray-400 mr-2">
-                        {expense.category === "Extra UPI Payment"
-                          ? expense.comment
-                          : null}
-                      </span>
-                      <span className="p-1 bg-neutral-800 rounded mr-2">
-                        ₹{expense.amount.toFixed(2)}
-                      </span>
-                      <span className="text-sm text-gray-400">
-                        {formatDateNonRound(new Date(expense.createdAt))}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      <div className="mb-4">
-        {isVerifyCounterBalanceExpanded && (
-          <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
-            <button
-              onClick={toggleVerifyCounterBalance}
-              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
-            >
-              <p className="text-3xl">&times;</p>
-            </button>
-            <div className="flex flex-wrap items-center   gap-2 mb-4">
-              <input
-                type="text"
-                inputMode="decimal"
-                value={addMoneyAmount}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d*\.?\d*$/.test(value)) {
-                    setAddMoneyAmount(value);
-                  }
-                }}
-                placeholder="Enter amount"
-                className="input bg-neutral-800 w-full max-w-xs mr-2"
-              />
-              <button
-                onClick={handleAddMoneySubmit}
-                className="btn btn-primary"
-                disabled={!addMoneyAmount || isSubmittingAddMoney}
-              >
-                {isSubmittingAddMoney ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  "Submit"
-                )}
-              </button>
-            </div>
-            <div className="text-sm text-gray-400 mb-4">
-              {formatDate(currentDateTime)}
-            </div>
-            
-            {counterBalanceEntries.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-2">Counter Balance Entries</h3>
-                <ul className="space-y-2">
-                  {counterBalanceEntries.map((entry) => (
-                    <li
-                      key={entry._id}
-                      className="flex justify-between items-center"
-                    >
-                      <span className="font-medium">
-                        {formatDateNonRound(new Date(entry.createdAt))}
-                      </span>
-                      {/* <span className="flex items-center">
+                    {/* <span className="flex items-center">
                         <span className="text-sm text-gray-400">
                         {slug ==="sevoke"?"Sevoke Road": "Dagapur"}
                         </span>
                       </span> */}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
       {isBalanceModalShown && (
         <dialog id="my_modal_1" className="modal modal-open">
           <div className="modal-box bg-neutral-800">
@@ -804,6 +807,7 @@ useEffect(() => {
           </div>
         </dialog>
       )}
+      
     </div>
   );
 };
