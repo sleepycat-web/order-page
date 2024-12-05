@@ -387,7 +387,7 @@ useEffect(() => {
               Online Payments
             </Button>
           )}
-          {balances.cash > 0 && (
+          {balances.cash > 0 && dailyExpenses.some(expense => expense.category === "Extra Cash Payment" || expense.category === "Opening Cash") && (
             <Button
               variant="accent"
               className="bg-purple-600 cursor-pointer"
@@ -429,7 +429,7 @@ useEffect(() => {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 011.414 1.414l-4 4a1 1 01-1.414 0l-4-4a1 1 010-1.414z"
                     clipRule="evenodd"
                   />
                 </svg>
@@ -545,7 +545,7 @@ useEffect(() => {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 111.414 1.414l-4 4a1 1 01-1.414 0l-4-4a1 1 010-1.414z"
                     clipRule="evenodd"
                   />
                 </svg>
@@ -641,7 +641,7 @@ useEffect(() => {
           )}
         </div>
       )}
-      {isCashBalanceExpanded && (
+      {isCashBalanceExpanded && dailyExpenses.some(expense => expense.category === "Extra Cash Payment" || expense.category === "Opening Cash") && (
         <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
           <button
             onClick={toggleCashBalance}
