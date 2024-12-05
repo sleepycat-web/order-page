@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
+import Bookings from "./bookings";
 interface ExpenseProps {
   slug: string;
   totalSales: number;
@@ -61,6 +61,7 @@ const Expense: React.FC<ExpenseProps> = ({ slug, totalSales, totalTips }) => {
   const [isSubmittingAddMoney, setIsSubmittingAddMoney] = useState(false);
   const [isBalanceModalShown, setIsBalanceModalShown] = useState(false);
   const [isBalanceSubmitted, setIsBalanceSubmitted] = useState(false);
+  const [isBookingsVisible, setIsBookingsVisible] = useState(false);
 
 const toggleExpenses = () => {
   setIsExpensesExpanded(!isExpensesExpanded);
@@ -355,6 +356,10 @@ useEffect(() => {
     setIsUPIPaymentsExpanded(!isUPIPaymentsExpanded);
   };
 
+  const toggleBookings = () => {
+    setIsBookingsVisible(!isBookingsVisible);
+  };
+
   return (
     <div className="space-y-4">
       {isLoading ? null : (
@@ -403,6 +408,12 @@ useEffect(() => {
           >
             Verify Counter Balance
           </Button>
+          <Button
+            className="cursor-pointer"
+            onClick={toggleBookings}
+          >
+            Bookings
+          </Button>
         </div>
       )}
 
@@ -429,7 +440,7 @@ useEffect(() => {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 011.414 1.414l-4 4a1 1 01-1.414 0l-4-4a1 1 010-1.414z"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 111.414 1.414l-4 4a1 1 01-1.414 0l-4-4a1 1 010-1.414z"
                     clipRule="evenodd"
                   />
                 </svg>
@@ -787,6 +798,9 @@ useEffect(() => {
           )}
         </div>
       )}
+
+      {isBookingsVisible && <Bookings slug={slug} />}
+      
       {isBalanceModalShown && (
         <dialog id="my_modal_1" className="modal modal-open">
           <div className="modal-box bg-neutral-800">
