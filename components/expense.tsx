@@ -392,15 +392,20 @@ useEffect(() => {
               Online Payments
             </Button>
           )}
-          {balances.cash > 0 && dailyExpenses.some(expense => expense.category === "Extra Cash Payment" || expense.category === "Opening Cash") && (
-            <Button
-              variant="accent"
-              className="bg-purple-600 cursor-pointer"
-              onClick={toggleCashBalance}
-            >
-              Cash Payments
-            </Button>
-          )}
+          {balances.cash > 0 &&
+            dailyExpenses.some(
+              (expense) =>
+                expense.category === "Extra Cash Payment" ||
+                expense.category === "Opening Cash"
+            ) && (
+              <Button
+                variant="accent"
+                className="bg-purple-600 cursor-pointer"
+                onClick={toggleCashBalance}
+              >
+                Cash Payments
+              </Button>
+            )}
           <Button
             variant="accent"
             className="bg-rose-600 cursor-pointer"
@@ -408,10 +413,7 @@ useEffect(() => {
           >
             Verify Counter Balance
           </Button>
-          <Button
-            className="cursor-pointer"
-            onClick={toggleBookings}
-          >
+          <Button className="cursor-pointer" onClick={toggleBookings}>
             Bookings
           </Button>
         </div>
@@ -652,45 +654,50 @@ useEffect(() => {
           )}
         </div>
       )}
-      {isCashBalanceExpanded && dailyExpenses.some(expense => expense.category === "Extra Cash Payment" || expense.category === "Opening Cash") && (
-        <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
-          <button
-            onClick={toggleCashBalance}
-            className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
-          >
-            <p className="text-3xl">&times;</p>
-          </button>
-          <h3 className="font-semibold mb-2">Cash Balance Details</h3>
-          <ul className="space-y-2">
-            {dailyExpenses
-              .filter(
-                (expense) =>
-                  expense.category === "Extra Cash Payment" ||
-                  expense.category === "Opening Cash"
-              )
-              .map((expense) => (
-                <li
-                  key={expense._id}
-                  className="flex justify-between items-center"
-                >
-                  <span className="font-medium">{expense.category}</span>
-                  <span className="flex items-center">
-                    <span className="text-sm text-gray-400 mr-2">
-                      {expense.comment}
-                    </span>
-                    <span className="p-1 bg-neutral-800 rounded mr-2">
-                      ₹{expense.amount.toFixed(2)}
-                    </span>
+      {isCashBalanceExpanded &&
+        dailyExpenses.some(
+          (expense) =>
+            expense.category === "Extra Cash Payment" ||
+            expense.category === "Opening Cash"
+        ) && (
+          <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+            <button
+              onClick={toggleCashBalance}
+              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+            >
+              <p className="text-3xl">&times;</p>
+            </button>
+            <h3 className="font-semibold mb-2">Cash Balance Details</h3>
+            <ul className="space-y-2">
+              {dailyExpenses
+                .filter(
+                  (expense) =>
+                    expense.category === "Extra Cash Payment" ||
+                    expense.category === "Opening Cash"
+                )
+                .map((expense) => (
+                  <li
+                    key={expense._id}
+                    className="flex justify-between items-center"
+                  >
+                    <span className="font-medium">{expense.category}</span>
+                    <span className="flex items-center">
+                      <span className="text-sm text-gray-400 mr-2">
+                        {expense.comment}
+                      </span>
+                      <span className="p-1 bg-neutral-800 rounded mr-2">
+                        ₹{expense.amount.toFixed(2)}
+                      </span>
 
-                    <span className="text-sm text-gray-400">
-                      {formatDateNonRound(new Date(expense.createdAt))}
+                      <span className="text-sm text-gray-400">
+                        {formatDateNonRound(new Date(expense.createdAt))}
+                      </span>
                     </span>
-                  </span>
-                </li>
-              ))}
-          </ul>
-        </div>
-      )}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
       {isUPIPaymentsExpanded && (
         <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
           <button
@@ -799,8 +806,9 @@ useEffect(() => {
         </div>
       )}
 
-      {isBookingsVisible && <Bookings slug={slug} />}
-      
+      {isBookingsVisible && (
+        <Bookings slug={slug} onClose={() => setIsBookingsVisible(false)} />
+      )}
       {isBalanceModalShown && (
         <dialog id="my_modal_1" className="modal modal-open">
           <div className="modal-box bg-neutral-800">
@@ -821,7 +829,6 @@ useEffect(() => {
           </div>
         </dialog>
       )}
-      
     </div>
   );
 };
