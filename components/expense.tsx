@@ -420,7 +420,7 @@ useEffect(() => {
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="btn bg-neutral-800 border-none hover:bg-neutral-800 text-neutral-200 px-6 p-3 w-full sm:w-auto flex items-center justify-left"
               >
-                {paycategory || "Select Category"}
+                {paycategory || "Select Payment Category"}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"

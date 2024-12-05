@@ -741,24 +741,22 @@ const calculateTotalSales = (orders: Order[]) => {
 
   return (
     <>
-      <style jsx global>{`
-        @keyframes highlightAnimation {
-          0% {
-            background-color: #ffd700;
-          }
-        }
-      `}</style>
-      <div className="container mx-auto  px-4 py-8 text-white min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">
-          {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
-        </h1>
-        {networkError && null}
-        <OrderSearch
-          orders={orders}
-          setActiveTab={setActiveTab}
-          orderRefs={orderRefs}
-          setHighlightedOrderId={setHighlightedOrderId}
-        />
+      <div className="container mx-auto px-4  text-white min-h-screen">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full py-4">
+          <h1 className="text-3xl font-bold text-white mb-4 md:mb-0 text-left md:text-center w-full md:w-auto">
+            {slug.charAt(0).toUpperCase() + slug.slice(1)} Orders
+          </h1>
+          <div className="w-full md:w-auto">
+            <OrderSearch
+              orders={orders}
+              payLaterOrders={payLaterOrders} // Pass payLaterOrders
+              setActiveTab={setActiveTab}
+              orderRefs={orderRefs}
+              setHighlightedOrderId={setHighlightedOrderId}
+              setPayLaterExpanded={setPayLaterExpanded}
+            />
+          </div>
+        </div>
         <div className="">
           <VacantCabinDropdown
             orders={combinedOrders([

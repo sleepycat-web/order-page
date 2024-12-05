@@ -1,41 +1,73 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { useState, Dispatch, SetStateAction, useEffect } from "react";
 import { Order } from "@/scripts/interface";
-
-
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Search } from "lucide-react";
 
 interface OrderSearchProps {
   orders: Order[];
+  payLaterOrders: Order[]; // Add payLaterOrders prop
   setActiveTab: (tab: "new" | "active" | "previous") => void;
   orderRefs: React.MutableRefObject<{
     [key: string]: React.RefObject<HTMLDivElement>;
   }>;
   setHighlightedOrderId: Dispatch<SetStateAction<string | null>>;
+  setPayLaterExpanded: Dispatch<SetStateAction<boolean>>;
 }
 
 const OrderSearch: React.FC<OrderSearchProps> = ({
   orders,
+  payLaterOrders,
   setActiveTab,
   orderRefs,
-  setHighlightedOrderId
+  setHighlightedOrderId,
+  setPayLaterExpanded,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>("");
 
   const handleSearch = (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
     if (!searchTerm.trim()) return;
 
     const normalizedSearchTerm = searchTerm.toLowerCase();
+    const currentDate = new Date().setHours(0, 0, 0, 0);
 
-    const foundOrder = orders.find(
-      (order) =>
-        order.customerName.toLowerCase().includes(normalizedSearchTerm) ||
-        order.phoneNumber.includes(normalizedSearchTerm)
-    );
+    // Combine orders and payLaterOrders
+    const allOrders = [...orders, ...payLaterOrders];
+
+    const foundOrder = allOrders.find((order) => {
+      const nameMatch = order.customerName
+        .toLowerCase()
+        .includes(normalizedSearchTerm);
+      const phoneMatch = order.phoneNumber
+        .toLowerCase()
+        .includes(normalizedSearchTerm);
+      const fuzzyMatch =
+        order.customerName.toLowerCase().length > 2 &&
+        normalizedSearchTerm.length > 2 &&
+        order.customerName
+          .toLowerCase()
+          .includes(normalizedSearchTerm.slice(0, 3));
+      return nameMatch || phoneMatch || fuzzyMatch;
+    });
 
     if (foundOrder) {
       let tabToSet: "new" | "active" | "previous";
-      if (
+      const orderDate = new Date(foundOrder.createdAt).setHours(0, 0, 0, 0);
+
+      if (orderDate < currentDate || payLaterOrders.includes(foundOrder)) {
+        tabToSet = "previous";
+        setPayLaterExpanded(true); // Expand Pay Later section
+      } else if (
         foundOrder.status === "fulfilled" &&
         foundOrder.order === "dispatched"
       ) {
@@ -52,6 +84,13 @@ const OrderSearch: React.FC<OrderSearchProps> = ({
       setActiveTab(tabToSet);
       setHighlightedOrderId(foundOrder._id);
 
+      // Ensure the pay later section expands if it's a previous order
+      if (tabToSet === "previous") {
+        setTimeout(() => {
+          setPayLaterExpanded(true);
+        }, 100);
+      }
+
       setTimeout(() => {
         const orderElement = orderRefs.current[foundOrder._id]?.current;
         if (orderElement) {
@@ -60,53 +99,52 @@ const OrderSearch: React.FC<OrderSearchProps> = ({
             block: "start",
           });
         }
-      }, 100);
+      }, 200);
     } else {
       setShowModal(true);
-      setTimeout(() => setShowModal(false), 5000);
     }
   };
 
+  // Add this useEffect to log when orders change
+  useEffect(() => {}, [orders]);
+
   return (
     <>
-      <form onSubmit={handleSearch} className="mb-4 flex items-center">
-        <input
+      <form
+        onSubmit={handleSearch}
+        className="flex items-center w-full md:w-auto"
+      >
+        <Input
           type="text"
           placeholder="Search"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="input bg-neutral-800 mr-2 text-white"
+          className="bg-blue-400 text-white placeholder-white w-full md:w-80"
         />
-        <button
+        <Button
           type="submit"
-          className="btn btn-ghost btn-circle"
+          variant="ghost"
+          size="icon"
           disabled={!searchTerm.trim()}
+          className="ml-2"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 512 512"
-            className="h-5 w-5 fill-white"
-          >
-            <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z" />
-          </svg>
-        </button>
+          <Search className="h-5 w-5 text-white" />
+        </Button>
       </form>
-      {showModal && (
-        <div className="modal modal-open">
-          <div className="modal-box bg-neutral-800">
-            <h3 className="font-bold text-lg">Order Not Found</h3>
-            <p className="py-4">No order found with the given details.</p>
-            <div className="modal-action">
-              <button
-                className="btn btn-primary text-black"
-                onClick={() => setShowModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="bg-neutral-800 text-white">
+          <DialogHeader>
+            <DialogTitle>Order Not Found</DialogTitle>
+            <DialogDescription>
+              No order found with the given details.
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => setShowModal(false)} className="mt-4">
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
