@@ -57,11 +57,13 @@ interface Booking {
   endTime: string;
   finalPrice: number;
   name: string;
+  phone: string;
   promoCode?: {
     code: string;
     percentage: number;
   };
   createdAt: string;
+  modifiedAt?: string;
 }
 
 interface BookingCardProps {
@@ -89,6 +91,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
   const [isDateManuallySelected, setIsDateManuallySelected] =
     useState<boolean>(false);
+  const [isPhoneVisible, setIsPhoneVisible] = useState(false);
 
   const formattedCreatedAt = formatDateTime(booking.createdAt);
   const formattedDate = formatDate(booking.date);
@@ -228,7 +231,23 @@ const BookingCard: React.FC<BookingCardProps> = ({
       setUpdating(false);
     }
   };
-  
+
+  const showPhoneNumber = async () => {
+    // Placeholder for future API call
+    // try {
+    //   const response = await axios.post('/api/logPhoneView', {
+    //     bookingId: booking._id,
+    //     // other required data
+    //   });
+    // } catch (error) {
+    //   console.error('Error logging phone view:', error);
+    // }
+
+    setIsPhoneVisible(true);
+    setTimeout(() => {
+      setIsPhoneVisible(false);
+    }, 5000);
+  };
 
   return (
     <Card key={booking._id} className="bg-neutral-800 shadow-md">
@@ -328,20 +347,43 @@ const BookingCard: React.FC<BookingCardProps> = ({
       <CardContent>
         <div className="grid grid-cols-6 gap-2 mb-4">
           <p className="text-neutral-400 col-span-3">
-            Date: <span className="text-white">{formattedDate}</span>
+            Phone:{" "}
+            {isPhoneVisible ? (
+              <span className="text-white">{booking.phone}</span>
+            ) : (
+              <span
+                onClick={showPhoneNumber}
+                className="text-blue-400 underline cursor-pointer hover:text-blue-300"
+              >
+                Show Number
+              </span>
+            )}
           </p>
           <p className="text-neutral-400 col-span-3">
-            Location: <span className="text-white">{booking.location}</span>
+            Date: <span className="text-white">{formattedDate}</span>
           </p>
+
+          {/* <p className="text-neutral-400 col-span-3">
+            Location: <span className="text-white">{booking.location}</span>
+          </p> */}
           <p className="text-neutral-400 col-span-3">
             Start Time: <span className="text-white">{booking.startTime}</span>
           </p>
           <p className="text-neutral-400 col-span-3">
             End Time: <span className="text-white">{booking.endTime}</span>
           </p>
+
           <p className="text-neutral-400 col-span-6">
             Created at: <span className="text-white">{formattedCreatedAt}</span>
           </p>
+          {booking.modifiedAt && (
+            <p className="text-neutral-400 col-span-6">
+              Modified at:{" "}
+              <span className="text-white">
+                {formatDateTime(booking.modifiedAt)}
+              </span>
+            </p>
+          )}
           <div className="text-neutral-400 col-span-3">
             Price: <Badge className="text-sm">₹{booking.finalPrice}</Badge>
           </div>
