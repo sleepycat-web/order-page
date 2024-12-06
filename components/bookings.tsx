@@ -112,6 +112,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
 
   useEffect(() => {
     if (isPopoverOpen) {
+      
       const originalDate = new Date(booking.date);
       const originalTimeSlot =
         TIME_SLOTS.find((slot) => slot.start === booking.startTime) || null;
@@ -163,15 +164,14 @@ useEffect(() => {
 
         const cabins = slot ? slot.availableCabins : [];
 
-        // Always include the current cabin, even if not in available slots
-       const cabinsToShow =
-         cabins.length > 0
-           ? Array.from(new Set([booking.cabin, ...cabins]))
-           : [booking.cabin];
+        // Always include and prioritize the current cabin
+        const cabinsToShow = Array.from(
+          new Set([booking.cabin, ...(cabins || [])])
+        );
 
         setAvailableCabins(cabinsToShow);
 
-        // Set the current cabin as default
+        // Always set the original cabin as the selected cabin
         setSelectedCabin(booking.cabin);
       } catch (error) {
         console.error("Error fetching available cabins:", error);
@@ -184,8 +184,7 @@ useEffect(() => {
 
     fetchAvailableCabins();
   }
-}, [isPopoverOpen, selectedDate, selectedTimeSlot]);
-  
+}, [isPopoverOpen, selectedDate, selectedTimeSlot]); 
   
   const handleDateChange = async (date: Date | undefined) => {
     if (!date) return;
