@@ -145,7 +145,6 @@ const BookingCard: React.FC<BookingCardProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPopoverOpen]);
-
 useEffect(() => {
   if (isPopoverOpen && selectedDate && selectedTimeSlot) {
     const fetchAvailableCabins = async () => {
@@ -153,39 +152,31 @@ useEffect(() => {
       try {
         const response = await axios.post("/api/checkBookings", {
           date: format(selectedDate, "yyyy-MM-dd"),
-          slug: booking.location.toLowerCase().split(" ")[0], // Ensure consistent slug
+          slug: booking.location.toLowerCase().split(" ")[0],
         });
         const data = response.data;
 
-        // Log the entire response data
-        console.log("Check Bookings Response in page.tsx:", data);
-
-        // Find the specific slot with available cabins
         const slot = data.availableSlots.find(
           (s: any) =>
             s.start === selectedTimeSlot.start && s.end === selectedTimeSlot.end
         );
 
-        // Log the found slot
-        console.log("Selected Slot:", slot);
-
-        // Use only available cabins for that specific time slot
         const cabins = slot ? slot.availableCabins : [];
 
-        // Log the available cabins
-        console.log("Available Cabins:", cabins);
+        // Always include the current cabin, even if not in available slots
+       const cabinsToShow =
+         cabins.length > 0
+           ? Array.from(new Set([booking.cabin, ...cabins]))
+           : [booking.cabin];
 
-        setAvailableCabins(cabins);
+        setAvailableCabins(cabinsToShow);
 
-        // Ensure the selectedCabin is within the available cabins
-        if (!cabins.includes(selectedCabin)) {
-          setSelectedCabin(cabins[0] || "");
-          // Log the updated selected cabin
-          console.log("Updated Selected Cabin:", cabins[0] || "");
-        }
+        // Set the current cabin as default
+        setSelectedCabin(booking.cabin);
       } catch (error) {
         console.error("Error fetching available cabins:", error);
-        setAvailableCabins([]);
+        setAvailableCabins([booking.cabin]);
+        setSelectedCabin(booking.cabin);
       } finally {
         setLoadingCabins(false);
       }
@@ -193,7 +184,9 @@ useEffect(() => {
 
     fetchAvailableCabins();
   }
-}, [isPopoverOpen, selectedDate, selectedTimeSlot]);  
+}, [isPopoverOpen, selectedDate, selectedTimeSlot]);
+  
+  
   const handleDateChange = async (date: Date | undefined) => {
     if (!date) return;
 
@@ -231,15 +224,18 @@ useEffect(() => {
     setIsPopoverOpen(open);
   };
 
-  const isUpdateDisabled = () => {
-    if (!selectedDate || !selectedTimeSlot) return true;
-    const originalDate = format(new Date(booking.date), "yyyy-MM-dd");
-    const formattedSelectedDate = format(selectedDate, "yyyy-MM-dd");
-    return (
-      originalDate === formattedSelectedDate &&
-      selectedTimeSlot.start === booking.startTime
-    );
-  };
+const isUpdateDisabled = () => {
+  if (!selectedDate || !selectedTimeSlot || !selectedCabin) return true;
+
+  const originalDate = format(new Date(booking.date), "yyyy-MM-dd");
+  const formattedSelectedDate = format(selectedDate, "yyyy-MM-dd");
+
+  return (
+    originalDate === formattedSelectedDate &&
+    selectedTimeSlot.start === booking.startTime &&
+    selectedCabin === booking.cabin
+  );
+};
 
   const handleUpdate = async () => {
     if (!selectedDate || !selectedTimeSlot || !selectedCabin) {
@@ -351,7 +347,6 @@ useEffect(() => {
                         Select Cabin
                       </label>
                       <Select
-                        key={JSON.stringify(availableCabins)} // Add key prop
                         value={selectedCabin}
                         onValueChange={(value) => setSelectedCabin(value)}
                         disabled={loadingCabins}
@@ -372,16 +367,29 @@ useEffect(() => {
                             <SelectItem value="loading" disabled>
                               Loading cabins...
                             </SelectItem>
-                          ) : availableCabins.length > 0 ? (
-                            availableCabins.map((cabin) => (
-                              <SelectItem key={cabin} value={cabin}>
-                                {cabin}
-                              </SelectItem>
-                            ))
                           ) : (
-                            <SelectItem value="no_cabins" disabled>
-                              No cabins available
-                            </SelectItem>
+                            <>
+                              {!availableCabins.includes(booking.cabin) && (
+                                <SelectItem
+                                  key="current-cabin"
+                                  value={booking.cabin}
+                                >
+                                  {booking.cabin} (Current)
+                                </SelectItem>
+                              )}
+
+                              {availableCabins.map((cabin) => (
+                                <SelectItem key={cabin} value={cabin}>
+                                  {cabin}
+                                </SelectItem>
+                              ))}
+
+                              {availableCabins.length === 0 && (
+                                <SelectItem value="no_cabins" disabled>
+                                  No cabins available
+                                </SelectItem>
+                              )}
+                            </>
                           )}
                         </SelectContent>
                       </Select>
@@ -393,6 +401,9 @@ useEffect(() => {
                   <Button
                     onClick={() => setIsModalOpen(true)}
                     disabled={isUpdateDisabled() || updating}
+                    variant={
+                      isUpdateDisabled() || updating ? "outline" : undefined
+                    }
                     className="ml-2"
                   >
                     {updating ? (
