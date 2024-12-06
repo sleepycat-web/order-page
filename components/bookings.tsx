@@ -131,8 +131,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
           const slots: TimeSlot[] = response.data.availableSlots;
 
           // Log the returned slots
-          console.log("Available Slots:", slots);
-
+ 
           // Set availableSlots directly from the handler
           setAvailableSlots(slots);
         } catch (error) {
@@ -202,8 +201,7 @@ useEffect(() => {
       setAvailableSlots(response.data.availableSlots);
 
       // Log the available slots after date change
-      console.log("Available Slots after Date Change:", response.data.availableSlots);
-    } catch (error) {
+     } catch (error) {
       console.error("Error fetching available slots:", error);
     } finally {
       setLoadingSlots(false);
