@@ -58,6 +58,7 @@ interface Booking {
   finalPrice: number;
   name: string;
   phone: string;
+  cabin: string;
   promoCode?: {
     code: string;
     percentage: number;
@@ -362,7 +363,6 @@ const BookingCard: React.FC<BookingCardProps> = ({
           <p className="text-neutral-400 col-span-3">
             Date: <span className="text-white">{formattedDate}</span>
           </p>
-
           {/* <p className="text-neutral-400 col-span-3">
             Location: <span className="text-white">{booking.location}</span>
           </p> */}
@@ -372,7 +372,9 @@ const BookingCard: React.FC<BookingCardProps> = ({
           <p className="text-neutral-400 col-span-3">
             End Time: <span className="text-white">{booking.endTime}</span>
           </p>
-
+          <p className="text-neutral-400 col-span-3">
+            Cabin: <span className="text-white">{booking.cabin}</span>
+          </p>{" "}
           <p className="text-neutral-400 col-span-6">
             Created at: <span className="text-white">{formattedCreatedAt}</span>
           </p>
