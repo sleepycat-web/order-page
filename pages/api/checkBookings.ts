@@ -122,6 +122,7 @@ export default async function handler(
       availableSlots,
       allCabins,
     });
+    // Ensure that `availableSlots` accurately reflects the remaining cabins.
   } catch (error) {
     console.error("Error checking availability:", error);
     return res.status(500).json({

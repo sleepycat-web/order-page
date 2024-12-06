@@ -125,7 +125,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
         try {
           const response = await axios.post("/api/checkBookings", {
             date: format(originalDate, "yyyy-MM-dd"),
-            slug: slug, // Use the slug prop consistently
+            slug: booking.location.toLowerCase().split(" ")[0], // Ensure consistent slug
           });
           const slots: TimeSlot[] = response.data.availableSlots;
 
@@ -153,12 +153,12 @@ useEffect(() => {
       try {
         const response = await axios.post("/api/checkBookings", {
           date: format(selectedDate, "yyyy-MM-dd"),
-          slug: slug, // Use the slug prop consistently
+          slug: booking.location.toLowerCase().split(" ")[0], // Ensure consistent slug
         });
         const data = response.data;
 
         // Log the entire response data
-        console.log("Check Bookings Response:", data);
+        console.log("Check Bookings Response in page.tsx:", data);
 
         // Find the specific slot with available cabins
         const slot = data.availableSlots.find(
@@ -368,11 +368,21 @@ useEffect(() => {
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          {availableCabins.map((cabin) => (
-                            <SelectItem key={cabin} value={cabin}>
-                              {cabin}
+                          {loadingCabins ? (
+                            <SelectItem value="loading" disabled>
+                              Loading cabins...
                             </SelectItem>
-                          ))}
+                          ) : availableCabins.length > 0 ? (
+                            availableCabins.map((cabin) => (
+                              <SelectItem key={cabin} value={cabin}>
+                                {cabin}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_cabins" disabled>
+                              No cabins available
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
