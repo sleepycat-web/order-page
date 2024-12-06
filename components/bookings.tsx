@@ -21,6 +21,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 // Keep existing date formatting functions intact
 const formatDate = (dateString: string) => {
@@ -93,6 +100,9 @@ const BookingCard: React.FC<BookingCardProps> = ({
   const [isDateManuallySelected, setIsDateManuallySelected] =
     useState<boolean>(false);
   const [isPhoneVisible, setIsPhoneVisible] = useState(false);
+  const [selectedCabin, setSelectedCabin] = useState<string>(booking.cabin);
+  const [availableCabins, setAvailableCabins] = useState<string[]>([]);
+  const [loadingCabins, setLoadingCabins] = useState<boolean>(false);
 
   const formattedCreatedAt = formatDateTime(booking.createdAt);
   const formattedDate = formatDate(booking.date);
@@ -150,10 +160,54 @@ const BookingCard: React.FC<BookingCardProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPopoverOpen]);
 
+ useEffect(() => {
+   if (isPopoverOpen && selectedDate && selectedTimeSlot) {
+     const fetchAvailableCabins = async () => {
+       setLoadingCabins(true);
+       try {
+         const response = await axios.post("/api/checkBookings", {
+           date: format(selectedDate, "yyyy-MM-dd"),
+           slug: booking.location.toLowerCase(),
+         });
+         const data = response.data;
+
+         const slot = data.availableSlots.find(
+           (s: any) =>
+             s.start === selectedTimeSlot.start &&
+             s.end === selectedTimeSlot.end
+         );
+
+         let cabins = slot ? slot.availableCabins : [];
+
+         // Ensure the original cabin is included only if it's available
+         if (cabins.includes(booking.cabin)) {
+           // Do nothing, cabin is already in the list
+         } else if (data.allCabins && !cabins.length) {
+           // If no cabins are available, fallback to the original cabin
+           cabins = [booking.cabin];
+         }
+
+         setAvailableCabins(cabins);
+
+         // If the current cabin is not available, reset the selected cabin
+         if (!cabins.includes(selectedCabin)) {
+           setSelectedCabin(cabins[0] || "");
+         }
+       } catch (error) {
+         console.error("Error fetching available cabins:", error);
+         setAvailableCabins([]);
+       } finally {
+         setLoadingCabins(false);
+       }
+     };
+
+     fetchAvailableCabins();
+   }
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [isPopoverOpen, selectedDate, selectedTimeSlot]);
   const handleDateChange = async (date: Date | undefined) => {
     if (!date) return;
 
- 
     // Ensure the date is set correctly
     const formattedDate = format(date, "yyyy-MM-dd");
     setSelectedDate(new Date(formattedDate)); // Explicitly create a new Date object
@@ -197,11 +251,11 @@ const BookingCard: React.FC<BookingCardProps> = ({
   };
 
   const handleUpdate = async () => {
-    if (!selectedDate || !selectedTimeSlot) {
-      alert("Please select a date and time slot");
+    if (!selectedDate || !selectedTimeSlot || !selectedCabin) {
+      alert("Please select a date, time slot, and cabin");
       return;
     }
-  
+
     setUpdating(true);
     try {
       const response = await axios.post("/api/modifyBookings", {
@@ -210,9 +264,10 @@ const BookingCard: React.FC<BookingCardProps> = ({
         date: format(selectedDate, "yyyy-MM-dd"),
         startTime: selectedTimeSlot.start,
         endTime: selectedTimeSlot.end,
+        cabin: selectedCabin,
         slug: slug,
       });
-  
+
       // Don't treat success messages as errors
       if (response.status === 200) {
         await fetchBookings();
@@ -300,8 +355,38 @@ const BookingCard: React.FC<BookingCardProps> = ({
                         </Button>
                       ))}
                     </div>
+                    <div className="mt-4">
+                      <label className="block text-md font-medium text-white mb-2">
+                        Select Cabin
+                      </label>
+                      <Select
+                        value={selectedCabin}
+                        onValueChange={(value) => setSelectedCabin(value)}
+                        disabled={loadingCabins}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={
+                              loadingCabins
+                                ? "Loading cabins..."
+                                : "Select cabin"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableCabins
+                            .filter((cabin) => availableCabins.includes(cabin))
+                            .map((cabin) => (
+                              <SelectItem key={cabin} value={cabin}>
+                                {cabin}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
+
                 <div className="flex justify-end mt-4">
                   <Button
                     onClick={() => setIsModalOpen(true)}
