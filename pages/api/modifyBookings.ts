@@ -40,21 +40,21 @@ export default async function handler(
     const updateData: any = { location, date, startTime, endTime };
 
     if (date) {
-      const istNow = toZonedTime(new Date(), 'Asia/Kolkata');
+      const istNow = toZonedTime(new Date(), "Asia/Kolkata");
       updateData.modifiedAt = format(istNow, "yyyy-MM-dd'T'HH:mm:ssXXX");
       updateData.name = `${existingBooking.name} (Modified)`; // Use existing booking name
     }
 
-    await db
-      .collection(collectionName)
-      .updateOne(
-        { _id: new ObjectId(bookingId) }, // Convert bookingId to ObjectId
-        { $set: updateData }
-      );
+    await db.collection(collectionName).updateOne(
+      { _id: new ObjectId(bookingId) }, // Convert bookingId to ObjectId
+      { $set: updateData }
+    );
 
     res.status(200).json({ message: "Booking updated successfully" });
   } catch (error) {
     console.error("Error modifying booking:", error);
-    res.status(500).json({ error: (error as Error).message || "Failed to modify booking" });
+    res
+      .status(500)
+      .json({ error: (error as Error).message || "Failed to modify booking" });
   }
 }

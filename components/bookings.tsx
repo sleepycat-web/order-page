@@ -50,9 +50,7 @@ interface TimeSlot {
 }
 
 interface Booking {
-  _id: {
-    $oid: string;
-  };
+  _id: string; // Changed from { $oid: string }
   location: string;
   date: string;
   startTime: string;
@@ -69,33 +67,99 @@ interface Booking {
 interface BookingCardProps {
   booking: Booking;
   fetchBookings: () => Promise<void>;
+  slug: string; // Added slug
 }
 
-const BookingCard: React.FC<BookingCardProps> = ({ booking, fetchBookings }) => {
+const BookingCard: React.FC<BookingCardProps> = ({
+  booking,
+  fetchBookings,
+  slug,
+}) => {
   const now = new Date();
   const istNow = toZonedTime(now, "Asia/Kolkata");
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
+    null
+  );
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState<boolean>(false);
   const [updating, setUpdating] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
-  const [isDateManuallySelected, setIsDateManuallySelected] = useState<boolean>(false);
+  const [isDateManuallySelected, setIsDateManuallySelected] =
+    useState<boolean>(false);
 
   const formattedCreatedAt = formatDateTime(booking.createdAt);
   const formattedDate = formatDate(booking.date);
   const bookingStart = new Date(`${booking.date}T${booking.startTime}:00`);
-  const diffInHours = (bookingStart.getTime() - istNow.getTime()) / (1000 * 60 * 60);
+  const diffInHours =
+    (bookingStart.getTime() - istNow.getTime()) / (1000 * 60 * 60);
 
-  const handleDateChange = async (date: Date) => {
-    setSelectedDate(date);
+  useEffect(() => {
+    if (isPopoverOpen) {
+      const originalDate = new Date(booking.date);
+      const originalTimeSlot =
+        TIME_SLOTS.find((slot) => slot.start === booking.startTime) || null;
+
+      setSelectedDate(originalDate);
+      setSelectedTimeSlot(originalTimeSlot);
+      setIsDateManuallySelected(false);
+
+      // Initialize availableSlots with the original time slot to prevent flashing
+      setAvailableSlots(originalTimeSlot ? [originalTimeSlot] : []);
+
+      const fetchAvailableSlots = async () => {
+        setLoadingSlots(true);
+        try {
+          const response = await axios.post("/api/checkBookings", {
+            date: format(originalDate, "yyyy-MM-dd"),
+            slug: booking.location.toLowerCase(),
+          });
+          let slots: TimeSlot[] = response.data.availableSlots;
+
+          // Ensure the original slot is included
+          if (
+            originalTimeSlot &&
+            !slots.find((slot) => slot.start === originalTimeSlot.start)
+          ) {
+            slots.push(originalTimeSlot);
+          }
+
+          // Append fetched slots to existing availableSlots without duplicates
+          setAvailableSlots((prevSlots) => {
+            const existingStarts = prevSlots.map((slot) => slot.start);
+            const newSlots = slots.filter(
+              (slot) => !existingStarts.includes(slot.start)
+            );
+            return [...prevSlots, ...newSlots];
+          });
+        } catch (error) {
+          console.error("Error fetching available slots:", error);
+        } finally {
+          setLoadingSlots(false);
+        }
+      };
+
+      fetchAvailableSlots();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPopoverOpen]);
+
+  const handleDateChange = async (date: Date | undefined) => {
+    if (!date) return;
+
+    console.log("Handling date change:", date);
+
+    // Ensure the date is set correctly
+    const formattedDate = format(date, "yyyy-MM-dd");
+    setSelectedDate(new Date(formattedDate)); // Explicitly create a new Date object
     setIsDateManuallySelected(true);
     setLoadingSlots(true);
+
     try {
       const response = await axios.post("/api/checkBookings", {
-        date: format(date, "yyyy-MM-dd"),
+        date: formattedDate,
         slug: booking.location.toLowerCase(),
       });
       setAvailableSlots(response.data.availableSlots);
@@ -109,24 +173,51 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, fetchBookings }) => 
   const isDateSelectable = (date: Date) => {
     const now = new Date();
     const istNow = toZonedTime(now, "Asia/Kolkata");
-    return date >= new Date(istNow.setHours(0, 0, 0, 0));
+
+    // Allow selection of today and future dates
+    const todayStart = new Date(istNow.setHours(0, 0, 0, 0));
+    return date >= todayStart;
+  };
+
+  const handlePopoverOpenChange = (open: boolean) => {
+    setIsPopoverOpen(open);
+  };
+
+  const isUpdateDisabled = () => {
+    if (!selectedDate || !selectedTimeSlot) return true;
+    const originalDate = format(new Date(booking.date), "yyyy-MM-dd");
+    const formattedSelectedDate = format(selectedDate, "yyyy-MM-dd");
+    return (
+      originalDate === formattedSelectedDate &&
+      selectedTimeSlot.start === booking.startTime
+    );
   };
 
   const handleUpdate = async () => {
-    if (!selectedDate || !selectedTimeSlot) {
-      console.error("Please select a date and time slot");
+    console.log("Updating - Selected Date:", selectedDate);
+    console.log("Updating - Selected Time Slot:", selectedTimeSlot);
+    console.log("Updating - Booking ID:", booking._id); // Changed from booking._id.$oid
+
+    if (!selectedDate) {
+      alert("Please select a date");
       return;
     }
 
+    if (!selectedTimeSlot) {
+      alert("Please select a time slot");
+      return;
+    }
+
+    // Rest of the update logic remains the same
     setUpdating(true);
     try {
       const response = await axios.post("/api/modifyBookings", {
-        bookingId: booking._id.$oid,
+        bookingId: booking._id, // Changed from booking._id.$oid
         location: booking.location,
         date: format(selectedDate, "yyyy-MM-dd"),
         startTime: selectedTimeSlot.start,
         endTime: selectedTimeSlot.end,
-        slug: booking.location.toLowerCase(),
+        slug: slug, // Added slug
       });
 
       if (response.status === 200 && response.data.success) {
@@ -150,19 +241,8 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, fetchBookings }) => 
     }
   };
 
-  const handlePopoverOpenChange = (open: boolean) => {
-    setIsPopoverOpen(open);
-    if (open) {
-      setSelectedDate(new Date(booking.date));
-      setSelectedTimeSlot(null);
-    } else {
-      setSelectedDate(undefined);
-      setSelectedTimeSlot(null);
-    }
-  };
-
   return (
-    <Card key={booking._id.$oid} className="bg-neutral-800 shadow-md">
+    <Card key={booking._id} className="bg-neutral-800 shadow-md">
       <CardHeader className="flex justify-between items-left">
         <div className="flex items-center">
           <CardTitle className="text-xl font-semibold flex-grow text-white">
@@ -172,6 +252,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, fetchBookings }) => 
             <Popover
               open={isPopoverOpen}
               onOpenChange={handlePopoverOpenChange}
+              defaultOpen={false}
             >
               <PopoverTrigger>
                 <Button variant="ghost" className="ml-auto">
@@ -179,44 +260,43 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, fetchBookings }) => 
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full">
-                <div className={`flex ${isDateManuallySelected ? "space-x-4" : ""}`}>
+                <div className={`flex space-x-4`}>
                   <Calendar
                     selected={selectedDate}
                     onSelect={(date: Date | undefined) => {
                       handleDateChange(date || new Date());
-                      setIsDateManuallySelected(true);
                     }}
                     mode="single"
                     disabled={(date: Date) => !isDateSelectable(date)}
                   />
-                  {selectedDate && !loadingSlots && isDateManuallySelected && (
-                    <div>
-                      <label className="block text-sm font-medium text-white mb-2 mt-4">
-                        Select Time Slot
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {availableSlots.map((slot) => (
-                          <Button
-                            key={slot.start}
-                            variant={
-                              selectedTimeSlot?.start === slot.start
-                                ? "secondary"
-                                : "outline"
-                            }
-                            onClick={() => setSelectedTimeSlot(slot)}
-                            className="text-sm"
-                          >
-                            {slot.label}
-                          </Button>
-                        ))}
-                      </div>
+                  <div className="">
+                    <label className="block text-md font-medium text-white mb-4 mt-4">
+                      Select Time Slot
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {availableSlots.map((slot) => (
+                        <Button
+                          key={slot.start}
+                          variant={
+                            selectedTimeSlot?.start === slot.start
+                              ? "secondary"
+                              : "outline"
+                          }
+                          onClick={() => {
+                            setSelectedTimeSlot(slot);
+                          }}
+                          className="text-sm"
+                        >
+                          {slot.label}
+                        </Button>
+                      ))}
                     </div>
-                  )}
+                  </div>
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-end mt-4">
                   <Button
                     onClick={() => setIsModalOpen(true)}
-                    disabled={!selectedDate || !selectedTimeSlot || updating}
+                    disabled={isUpdateDisabled() || updating}
                     className="ml-2"
                   >
                     {updating ? (
@@ -237,7 +317,9 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, fetchBookings }) => 
               <DialogHeader>
                 <DialogTitle>Confirm Update</DialogTitle>
               </DialogHeader>
-              <p className="mt-2">Are you sure you want to update this booking?</p>
+              <p className="mt-2">
+                Are you sure you want to update this booking?
+              </p>
               <DialogFooter>
                 <Button onClick={() => setIsModalOpen(false)} variant="ghost">
                   Cancel
@@ -379,9 +461,10 @@ const Bookings: React.FC<BookingsProps> = ({ slug, onClose }) => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {todayBookings.map((booking) => (
                       <BookingCard
-                        key={booking._id.$oid}
+                        key={booking._id}
                         booking={booking}
                         fetchBookings={fetchBookings}
+                        slug={slug} // Pass slug
                       />
                     ))}
                   </div>
@@ -396,9 +479,10 @@ const Bookings: React.FC<BookingsProps> = ({ slug, onClose }) => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {upcomingBookings.map((booking) => (
                       <BookingCard
-                        key={booking._id.$oid}
+                        key={booking._id}
                         booking={booking}
                         fetchBookings={fetchBookings}
+                        slug={slug} // Pass slug
                       />
                     ))}
                   </div>
