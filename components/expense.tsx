@@ -363,7 +363,7 @@ useEffect(() => {
   return (
     <div className="space-y-4">
       {isLoading ? null : (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-4">
           {totalTips > 0 && (
             <Button variant="accent" className="bg-teal-600 ">
               Total tips: ₹{totalTips.toFixed(2)}
@@ -534,100 +534,151 @@ useEffect(() => {
           )}
         </div>
       )}
-
-      {isExpensesExpanded && (
-        <div className="rounded-lg relative p-4 bg-neutral-900 mb-4">
-          <button
-            onClick={toggleExpenses}
-            className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
-          >
-            <p className="text-3xl">&times;</p>
-          </button>
-          <div className="flex flex-wrap items-center   gap-2 mb-4">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="btn bg-neutral-800 border-none hover:bg-neutral-800 text-neutral-200 p-3 w-full sm:w-auto flex items-center justify-between"
-              >
-                {category || "Select Category"}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-4 h-4 ml-2"
+      <div className="mb-4">
+        {" "}
+        {isExpensesExpanded && (
+          <div className="rounded-lg relative p-4 bg-neutral-900  mb-4">
+            <button
+              onClick={toggleExpenses}
+              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+            >
+              <p className="text-3xl">&times;</p>
+            </button>
+            <div className="flex flex-wrap items-center   gap-2 mb-4">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="btn bg-neutral-800 border-none hover:bg-neutral-800 text-neutral-200 p-3 w-full sm:w-auto flex items-center justify-between"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 111.414 1.414l-4 4a1 1 01-1.414 0l-4-4a1 1 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                  {category || "Select Category"}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="w-4 h-4 ml-2"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 111.414 1.414l-4 4a1 1 01-1.414 0l-4-4a1 1 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+                {isDropdownOpen && (
+                  <ul className="absolute z-10 mt-1 w-full bg-neutral-800 rounded-box shadow-lg">
+                    {categories.map((cat) => (
+                      <li
+                        key={cat}
+                        className="px-4 py-2 hover:bg-neutral-700 cursor-pointer"
+                        onClick={() => handleCategorySelect(cat)}
+                      >
+                        {cat}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <input
+                type="text"
+                inputMode="decimal"
+                className="input bg-neutral-800 w-full sm:w-40"
+                placeholder="Amount"
+                value={amount}
+                onChange={handleAmountChange}
+              />
+              <input
+                type="text"
+                placeholder="Description"
+                className={`input w-full sm:w-40 ${
+                  comment ? "bg-neutral-800" : "bg-gray-800"
+                }`}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+
+              <button
+                className="btn btn-primary text-black w-full sm:w-auto"
+                onClick={handleSubmit}
+                disabled={!category || !amount || !comment}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                  </>
+                ) : (
+                  "Submit"
+                )}{" "}
               </button>
-              {isDropdownOpen && (
-                <ul className="absolute z-10 mt-1 w-full bg-neutral-800 rounded-box shadow-lg">
-                  {categories.map((cat) => (
-                    <li
-                      key={cat}
-                      className="px-4 py-2 hover:bg-neutral-700 cursor-pointer"
-                      onClick={() => handleCategorySelect(cat)}
-                    >
-                      {cat}
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
 
-            <input
-              type="text"
-              inputMode="decimal"
-              className="input bg-neutral-800 w-full sm:w-40"
-              placeholder="Amount"
-              value={amount}
-              onChange={handleAmountChange}
-            />
-            <input
-              type="text"
-              placeholder="Description"
-              className={`input w-full sm:w-40 ${
-                comment ? "bg-neutral-800" : "bg-gray-800"
-              }`}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-            />
+            <div className="text-sm text-gray-400 mb-4">
+              {formatDate(currentDateTime)}
+            </div>
 
-            <button
-              className="btn btn-primary text-black w-full sm:w-auto"
-              onClick={handleSubmit}
-              disabled={!category || !amount || !comment}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                </>
-              ) : (
-                "Submit"
-              )}{" "}
-            </button>
+            {dailyExpenses.length > 0 && (
+              <div>
+                {calculateTotalExpenses() > 0 && (
+                  <h3 className="font-semibold mb-2">Expenses for the day</h3>
+                )}
+                <ul className="space-y-2">
+                  {dailyExpenses
+                    .filter(
+                      (expense) =>
+                        expense.category !== "UPI Payment" &&
+                        expense.category !== "Extra Cash Payment" &&
+                        expense.category !== "Extra UPI Payment" &&
+                        expense.category !== "Opening Cash"
+                    )
+                    .map((expense) => (
+                      <li
+                        key={expense._id}
+                        className="flex justify-between items-center"
+                      >
+                        <span className="font-medium">{expense.category}</span>
+                        <span className="flex items-center">
+                          <span className="text-sm text-gray-400 mr-2">
+                            {expense.comment}
+                          </span>
+
+                          <span className="p-1 bg-neutral-800 rounded mr-2">
+                            ₹{expense.amount.toFixed(2)}
+                          </span>
+                          <span className="text-sm text-gray-400 m ">
+                            {formatDateNonRound(new Date(expense.createdAt))}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
           </div>
+        )}
+      </div>
 
-          <div className="text-sm text-gray-400 mb-4">
-            {formatDate(currentDateTime)}
-          </div>
-
-          {dailyExpenses.length > 0 && (
-            <div>
-              {calculateTotalExpenses() > 0 && (
-                <h3 className="font-semibold mb-2">Expenses for the day</h3>
-              )}
+      <div className="mb-4">
+        {" "}
+        {isCashBalanceExpanded &&
+          dailyExpenses.some(
+            (expense) =>
+              expense.category === "Extra Cash Payment" ||
+              expense.category === "Opening Cash"
+          ) && (
+            <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+              <button
+                onClick={toggleCashBalance}
+                className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
+              >
+                <p className="text-3xl">&times;</p>
+              </button>
+              <h3 className="font-semibold mb-2">Cash Balance Details</h3>
               <ul className="space-y-2">
                 {dailyExpenses
                   .filter(
                     (expense) =>
-                      expense.category !== "UPI Payment" &&
-                      expense.category !== "Extra Cash Payment" &&
-                      expense.category !== "Extra UPI Payment" &&
-                      expense.category !== "Opening Cash"
+                      expense.category === "Extra Cash Payment" ||
+                      expense.category === "Opening Cash"
                   )
                   .map((expense) => (
                     <li
@@ -639,11 +690,11 @@ useEffect(() => {
                         <span className="text-sm text-gray-400 mr-2">
                           {expense.comment}
                         </span>
-
                         <span className="p-1 bg-neutral-800 rounded mr-2">
                           ₹{expense.amount.toFixed(2)}
                         </span>
-                        <span className="text-sm text-gray-400 m ">
+
+                        <span className="text-sm text-gray-400">
                           {formatDateNonRound(new Date(expense.createdAt))}
                         </span>
                       </span>
@@ -652,54 +703,16 @@ useEffect(() => {
               </ul>
             </div>
           )}
-        </div>
-      )}
-      {isCashBalanceExpanded &&
-        dailyExpenses.some(
-          (expense) =>
-            expense.category === "Extra Cash Payment" ||
-            expense.category === "Opening Cash"
-        ) && (
-          <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
-            <button
-              onClick={toggleCashBalance}
-              className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
-            >
-              <p className="text-3xl">&times;</p>
-            </button>
-            <h3 className="font-semibold mb-2">Cash Balance Details</h3>
-            <ul className="space-y-2">
-              {dailyExpenses
-                .filter(
-                  (expense) =>
-                    expense.category === "Extra Cash Payment" ||
-                    expense.category === "Opening Cash"
-                )
-                .map((expense) => (
-                  <li
-                    key={expense._id}
-                    className="flex justify-between items-center"
-                  >
-                    <span className="font-medium">{expense.category}</span>
-                    <span className="flex items-center">
-                      <span className="text-sm text-gray-400 mr-2">
-                        {expense.comment}
-                      </span>
-                      <span className="p-1 bg-neutral-800 rounded mr-2">
-                        ₹{expense.amount.toFixed(2)}
-                      </span>
+      </div>
 
-                      <span className="text-sm text-gray-400">
-                        {formatDateNonRound(new Date(expense.createdAt))}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          </div>
-        )}
-      {isUPIPaymentsExpanded && (
-        <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
+     
+
+     
+
+     
+
+      <div className="mb-4"> {isUPIPaymentsExpanded && (
+        <div className="rounded-lg relative p-4 bg-neutral-900 mt-3 ">
           <button
             onClick={toggleUPIPayments}
             className="absolute top-2 right-4 text-gray-400 z-10 hover:text-white"
@@ -741,9 +754,8 @@ useEffect(() => {
               ))}
           </ul>
         </div>
-      )}
-
-      {isVerifyCounterBalanceExpanded && (
+      )}</div>
+      <div className="mb-4"> {isVerifyCounterBalanceExpanded && (
         <div className="rounded-lg relative p-4 bg-neutral-900 mt-3">
           <button
             onClick={toggleVerifyCounterBalance}
@@ -804,11 +816,13 @@ useEffect(() => {
             </div>
           )}
         </div>
-      )}
+      )}</div>
+      <div className="mb-4"> {isBookingsVisible && (
+        <div className="mb-4">   
+          <Bookings slug={slug} onClose={() => setIsBookingsVisible(false)} />
+        </div>
+      )}</div>
 
-      {isBookingsVisible && (
-        <Bookings slug={slug} onClose={() => setIsBookingsVisible(false)} />
-      )}
       {isBalanceModalShown && (
         <dialog id="my_modal_1" className="modal modal-open">
           <div className="modal-box bg-neutral-800">
