@@ -405,8 +405,8 @@ const isUpdateDisabled = () => {
                   >
                     {updating ? (
                       <div className="flex items-center">
-                        <Loader2 className="animate-spin mr-2" size={16} />
-                        Updating
+                        <Loader2 className="animate-spin" size={16} />
+                        
                       </div>
                     ) : (
                       "Update Booking"
@@ -430,7 +430,7 @@ const isUpdateDisabled = () => {
                 </Button>
                 <Button onClick={handleUpdate} disabled={updating}>
                   {updating ? (
-                    <Loader2 className="animate-spin mr-2" size={16} />
+                    <Loader2 className="animate-spin" size={16} />
                   ) : (
                     "Confirm"
                   )}
