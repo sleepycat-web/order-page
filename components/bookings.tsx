@@ -194,45 +194,34 @@ const BookingCard: React.FC<BookingCardProps> = ({
   };
 
   const handleUpdate = async () => {
-    console.log("Updating - Selected Date:", selectedDate);
-    console.log("Updating - Selected Time Slot:", selectedTimeSlot);
-    console.log("Updating - Booking ID:", booking._id); // Changed from booking._id.$oid
-
-    if (!selectedDate) {
-      alert("Please select a date");
+    if (!selectedDate || !selectedTimeSlot) {
+      alert("Please select a date and time slot");
       return;
     }
-
-    if (!selectedTimeSlot) {
-      alert("Please select a time slot");
-      return;
-    }
-
-    // Rest of the update logic remains the same
+  
     setUpdating(true);
     try {
       const response = await axios.post("/api/modifyBookings", {
-        bookingId: booking._id, // Changed from booking._id.$oid
+        bookingId: booking._id,
         location: booking.location,
         date: format(selectedDate, "yyyy-MM-dd"),
         startTime: selectedTimeSlot.start,
         endTime: selectedTimeSlot.end,
-        slug: slug, // Added slug
+        slug: slug,
       });
-
-      if (response.status === 200 && response.data.success) {
+  
+      // Don't treat success messages as errors
+      if (response.status === 200) {
         await fetchBookings();
         setIsModalOpen(false);
         setIsPopoverOpen(false);
-        console.log("Booking updated successfully");
-      } else {
-        console.error("Update failed:", response.data.message);
-        alert(response.data.message || "Failed to update booking");
+        // Optional: Show success message
+        // alert("Booking updated successfully");
       }
     } catch (error) {
       console.error("Error updating booking:", error);
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.message || "Network error occurred");
+        alert(error.response?.data?.message || "Failed to update booking");
       } else {
         alert("An unexpected error occurred");
       }
@@ -240,6 +229,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
       setUpdating(false);
     }
   };
+  
 
   return (
     <Card key={booking._id} className="bg-neutral-800 shadow-md">
