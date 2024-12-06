@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { connectToDatabase } from "@/lib/mongodb";
 import { toZonedTime, format } from "date-fns-tz";
 import { ObjectId } from "mongodb"; // Import ObjectId
+import { get } from "http";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,11 +12,12 @@ export default async function handler(
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
-
+  // Helper function to get IST time
+  function getISTTime(): Date {
+    return new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000);
+  }
   try {
     const { bookingId, location, date, startTime, endTime, slug } = req.body;
-    console.log("Request body:", req.body); // Log the request body
-    console.log("Booking ID:", bookingId); // Log the bookingId
 
     if (!bookingId || !location || !date || !startTime || !endTime || !slug) {
       res.status(400).json({ error: "All fields are required" });
@@ -40,9 +42,8 @@ export default async function handler(
     const updateData: any = { location, date, startTime, endTime };
 
     if (date) {
-      const istNow = toZonedTime(new Date(), "Asia/Kolkata");
-      updateData.modifiedAt = format(istNow, "yyyy-MM-dd'T'HH:mm:ssXXX");
-      updateData.name = `${existingBooking.name} (Modified)`; // Use existing booking name
+      updateData.modifiedAt = getISTTime();
+      updateData.name = `${existingBooking.name} (Modified)`;
     }
 
     await db.collection(collectionName).updateOne(

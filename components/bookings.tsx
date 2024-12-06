@@ -149,8 +149,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
   const handleDateChange = async (date: Date | undefined) => {
     if (!date) return;
 
-    console.log("Handling date change:", date);
-
+ 
     // Ensure the date is set correctly
     const formattedDate = format(date, "yyyy-MM-dd");
     setSelectedDate(new Date(formattedDate)); // Explicitly create a new Date object
