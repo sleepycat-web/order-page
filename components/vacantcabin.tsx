@@ -356,8 +356,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant={`accent`}
-          className="bg-blue-500 mb-4  text-white py-2 px-4 rounded-lg"
+           className="  mb-4  text-white py-2 px-4 rounded-lg"
         >
           {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
         </Button>
