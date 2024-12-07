@@ -19,7 +19,7 @@ export default async function handler(
 
   try {
     const { date, slug } = req.body;
- 
+   
     if (!date || !slug) {
       return res.status(400).json({ error: "Date and slug are required" });
     }
@@ -28,10 +28,16 @@ export default async function handler(
 
     const parsedDate = parseISO(date);
     const formattedDate = format(parsedDate, "yyyy-MM-dd");
- 
+
+    // Get current date and time in IST
+    const currentDateIST = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    );
+    const formattedCurrentDate = format(currentDateIST, "yyyy-MM-dd");
+    const currentTimeIST = format(currentDateIST, "HH:mm");
+
     const collectionName =
       slug === "sevoke" ? "BookingSevoke" : "BookingDagapur";
- 
     const allCabins =
       slug.toLowerCase() === "dagapur"
         ? ["Cabin 1", "Cabin 2", "Cabin 3"]
@@ -45,13 +51,11 @@ export default async function handler(
             "Cabin 10",
             "Cabin 11",
           ];
- 
     const bookings = await db
       .collection(collectionName)
       .find({ date: formattedDate })
       .project({ startTime: 1, endTime: 1, cabin: 1, _id: 0 })
       .toArray();
- 
     const TIME_SLOTS: TimeSlot[] = [
       {
         start: "11:00",
@@ -84,29 +88,38 @@ export default async function handler(
         availableCabins: [...allCabins],
       },
     ];
- 
-    const availableSlots = TIME_SLOTS.map((slot) => {
+    let availableSlots = TIME_SLOTS.map((slot) => {
       const bookedCabins = bookings
         .filter(
           (booking) =>
             booking.startTime === slot.start && booking.endTime === slot.end
         )
         .map((booking) => booking.cabin);
-
- 
       const remainingCabins = slot.availableCabins.filter(
         (cabin) => !bookedCabins.includes(cabin)
       );
-
- 
       return {
         ...slot,
         availableCabins: remainingCabins,
       };
     }).filter((slot) => slot.availableCabins.length > 0);
 
-    
-
+    // If the date is today, filter out past time slots
+    if (formattedDate === formattedCurrentDate) {
+      availableSlots = availableSlots.filter(
+        (slot) => slot.start > currentTimeIST
+      );
+    }
+    // // If the date is today, filter out past time slots
+    // if (formattedDate < formattedCurrentDate) {
+    //   // If the date is in the past, no slots should be available
+    //   return res.status(200).json({ availableSlots: [], allCabins });
+    // } else if (formattedDate === formattedCurrentDate) {
+    //   // If the date is today, filter out past time slots
+    //   availableSlots = availableSlots.filter(
+    //     (slot) => slot.start > currentTimeIST
+    //   );
+    // }
     return res.status(200).json({
       availableSlots,
       allCabins,

@@ -317,89 +317,99 @@ const BookingCard: React.FC<BookingCardProps> = ({
                     mode="single"
                     disabled={(date: Date) => !isDateSelectable(date)}
                   />
-                  <div className="">
-                    <label className="block text-md font-medium text-white mb-4 mt-4">
-                      Select Time Slot
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {availableSlots.map((slot) => (
-                        <Button
-                          key={slot.start}
-                          variant={
-                            selectedTimeSlot?.start === slot.start
-                              ? "secondary"
-                              : "outline"
-                          }
-                          onClick={() => {
-                            setSelectedTimeSlot(slot);
-                          }}
-                          className="text-sm"
-                        >
-                          {slot.label}
-                        </Button>
-                      ))}
-                    </div>
-                    <div className="mt-4">
-                      <label className="block text-md font-medium text-white mb-2">
-                        Select Cabin
+                  {availableSlots.length > 0 && (
+                    <div className="showdiv">
+                      <label className="block text-md font-medium text-white mb-4 mt-4">
+                        Select Time Slot
                       </label>
-                      <Select
-                        value={selectedCabin}
-                        onValueChange={(value) => setSelectedCabin(value)}
-                        disabled={loadingCabins}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue
-                            placeholder={
-                              loadingCabins
-                                ? "Loading cabins..."
-                                : availableCabins.length > 0
-                                ? "Select cabin"
-                                : "No cabins available"
+                      <div className="grid grid-cols-2 gap-2">
+                        {availableSlots.map((slot) => (
+                          <Button
+                            key={slot.start}
+                            variant={
+                              selectedTimeSlot?.start === slot.start
+                                ? "secondary"
+                                : "outline"
                             }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {loadingCabins ? (
-                            <SelectItem value="loading" disabled>
-                              Loading cabins...
-                            </SelectItem>
-                          ) : (
-                            <>
-                              {!availableCabins.includes(booking.cabin) && (
-                                <SelectItem
-                                  key="current-cabin"
-                                  value={booking.cabin}
-                                >
-                                  {booking.cabin} (Current)
-                                </SelectItem>
-                              )}
+                            onClick={() => {
+                              setSelectedTimeSlot(slot);
+                            }}
+                            className="text-sm"
+                          >
+                            {slot.label}
+                          </Button>
+                        ))}
+                      </div>
+                      <div className="mt-4">
+                        <label className="block text-md font-medium text-white mb-2">
+                          Select Cabin
+                        </label>
+                        <Select
+                          value={selectedCabin}
+                          onValueChange={(value) => setSelectedCabin(value)}
+                          disabled={loadingCabins}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue
+                              placeholder={
+                                loadingCabins
+                                  ? "Loading cabins..."
+                                  : availableCabins.length > 0
+                                  ? "Select cabin"
+                                  : "No cabins available"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {loadingCabins ? (
+                              <SelectItem value="loading" disabled>
+                                Loading cabins...
+                              </SelectItem>
+                            ) : (
+                              <>
+                                {!availableCabins.includes(booking.cabin) && (
+                                  <SelectItem
+                                    key="current-cabin"
+                                    value={booking.cabin}
+                                  >
+                                    {booking.cabin} (Current)
+                                  </SelectItem>
+                                )}
 
-                              {availableCabins.map((cabin) => (
-                                <SelectItem key={cabin} value={cabin}>
-                                  {cabin}
-                                </SelectItem>
-                              ))}
+                                {availableCabins.map((cabin) => (
+                                  <SelectItem key={cabin} value={cabin}>
+                                    {cabin}
+                                  </SelectItem>
+                                ))}
 
-                              {availableCabins.length === 0 && (
-                                <SelectItem value="no_cabins" disabled>
-                                  No cabins available
-                                </SelectItem>
-                              )}
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
+                                {availableCabins.length === 0 && (
+                                  <SelectItem value="no_cabins" disabled>
+                                    No cabins available
+                                  </SelectItem>
+                                )}
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end mt-4">
                   <Button
                     onClick={() => setIsModalOpen(true)}
-                    disabled={isUpdateDisabled() || updating}
+                    disabled={
+                      isUpdateDisabled() ||
+                      updating ||
+                      availableSlots.length === 0
+                    }
                     variant={
-                      isUpdateDisabled() || updating ? "outline" : undefined
+                      isUpdateDisabled() ||
+                      updating ||
+                      availableSlots.length === 0
+                        ? "outline"
+                        : undefined
                     }
                     className="ml-2"
                   >
