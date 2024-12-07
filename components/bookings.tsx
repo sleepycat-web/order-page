@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Loader2, UserPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { format, isValid } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Popover,
@@ -110,80 +110,96 @@ const BookingCard: React.FC<BookingCardProps> = ({
   const diffInHours =
     (bookingStart.getTime() - istNow.getTime()) / (1000 * 60 * 60);
 
-  useEffect(() => {
-    if (isPopoverOpen) {
-      
-      const originalDate = new Date(booking.date);
-      const originalTimeSlot =
-        TIME_SLOTS.find((slot) => slot.start === booking.startTime) || null;
+ useEffect(() => {
+   if (isPopoverOpen) {
+     const originalDate = new Date(booking.date);
+     const originalTimeSlot =
+       TIME_SLOTS.find((slot) => slot.start === booking.startTime) || null;
 
-      setSelectedDate(originalDate);
-      setSelectedTimeSlot(originalTimeSlot);
-      setIsDateManuallySelected(false);
+     setSelectedDate(originalDate);
+     setSelectedTimeSlot(originalTimeSlot);
+     setIsDateManuallySelected(false);
 
-      const fetchAvailableSlots = async () => {
-        setLoadingSlots(true);
-        try {
-          const response = await axios.post("/api/checkBookings", {
-            date: format(originalDate, "yyyy-MM-dd"),
-            slug: booking.location.toLowerCase().split(" ")[0], // Ensure consistent slug
-          });
-          const slots: TimeSlot[] = response.data.availableSlots;
+     const fetchAvailableSlots = async () => {
+       setLoadingSlots(true);
+       try {
+         const response = await axios.post("/api/checkBookings", {
+           date: format(originalDate, "yyyy-MM-dd"),
+           slug: booking.location.toLowerCase().split(" ")[0],
+         });
+         const slots: TimeSlot[] = response.data.availableSlots;
 
-          // Log the returned slots
- 
-          // Set availableSlots directly from the handler
-          setAvailableSlots(slots);
-        } catch (error) {
-          console.error("Error fetching available slots:", error);
-        } finally {
-          setLoadingSlots(false);
-        }
-      };
+         // Filter slots to keep only future slots or the original booking's slot
+         const filteredSlots = slots.filter((slot) => {
+           // Always keep the original booking's time slot
+           if (slot.start === booking.startTime) return true;
 
-      fetchAvailableSlots();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPopoverOpen]);
-useEffect(() => {
-  if (isPopoverOpen && selectedDate && selectedTimeSlot) {
-    const fetchAvailableCabins = async () => {
-      setLoadingCabins(true);
-      try {
-        const response = await axios.post("/api/checkBookings", {
-          date: format(selectedDate, "yyyy-MM-dd"),
-          slug: booking.location.toLowerCase().split(" ")[0],
-        });
-        const data = response.data;
+           // Parse the slot time with today's date to compare
+           const slotDateTime = parseISO(
+             `${format(istNow, "yyyy-MM-dd")}T${slot.start}:00`
+           );
+           const currentDateTime = istNow;
 
-        const slot = data.availableSlots.find(
-          (s: any) =>
-            s.start === selectedTimeSlot.start && s.end === selectedTimeSlot.end
-        );
+           // Keep only slots after the current time
+           return slotDateTime > currentDateTime;
+         });
 
-        const cabins = slot ? slot.availableCabins : [];
+         setAvailableSlots(filteredSlots);
+       } catch (error) {
+         console.error("Error fetching available slots:", error);
+       } finally {
+         setLoadingSlots(false);
+       }
+     };
 
-        // Always include and prioritize the current cabin
-        const cabinsToShow = Array.from(
-          new Set([booking.cabin, ...(cabins || [])])
-        );
+     fetchAvailableSlots();
+   }
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [isPopoverOpen]);
 
-        setAvailableCabins(cabinsToShow);
+ useEffect(() => {
+   if (isPopoverOpen && selectedDate && selectedTimeSlot) {
+     const fetchAvailableCabins = async () => {
+       setLoadingCabins(true);
+       try {
+         const response = await axios.post("/api/checkBookings", {
+           date: format(selectedDate, "yyyy-MM-dd"),
+           slug: booking.location.toLowerCase().split(" ")[0],
+         });
+         const data = response.data;
 
-        // Always set the original cabin as the selected cabin
-        setSelectedCabin(booking.cabin);
-      } catch (error) {
-        console.error("Error fetching available cabins:", error);
-        setAvailableCabins([booking.cabin]);
-        setSelectedCabin(booking.cabin);
-      } finally {
-        setLoadingCabins(false);
-      }
-    };
+         const slot = data.availableSlots.find(
+           (s: any) =>
+             s.start === selectedTimeSlot.start &&
+             s.end === selectedTimeSlot.end
+         );
 
-    fetchAvailableCabins();
-  }
-}, [isPopoverOpen, selectedDate, selectedTimeSlot]); 
+         let cabins = slot ? slot.availableCabins : [];
+
+         // Filter cabins to keep only future cabins or the original booking's cabin
+         const filteredCabins = Array.from(
+           new Set([
+             booking.cabin,
+             ...(cabins || []).filter(
+               (cabin: string) => cabin !== booking.cabin
+             ),
+           ])
+         );
+
+         setAvailableCabins(filteredCabins);
+         setSelectedCabin(booking.cabin);
+       } catch (error) {
+         console.error("Error fetching available cabins:", error);
+         setAvailableCabins([booking.cabin]);
+         setSelectedCabin(booking.cabin);
+       } finally {
+         setLoadingCabins(false);
+       }
+     };
+
+     fetchAvailableCabins();
+   }
+ }, [isPopoverOpen, selectedDate, selectedTimeSlot, booking]);
   
   const handleDateChange = async (date: Date | undefined) => {
     if (!date) return;
