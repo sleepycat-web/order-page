@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Order } from "@/scripts/interface";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface VacantCabinDropdownProps {
   orders: { [key: string]: Order[] };
@@ -340,94 +347,95 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     updateCabinStatuses();
   }, [currentTime, updateCabinStatuses]);
 
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      if (isOpen) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("click", handleClick);
-
-    return () => {
-      document.removeEventListener("click", handleClick);
-    };
-  }, [isOpen]);
-
   const toggleDropdown = (event: React.MouseEvent) => {
     event.stopPropagation();
     setIsOpen(!isOpen);
   };
 
   return (
-    <div className="relative mb-4 block w-full">
-      <button
-        onClick={toggleDropdown}
-        className="bg-blue-500 text-white py-2 px-4 rounded-lg"
-      >
-        {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
-      </button>
-      {isOpen && (
-        <div className="absolute z-10 bg-neutral-800 text-white rounded-lg p-4 shadow-lg max-h-96 overflow-y-auto mt-2 w-full max-w-4xl">
-          <div className="mb-4">
-            <h3 className="font-bold text-lg">Cabin Status</h3>
-          </div>
-          <div className="grid md:grid-cols-2 grid-cols-1 gap-x-4 gap-y-2">
-            {getCabinOptions().map((cabin) => {
-              const status =
-                cabinStatuses[cabin] ||
-                getCabinStatus(cabin, getOldestOrderTime(cabin));
-              const isHighChairCabin = isHighChair(cabin);
-
-              return (
-                <div key={cabin} className="flex items-center gap-2 min-w-0">
-                  <span className="flex-shrink-0">{cabin}:</span>
-                  <span
-                    className={`px-2 py-1 rounded text-sm font-semibold ${status.bgColor}`}
-                  >
-                    {status.status}
-                  </span>
-                  {!isHighChairCabin &&
-                    status.isVacant &&
-                    status.lastFulfilledTime && (
-                      <span className="px-2 py-1 rounded text-sm font-semibold bg-yellow-500">
-                        {formatElapsedTime(status.lastFulfilledTime)}
-                      </span>
-                    )}
-
-                  {!status.isVacant && (
-                    <>
-                      <span className="px-2 py-1 rounded text-sm font-semibold bg-purple-500">
-                        ₹{status.totalOrders}
-                      </span>
-                      {!isHighChairCabin && (
-                        <>
-                          <span className="px-2 py-1 rounded text-sm font-semibold bg-orange-500">
-                            {formatElapsedTime(
-                              getOldestOrderTime(cabin)!.toISOString()
-                            )}
-                          </span>
-                          {status.rank && (
-                            <span className="px-2 py-1 rounded text-sm font-semibold bg-blue-500">
-                              {status.rank}
-                            </span>
-                          )}
-                        </>
-                      )}
-                      {status.hasUndispatchedOrders && (
-                        <span className="px-2 py-1 rounded text-sm font-semibold bg-teal-500">
-                          R
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant={`accent`}
+          className="bg-blue-500 mb-4  text-white py-2 px-4 rounded-lg"
+        >
+          {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="mb-4 bg-neutral-800 text-white   p-4  ">
+        <div className="mb-4">
+          <h3 className="font-bold text-lg">Cabin Status</h3>
         </div>
-      )}
-    </div>
+        <div className="grid md:grid-cols-2 grid-cols-1 gap-x-4 gap-y-2">
+          {getCabinOptions().map((cabin) => {
+            const status =
+              cabinStatuses[cabin] ||
+              getCabinStatus(cabin, getOldestOrderTime(cabin));
+            const isHighChairCabin = isHighChair(cabin);
+
+            return (
+              <div key={cabin} className="flex items-center gap-2 min-w-0">
+                <span className="flex-shrink-0  text-lg">{cabin}:</span>
+                <Badge
+                  variant="accent"
+                  className={`${status.bgColor}  text-base text-white`}
+                >
+                  {status.status}
+                </Badge>
+                {!isHighChairCabin &&
+                  status.isVacant &&
+                  status.lastFulfilledTime && (
+                    <Badge
+                      variant="accent"
+                      className="bg-yellow-500 text-base text-white"
+                    >
+                      {formatElapsedTime(status.lastFulfilledTime)}
+                    </Badge>
+                  )}
+                {!status.isVacant && (
+                  <>
+                    <Badge
+                      variant="accent"
+                      className="bg-purple-500  text-base text-white"
+                    >
+                      ₹{status.totalOrders}
+                    </Badge>
+                    {!isHighChairCabin && (
+                      <>
+                        <Badge
+                          variant="accent"
+                          className="bg-orange-500 text-base text-white"
+                        >
+                          {formatElapsedTime(
+                            getOldestOrderTime(cabin)!.toISOString()
+                          )}
+                        </Badge>
+                        {status.rank && (
+                          <Badge
+                            variant="accent"
+                            className="bg-blue-500 text-base text-white"
+                          >
+                            {status.rank}
+                          </Badge>
+                        )}
+                      </>
+                    )}
+                    {status.hasUndispatchedOrders && (
+                      <Badge
+                        variant="accent"
+                        className="bg-teal-500 text-base text-white"
+                      >
+                        R
+                      </Badge>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
