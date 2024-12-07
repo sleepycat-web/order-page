@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef, createRef } from "react";
-import { MenuItem, CustomizationOption } from "./menu"; // Adjust the import path as needed
+import React, { useState, useEffect, useRef } from "react";
+import { MenuItem } from "./menu";
+import { Button } from "./ui/button";
+import { X } from "lucide-react";
 
 interface PopupProps {
   item: MenuItem;
@@ -23,13 +25,15 @@ const Popup: React.FC<PopupProps> = ({ item, onClose, onAddToOrder }) => {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [showErrorHighlight, setShowErrorHighlight] = useState(false);
-const optionRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const optionRefs = useRef<Array<HTMLDivElement | null>>([]);
 
-useEffect(() => {
-  if (item.customizationOptions) {
-    optionRefs.current = new Array(item.customizationOptions.length).fill(null);
-  }
-}, [item.customizationOptions]);
+  useEffect(() => {
+    if (item.customizationOptions) {
+      optionRefs.current = new Array(item.customizationOptions.length).fill(
+        null
+      );
+    }
+  }, [item.customizationOptions]);
   const calculateTotalPrice = (): number => {
     let total = 0;
     Object.entries(selectedOptions).forEach(([optionName, selectedValues]) => {
@@ -48,8 +52,8 @@ useEffect(() => {
     return total * quantity;
   };
 
-const validateSpecialRequests = (input: string): string => {
-  return input.replace(/[^a-zA-Z0-9?.! ]/g, '');  // Added '\s' to allow spaces
+  const validateSpecialRequests = (input: string): string => {
+    return input.replace(/[^a-zA-Z0-9?.! ]/g, ""); // Added '\s' to allow spaces
   };
 
   const hasSelectedOptionsWithPrice = (): boolean => {
@@ -64,7 +68,6 @@ const validateSpecialRequests = (input: string): string => {
       }
     );
   };
-
 
   const cleanupEmptyEntries = (options: Record<string, string[]>) => {
     const cleanedOptions = { ...options };
@@ -141,67 +144,70 @@ const validateSpecialRequests = (input: string): string => {
     return !hasOnlyCheckboxes || hasSelectedCheckbox;
   };
 
-const handleAddToOrderWithCleanup = () => {
-  if (validateSelection()) {
-    const cleanedOptions = cleanupEmptyEntries(selectedOptions);
+  const handleAddToOrderWithCleanup = () => {
+    if (validateSelection()) {
+      const cleanedOptions = cleanupEmptyEntries(selectedOptions);
 
-    // Create orderedSelectedOptions based on the order of item.customizationOptions
-    const orderedSelectedOptions: Record<string, string[]> = {};
-    item.customizationOptions?.forEach((option) => {
-      if (cleanedOptions[option.name]) {
-        orderedSelectedOptions[option.name] = cleanedOptions[option.name];
-      }
-    });
-
-    onAddToOrder(
-      item,
-      orderedSelectedOptions,
-      quantity,
-      specialRequests,
-      totalPrice
-    );
-    onClose();
-  } else {
-    setShowErrorHighlight(true);
-    if (
-      item.customizationOptions?.every((option) => option.type === "checkbox")
-    ) {
-      setError("Please select at least one option");
-    } else {
-      setError("Please select required options");
-    }
-
-    const firstInvalidOptionIndex = item.customizationOptions?.findIndex(
-      (option, index) => {
-        if (option.type === "radio") {
-          return (
-            !selectedOptions[option.name] ||
-            selectedOptions[option.name].length === 0
-          );
-        } else if (option.type === "checkbox") {
-          return (
-            item.customizationOptions?.every(
-              (opt) => opt.type === "checkbox"
-            ) &&
-            (!selectedOptions[option.name] ||
-              selectedOptions[option.name].length === 0)
-          );
+      // Create orderedSelectedOptions based on the order of item.customizationOptions
+      const orderedSelectedOptions: Record<string, string[]> = {};
+      item.customizationOptions?.forEach((option) => {
+        if (cleanedOptions[option.name]) {
+          orderedSelectedOptions[option.name] = cleanedOptions[option.name];
         }
-        return false;
-      }
-    );
+      });
 
-    if (
-      firstInvalidOptionIndex !== -1 &&
-      firstInvalidOptionIndex !== undefined
-    ) {
-      const invalidElement = optionRefs.current[firstInvalidOptionIndex];
-      if (invalidElement) {
-        invalidElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      onAddToOrder(
+        item,
+        orderedSelectedOptions,
+        quantity,
+        specialRequests,
+        totalPrice
+      );
+      onClose();
+    } else {
+      setShowErrorHighlight(true);
+      if (
+        item.customizationOptions?.every((option) => option.type === "checkbox")
+      ) {
+        setError("Please select at least one option");
+      } else {
+        setError("Please select required options");
+      }
+
+      const firstInvalidOptionIndex = item.customizationOptions?.findIndex(
+        (option, index) => {
+          if (option.type === "radio") {
+            return (
+              !selectedOptions[option.name] ||
+              selectedOptions[option.name].length === 0
+            );
+          } else if (option.type === "checkbox") {
+            return (
+              item.customizationOptions?.every(
+                (opt) => opt.type === "checkbox"
+              ) &&
+              (!selectedOptions[option.name] ||
+                selectedOptions[option.name].length === 0)
+            );
+          }
+          return false;
+        }
+      );
+
+      if (
+        firstInvalidOptionIndex !== -1 &&
+        firstInvalidOptionIndex !== undefined
+      ) {
+        const invalidElement = optionRefs.current[firstInvalidOptionIndex];
+        if (invalidElement) {
+          invalidElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
       }
     }
-  }
-};
+  };
 
   const handleQuantityChange = (change: number) => {
     const newQuantity = Math.max(1, quantity + change);
@@ -221,26 +227,13 @@ const handleAddToOrderWithCleanup = () => {
     <div className="fixed inset-0 bg-black bg-opacity-0 flex items-center justify-center z-50 overflow-y-auto p-4">
       <div
         ref={popupRef}
-        className="bg-neutral-950 p-6 rounded-lg  w-full max-w-2xl relative flex flex-col h-[90vh]"
+        className="bg-neutral-950 p-6 rounded-lg w-full max-w-2xl relative flex flex-col h-[90vh]"
       >
         <button
           className="absolute top-4 right-4 text-white hover:text-gray-300"
           onClick={onClose}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X />
         </button>
         <h2 className="text-xl font-bold mb-4">{item.name}</h2>
         <div className="max-h-[70vh] overflow-y-auto">
@@ -331,7 +324,7 @@ const handleAddToOrderWithCleanup = () => {
                           checked={isSelected}
                           className="mr-2 cursor-pointer"
                           onChange={handleInputChange}
-                          onClick={(e) => e.stopPropagation()} // Prevent double-triggering
+                          onClick={(e) => e.stopPropagation()}
                         />
                         <span className="flex-grow text-sm select-none">
                           {opt.label}{" "}
@@ -393,21 +386,19 @@ const handleAddToOrderWithCleanup = () => {
         )}
 
         {error && <p className="text-red-500 mt-2">{error}</p>}
-        <div className="flex gap-2 ">
-          <button
-            className="btn mt-2 btn-primary w-2/3"
-            onClick={handleAddToOrderWithCleanup}
-          >
+        <div className="flex gap-2">
+          <Button className="mt-4 w-2/3" onClick={handleAddToOrderWithCleanup}>
             {hasSelectedOptionsWithPrice()
               ? `Add to my order ₹${totalPrice.toFixed(2)}`
               : "Add to my order"}
-          </button>
-          <button
-            className="btn btn-ghost bg-neutral-900 w-1/3 mt-2"
+          </Button>
+          <Button
+            className="bg-neutral w-1/3 mt-4"
             onClick={onClose}
+            variant={"secondary"}
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     </div>
