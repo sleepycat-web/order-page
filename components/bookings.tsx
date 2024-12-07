@@ -366,21 +366,11 @@ const isUpdateDisabled = () => {
                             </SelectItem>
                           ) : (
                             <>
-                              {!availableCabins.includes(booking.cabin) && (
-                                <SelectItem
-                                  key="current-cabin"
-                                  value={booking.cabin}
-                                >
-                                  {booking.cabin} (Current)
-                                </SelectItem>
-                              )}
-
                               {availableCabins.map((cabin) => (
                                 <SelectItem key={cabin} value={cabin}>
                                   {cabin}
                                 </SelectItem>
                               ))}
-
                               {availableCabins.length === 0 && (
                                 <SelectItem value="no_cabins" disabled>
                                   No cabins available
@@ -610,7 +600,7 @@ const Bookings: React.FC<BookingsProps> = ({ slug, onClose }) => {
                         key={booking._id}
                         booking={booking}
                         fetchBookings={fetchBookings}
-                        slug={slug} // Pass slug
+                        slug={slug} 
                       />
                     ))}
                   </div>
