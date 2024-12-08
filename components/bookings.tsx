@@ -11,7 +11,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { toZonedTime } from "date-fns-tz";
+import { utcToZonedTime } from "date-fns-tz";
 import axios from "axios";
 import {
   Dialog,
@@ -37,6 +37,8 @@ const formatDate = (dateString: string) => {
 
 const formatDateTime = (dateString: string) => {
   const date = new Date(dateString);
+  date.setHours(date.getHours() - 5);
+  date.setMinutes(date.getMinutes() - 30);
   return format(date, "d MMMM yyyy 'at' h:mm a");
 };
 
@@ -86,7 +88,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
   slug,
 }) => {
   const now = new Date();
-  const istNow = toZonedTime(now, "Asia/Kolkata");
+  const istNow = utcToZonedTime(now, "Asia/Kolkata");
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
@@ -210,7 +212,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
 
   const isDateSelectable = (date: Date) => {
     const now = new Date();
-    const istNow = toZonedTime(now, "Asia/Kolkata");
+    const istNow = utcToZonedTime(now, "Asia/Kolkata");
 
     // Allow selection of today and future dates
     const todayStart = new Date(istNow.setHours(0, 0, 0, 0));

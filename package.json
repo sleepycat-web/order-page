@@ -15,8 +15,6 @@
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "date-fns-tz": "^3.2.0",
     "dotenv": "^16.4.5",
     "lucide-react": "^0.460.0",
     "mongodb": "^6.11.0",
@@ -26,13 +24,14 @@
     "nodemailer": "^6.9.16",
     "radix-ui": "^1.0.1",
     "react": "^18",
-    "react-day-picker": "^9.4.1",
     "react-dom": "^18",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "react-day-picker": "^8.10.1",
+"date-fns": "^2.30.0",
+"date-fns-tz": "^2.0.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^18",

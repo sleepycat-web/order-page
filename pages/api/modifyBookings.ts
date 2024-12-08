@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { connectToDatabase } from "@/lib/mongodb";
-import { toZonedTime, format } from "date-fns-tz";
+import { utcToZonedTime, format } from "date-fns-tz";
 import { ObjectId } from "mongodb"; // Import ObjectId
 import { get } from "http";
 

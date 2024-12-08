@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { connectToDatabase } from "@/lib/mongodb";
 import { startOfDay } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import { utcToZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
 
 export default async function handler(
@@ -21,7 +21,7 @@ export default async function handler(
 
     const timeZone = "Asia/Kolkata";
     const now = new Date();
-    const istNow = toZonedTime(now, timeZone);
+    const istNow = utcToZonedTime(now, timeZone);
     const todayStart = startOfDay(istNow);
     const todayStartStr = format(todayStart, "yyyy-MM-dd");
 
