@@ -614,14 +614,12 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                 )}
                {status.nextBookingInMinutes !== undefined &&
                   status.nextBookingInMinutes <= 20 && ( <Badge
-                      variant="accent"
-                      className="bg-yellow-500 text-base text-white"
+                       
+                      className="text-base"
                     >
                      Booking in {status.nextBookingInMinutes} minutes
                     </Badge>
                   )}
-                
-                
               </div>
             );
           })}
