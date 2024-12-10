@@ -7,28 +7,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { utcToZonedTime } from "date-fns-tz";
-import { format } from "date-fns"; // Import 'format'
-
-// Define the Booking interface
-interface Booking {
-  _id: any; // Adjust type if necessary
-  location: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  cabin: string;
-  finalPrice: number;
-  name: string;
-  phone: string;
-  promoCode?: {
-    code: string;
-    percentage: number;
-  };
-  createdAt: any; // Adjust type if necessary
-  bookingStartDateTime: Date;
-  bookingEndDateTime: Date;
-}
 
 interface VacantCabinDropdownProps {
   orders: { [key: string]: Order[] };
@@ -39,7 +17,6 @@ interface VacantCabinDropdownProps {
 type BaseStatus = {
   status: string;
   bgColor: string;
-  isBooked?: boolean;
 };
 
 type VacantStatus = BaseStatus & {
@@ -71,49 +48,6 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
   const [cabinStatuses, setCabinStatuses] = useState<{
     [key: string]: CabinStatus;
   }>({});
-  const [bookings, setBookings] = useState<Booking[]>([]); // Add type annotation
-
-  // Move fetchBookings outside of useEffect and wrap with useCallback
-  const fetchBookings = useCallback(async () => {
-    try {
-      const response = await fetch("/api/getBookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ slug }),
-      });
-      const data = await response.json();
-      const istTimeZone = "Asia/Kolkata";
-      // Parse dates and times in IST
-      const parsedBookings = data.map((booking: Booking) => {
-        // Type 'booking' parameter
-        const bookingStartDateTime = utcToZonedTime(
-          new Date(`${booking.date}T${booking.startTime}`),
-          istTimeZone
-        );
-        const bookingEndDateTime = utcToZonedTime(
-          new Date(`${booking.date}T${booking.endTime}`),
-          istTimeZone
-        );
-        return {
-          ...booking,
-          bookingStartDateTime,
-          bookingEndDateTime,
-        };
-      });
-      setBookings(parsedBookings);
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
-    }
-  }, [slug]);
-
-  // New useEffect to fetch bookings when dropdown opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchBookings();
-    }
-  }, [isOpen, fetchBookings]);
 
   const isHighChair = (cabin: string): boolean => {
     return cabin.toLowerCase().startsWith("high chair");
@@ -277,7 +211,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
 
   const calculateRanks = (statuses: { [key: string]: CabinStatus }) => {
     const occupiedStatuses = Object.entries(statuses)
-      .filter(([_, status]) => !status.isVacant && !status.isBooked) // Exclude booked cabins
+      .filter(([_, status]) => !status.isVacant)
       .map(([cabin, status]) => ({
         cabin,
         status: status as OccupiedStatus,
@@ -325,65 +259,6 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
 
   const getCabinStatus = useCallback(
     (cabin: string, oldestOrderTime: Date | null): CabinStatus => {
-      // Check if cabin is booked
-      const now = utcToZonedTime(new Date(), "Asia/Kolkata");
-      const isCabinBooked = bookings.some((booking: Booking) => {
-        if (booking.cabin !== cabin) return false;
-        return (
-          now >= booking.bookingStartDateTime &&
-          now <= booking.bookingEndDateTime
-        );
-      });
-
-      if (isCabinBooked) {
-        // Find the relevant booking
-        const now = utcToZonedTime(new Date(), "Asia/Kolkata");
-        const currentBooking = bookings.find((booking: Booking) => {
-          if (booking.cabin !== cabin) return false;
-          return (
-            now >= booking.bookingStartDateTime &&
-            now <= booking.bookingEndDateTime
-          );
-        });
-
-        // Format endTime to 12-hour format with am/pm
-        let formattedEndTime = "";
-        if (currentBooking) {
-          const endTimeDate = utcToZonedTime(
-            new Date(`${currentBooking.date}T${currentBooking.endTime}`),
-            "Asia/Kolkata"
-          );
-          formattedEndTime = format(endTimeDate, "h:mm a");
-        }
-
-        // Check if there are no orders for this cabin
-        const cabinOrders = Object.values(orders)
-          .flat()
-          .filter((order) => order.selectedCabin === cabin);
-        
-        const totalOrders = getCabinOrderTotal(cabin); // Calculate total orders
-
-        if (cabinOrders.length === 0) {
-          // No orders, set status as Vacant (Booked till endTime)
-          return {
-            status: `Vacant (Booked till ${formattedEndTime})`,
-            bgColor: "bg-blue-500",
-            isVacant: true,
-            isBooked: true, // Set isBooked to true
-          };
-        } else {
-          // Orders exist, set status as Occupied (Booked till endTime) with actual totalOrders
-          return {
-            status: `Occupied (Booked till ${formattedEndTime})`,
-            bgColor: "bg-blue-500",
-            isVacant: false,
-            isBooked: true, // Set isBooked to true
-            totalOrders, // Set to actual total orders
-            minimumRequired: 0,
-          };
-        }
-      }
-
       if (isHighChair(cabin)) {
         if (!oldestOrderTime) {
           const lastFulfilledTime = getLastFulfilledTime(cabin);
@@ -443,7 +318,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
         hasUndispatchedOrders: hasUndispatched,
       };
     },
-    [currentTime, bookings, orders] // Include 'orders' in dependencies
+    [currentTime]
   );
 
   const updateCabinStatuses = useCallback(() => {
@@ -470,7 +345,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
   // Separate effect for updating cabin statuses when time changes
   useEffect(() => {
     updateCabinStatuses();
-  }, [currentTime, updateCabinStatuses, bookings]); // Include bookings
+  }, [currentTime, updateCabinStatuses]);
 
   const toggleDropdown = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -480,14 +355,11 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button
-          className="mb-4 text-white py-2 px-4 rounded-lg"
-          onClick={toggleDropdown}
-        >
+        <Button className="  mb-4  text-white py-2 px-4 rounded-lg">
           {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="mb-4 bg-neutral-800 text-white p-4">
+      <DropdownMenuContent className="mb-4 bg-neutral-800 text-white   p-4  ">
         <div className="mb-4">
           <h3 className="font-bold text-lg">Cabin Status</h3>
         </div>
@@ -500,24 +372,31 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
 
             return (
               <div key={cabin} className="flex items-center gap-2 min-w-0">
-                <span className="flex-shrink-0 text-lg">{cabin}:</span>
+                <span className="flex-shrink-0  text-lg">{cabin}:</span>
                 <Badge
                   variant="accent"
-                  className={`${status.bgColor} text-base text-white`}
+                  className={`${status.bgColor}  text-base text-white`}
                 >
                   {status.status}
                 </Badge>
-                {/* Show price badge regardless of booking status */}
+                {!isHighChairCabin &&
+                  status.isVacant &&
+                  status.lastFulfilledTime && (
+                    <Badge
+                      variant="accent"
+                      className="bg-yellow-500 text-base text-white"
+                    >
+                      {formatElapsedTime(status.lastFulfilledTime)}
+                    </Badge>
+                  )}
                 {!status.isVacant && (
-                  <Badge
-                    variant="accent"
-                    className="bg-purple-500 text-base text-white"
-                  >
-                    ₹{status.totalOrders}
-                  </Badge>
-                )}
-                {!status.isVacant && !status.isBooked && ( // Exclude booked cabins from rankings and related badges
                   <>
+                    <Badge
+                      variant="accent"
+                      className="bg-purple-500  text-base text-white"
+                    >
+                      ₹{status.totalOrders}
+                    </Badge>
                     {!isHighChairCabin && (
                       <>
                         <Badge
@@ -548,7 +427,6 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                     )}
                   </>
                 )}
-                {/* ...existing code... */}
               </div>
             );
           })}
