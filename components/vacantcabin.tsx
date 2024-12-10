@@ -582,19 +582,37 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                       Booking in {status.nextBookingInMinutes} minutes
                     </Badge>
                   )}
+                {!status.isVacant && status.isBooked && (
+                  <Badge
+                    variant="accent"
+                    className="bg-orange-500 text-base text-white" // Changed color to orange for occupied booked cabins
+                  >
+                    {formatElapsedTime(currentTime.toISOString())}
+                  </Badge>
+                )}
+                {status.isVacant && status.isBooked && (
+                  <Badge
+                    variant="accent"
+                    className="bg-yellow-500 text-base text-white" // Added yellow color for vacant booked cabins
+                  >
+                    {formatElapsedTime(currentTime.toISOString())}
+                  </Badge>
+                )}
                 {!status.isVacant &&
                   !status.isBooked && ( // Exclude booked cabins from rankings and related badges
                     <>
                       {!isHighChairCabin && (
                         <>
-                          <Badge
-                            variant="accent"
-                            className="bg-orange-500 text-base text-white"
-                          >
-                            {formatElapsedTime(
-                              getOldestOrderTime(cabin)!.toISOString()
-                            )}
-                          </Badge>
+                          {getOldestOrderTime(cabin) && (
+                            <Badge
+                              variant="accent"
+                              className="bg-orange-500 text-base text-white"
+                            >
+                              {formatElapsedTime(
+                                getOldestOrderTime(cabin)!.toISOString()
+                              )}
+                            </Badge>
+                          )}
                           {status.rank && (
                             <Badge
                               variant="accent"
