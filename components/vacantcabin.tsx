@@ -401,6 +401,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
            isVacant: true,
            isBooked: true, // Set isBooked to true
            nextBookingInMinutes, // Add next booking time
+           lastFulfilledTime: getLastFulfilledTime(cabin), // Add this line
          };
        } else {
          // Orders exist, set status as Occupied (Booked till endTime) with actual totalOrders
