@@ -416,6 +416,20 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
        }
      }
 
+     // Add logic for vacant cabins with upcoming bookings
+     const futureBooking = bookings
+       .filter((booking) => booking.cabin === cabin && booking.bookingStartDateTime > now)
+       .sort((a, b) => a.bookingStartDateTime.getTime() - b.bookingStartDateTime.getTime())[0];
+
+     let nextBookingInMinutes: number | undefined = undefined;
+     if (futureBooking) {
+       const timeDifference = Math.floor(
+         (futureBooking.bookingStartDateTime.getTime() - now.getTime()) / 60000
+       );
+       nextBookingInMinutes = timeDifference > 0 ? timeDifference : undefined;
+     }
+     
+
      if (isHighChair(cabin)) {
        if (!oldestOrderTime) {
          const lastFulfilledTime = getLastFulfilledTime(cabin);
@@ -443,6 +457,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
          status: "Vacant",
          bgColor: "bg-green-500",
          isVacant: true,
+         nextBookingInMinutes, // Add next booking time
          ...(lastFulfilledTime ? { lastFulfilledTime } : {}),
        };
      }
@@ -467,14 +482,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
        (booking) => booking.bookingStartDateTime > now
      );
 
-     let nextBookingInMinutes: number | undefined = undefined;
-     if (nextBooking) {
-       const timeDifference = Math.floor(
-         (nextBooking.bookingStartDateTime.getTime() - now.getTime()) / 60000
-       );
-       nextBookingInMinutes = timeDifference > 0 ? timeDifference : undefined;
-     }
-
+   
      if (
        elapsedMinutes > TIME_THRESHOLD_MINUTES &&
        totalOrders < minimumRequired
@@ -549,7 +557,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
           <h3 className="font-bold text-lg">Cabin Status</h3>
         </div>
         <div className="grid md:grid-cols-2 grid-cols-1 gap-x-4 gap-y-2">
-          {getCabinOptions().map((cabin) => {
+          {getCabinOptions().map((cabin: string) => {
             const status =
               cabinStatuses[cabin] ||
               getCabinStatus(cabin, getOldestOrderTime(cabin));
@@ -565,7 +573,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                   {status.status}
                 </Badge>
                 {!isHighChairCabin &&
-                  status.isVacant &&
+                  status.isVacant && // Changed condition to only check isVacant
                   status.lastFulfilledTime && (
                     <Badge
                       variant="accent"
@@ -612,12 +620,12 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
                     )}
                   </>
                 )}
-               {status.nextBookingInMinutes !== undefined &&
-                  status.nextBookingInMinutes <= 20 && ( <Badge
-                       
-                      className="text-base"
-                    >
-                     Booking in {status.nextBookingInMinutes} minutes
+                {status.nextBookingInMinutes !== undefined &&
+                  status.nextBookingInMinutes <= 20 && (
+                    <Badge className="text-base">
+                      {status.nextBookingInMinutes <= 1
+                        ? "Booking in 1 minute"
+                        : `Booking in ${status.nextBookingInMinutes} minutes`}
                     </Badge>
                   )}
               </div>
