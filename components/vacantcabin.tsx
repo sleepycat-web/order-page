@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { utcToZonedTime } from "date-fns-tz";
 import { format } from "date-fns"; // Import 'format'
+import { Loader2 } from 'lucide-react'; // Import Loader2
 
 // Define the Booking interface
 interface Booking {
@@ -72,6 +73,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
   const [cabinStatuses, setCabinStatuses] = useState<{
     [key: string]: CabinStatus;
   }>({});
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   const isHighChair = (cabin: string): boolean => {
     return cabin.toLowerCase().startsWith("high chair");
@@ -155,6 +157,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
 
     // Move fetchBookings outside of useEffect and wrap with useCallback
     const fetchBookings = useCallback(async () => {
+      setIsLoading(true); // Set loading to true
       try {
         const response = await fetch("/api/getBookings", {
           method: "POST",
@@ -185,6 +188,8 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
         setBookings(parsedBookings);
       } catch (error) {
         console.error("Error fetching bookings:", error);
+      } finally {
+        setIsLoading(false); // Set loading to false
       }
     }, [slug]);
 
@@ -554,85 +559,94 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="mb-4 bg-neutral-800 text-white   p-4  ">
-        <div className="mb-4">
-          <h3 className="font-bold text-lg">Cabin Status</h3>
-        </div>
-        <div className="grid md:grid-cols-2 grid-cols-1 gap-x-4 gap-y-2">
-          {getCabinOptions().map((cabin: string) => {
-            const status =
-              cabinStatuses[cabin] ||
-              getCabinStatus(cabin, getOldestOrderTime(cabin));
-            const isHighChairCabin = isHighChair(cabin);
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            
+            <Loader2 className="animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="mb-4">
+              <h3 className="font-bold text-lg">Cabin Status</h3>
+            </div>
+            <div className="grid md:grid-cols-2 grid-cols-1 gap-x-4 gap-y-2">
+              {getCabinOptions().map((cabin: string) => {
+                const status =
+                  cabinStatuses[cabin] ||
+                  getCabinStatus(cabin, getOldestOrderTime(cabin));
+                const isHighChairCabin = isHighChair(cabin);
 
-            return (
-              <div key={cabin} className="flex items-center gap-2 min-w-0">
-                <span className="flex-shrink-0  text-lg">{cabin}:</span>
-                <Badge
-                  variant="accent"
-                  className={`${status.bgColor}  text-base text-white`}
-                >
-                  {status.status}
-                </Badge>
-                {!isHighChairCabin &&
-                  status.isVacant && // Changed condition to only check isVacant
-                  status.lastFulfilledTime && (
+                return (
+                  <div key={cabin} className="flex items-center gap-2 min-w-0">
+                    <span className="flex-shrink-0  text-lg">{cabin}:</span>
                     <Badge
                       variant="accent"
-                      className="bg-yellow-500 text-base text-white"
+                      className={`${status.bgColor}  text-base text-white`}
                     >
-                      {formatElapsedTime(status.lastFulfilledTime)}
+                      {status.status}
                     </Badge>
-                  )}
-                {!status.isVacant && (
-                  <>
-                    <Badge
-                      variant="accent"
-                      className="bg-purple-500  text-base text-white"
-                    >
-                      ₹{status.totalOrders}
-                    </Badge>
-                    {!isHighChairCabin && (
+                    {!isHighChairCabin &&
+                      status.isVacant && // Changed condition to only check isVacant
+                      status.lastFulfilledTime && (
+                        <Badge
+                          variant="accent"
+                          className="bg-yellow-500 text-base text-white"
+                        >
+                          {formatElapsedTime(status.lastFulfilledTime)}
+                        </Badge>
+                      )}
+                    {!status.isVacant && (
                       <>
                         <Badge
                           variant="accent"
-                          className="bg-orange-500 text-base text-white"
+                          className="bg-purple-500  text-base text-white"
                         >
-                          {formatElapsedTime(
-                            getOldestOrderTime(cabin)!.toISOString()
-                          )}
+                          ₹{status.totalOrders}
                         </Badge>
-                        {status.rank && (
+                        {!isHighChairCabin && (
+                          <>
+                            <Badge
+                              variant="accent"
+                              className="bg-orange-500 text-base text-white"
+                            >
+                              {formatElapsedTime(
+                                getOldestOrderTime(cabin)!.toISOString()
+                              )}
+                            </Badge>
+                            {status.rank && (
+                              <Badge
+                                variant="accent"
+                                className="bg-blue-500 text-base text-white"
+                              >
+                                {status.rank}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                        {status.hasUndispatchedOrders && (
                           <Badge
                             variant="accent"
-                            className="bg-blue-500 text-base text-white"
+                            className="bg-teal-500 text-base text-white"
                           >
-                            {status.rank}
+                            R
                           </Badge>
                         )}
                       </>
                     )}
-                    {status.hasUndispatchedOrders && (
-                      <Badge
-                        variant="accent"
-                        className="bg-teal-500 text-base text-white"
-                      >
-                        R
-                      </Badge>
-                    )}
-                  </>
-                )}
-                {status.nextBookingInMinutes !== undefined &&
-                  status.nextBookingInMinutes <= 20 && (
-                    <Badge className="text-base">
-                      {status.nextBookingInMinutes <= 1
-                        ? "Booking in 1 minute"
-                        : `Booking in ${status.nextBookingInMinutes} minutes`}
-                    </Badge>
-                  )}
-              </div>
-            );
-          })}
-        </div>
+                    {status.nextBookingInMinutes !== undefined &&
+                      status.nextBookingInMinutes <= 20 && (
+                        <Badge className="text-base">
+                          {status.nextBookingInMinutes <= 1
+                            ? "Booking in 1 minute"
+                            : `Booking in ${status.nextBookingInMinutes} minutes`}
+                        </Badge>
+                      )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
