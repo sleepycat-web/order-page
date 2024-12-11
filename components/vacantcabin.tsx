@@ -200,6 +200,10 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
       }
     }, [isOpen, fetchBookings]);
 
+useEffect(() => {
+  fetchBookings(); // Fetch bookings on component mount
+}, []);
+
   const getValidOldOrders = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
