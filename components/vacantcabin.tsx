@@ -638,7 +638,7 @@ useEffect(() => {
                       </>
                     )}
                     {status.nextBookingInMinutes !== undefined &&
-                      status.nextBookingInMinutes <= 20 && (
+                      status.nextBookingInMinutes <= 30 && (
                         <Badge className="text-base">
                           {status.nextBookingInMinutes <= 1
                             ? "Booking in 1 minute"
