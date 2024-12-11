@@ -462,6 +462,23 @@ useEffect(() => {
      }
 
      if (!oldestOrderTime) {
+       // Change condition to check for any orders
+       const hasOrders = Object.values(orders)
+         .flat()
+         .some(order => order.selectedCabin === cabin);
+      
+       if (hasOrders) {
+         return {
+           status: "Occupied",
+           bgColor: "bg-yellow-500",
+           isVacant: false,
+           totalOrders: getCabinOrderTotal(cabin), // Add totalOrders
+           minimumRequired: getMinimumOrderValue(0), // Set minimumRequired appropriately
+           // ...additional properties...
+         };
+       }
+
+       // Existing Vacant status
        const lastFulfilledTime = getLastFulfilledTime(cabin);
        return {
          status: "Vacant",
@@ -526,14 +543,13 @@ useEffect(() => {
     const cabinOptions = getCabinOptions();
 
     cabinOptions.forEach((cabin) => {
-      const oldestOrderTime = getOldestOrderTime(cabin);
-      newStatuses[cabin] = getCabinStatus(cabin, oldestOrderTime);
+      const firstDispatchedTime = getFirstDispatchedTime(cabin);
+      newStatuses[cabin] = getCabinStatus(cabin, firstDispatchedTime);
     });
 
     calculateRanks(newStatuses);
     setCabinStatuses(newStatuses);
-  }, [getCabinStatus, orders, slug]); // Add orders and slug as dependencies
-
+  }, [getCabinStatus, orders, slug]);   
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -551,7 +567,23 @@ useEffect(() => {
     event.stopPropagation();
     setIsOpen(!isOpen);
   };
+const getFirstDispatchedTime = (cabin: string): Date | null => {
+  const cabinOrders = Object.values(orders)
+    .flat()
+    .filter(
+      (order) =>
+        order.selectedCabin === cabin && order.dispatchedAt !== undefined
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.dispatchedAt!).getTime() -
+        new Date(b.dispatchedAt!).getTime()
+    );
 
+  if (cabinOrders.length === 0) return null;
+
+  return new Date(cabinOrders[0].dispatchedAt!);
+};
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -577,7 +609,7 @@ useEffect(() => {
               {getCabinOptions().map((cabin: string) => {
                 const status =
                   cabinStatuses[cabin] ||
-                  getCabinStatus(cabin, getOldestOrderTime(cabin));
+                  getCabinStatus(cabin, getFirstDispatchedTime(cabin)); // Fixed method name here
                 const isHighChairCabin = isHighChair(cabin);
 
                 return (
@@ -609,14 +641,16 @@ useEffect(() => {
                         </Badge>
                         {!isHighChairCabin && (
                           <>
+                          {getFirstDispatchedTime(cabin) && ( // Conditionally render the badge
                             <Badge
                               variant="accent"
                               className="bg-orange-500 text-base text-white"
                             >
                               {formatElapsedTime(
-                                getOldestOrderTime(cabin)!.toISOString()
+                                getFirstDispatchedTime(cabin)!.toISOString()
                               )}
                             </Badge>
+                          )}
                             {status.rank && (
                               <Badge
                                 variant="accent"
@@ -627,7 +661,8 @@ useEffect(() => {
                             )}
                           </>
                         )}
-                        {status.hasUndispatchedOrders && (
+                        {(status.hasUndispatchedOrders ||
+                          getFirstDispatchedTime(cabin) === null) && (
                           <Badge
                             variant="accent"
                             className="bg-teal-500 text-base text-white"
