@@ -57,8 +57,8 @@ const Cart: React.FC<CartProps> = ({
   const handleCloseBillSection = () => {
     setIsBillSectionOpen(false);
   };
-  const handleApplyPromo = () => {
-    const validPromo = validatePromo(promoCode);
+  const handleApplyPromo = async () => {
+    const validPromo = await validatePromo(promoCode);
     if (validPromo) {
       onApplyPromo(validPromo);
       setPromoError("");
