@@ -56,38 +56,45 @@ export default async function handler(
       .find({ date: formattedDate })
       .project({ startTime: 1, endTime: 1, cabin: 1, _id: 0 })
       .toArray();
-    const TIME_SLOTS: TimeSlot[] = [
-      {
-        start: "11:00",
-        end: "13:00",
-        label: "11 am to 1 pm",
-        availableCabins: [...allCabins],
-      },
-      {
-        start: "13:00",
-        end: "15:00",
-        label: "1 pm to 3 pm",
-        availableCabins: [...allCabins],
-      },
-      {
-        start: "15:00",
-        end: "17:00",
-        label: "3 pm to 5 pm",
-        availableCabins: [...allCabins],
-      },
-      {
-        start: "17:00",
-        end: "19:00",
-        label: "5 pm to 7 pm",
-        availableCabins: [...allCabins],
-      },
-      {
-        start: "19:00",
-        end: "21:00",
-        label: "7 pm to 9 pm",
-        availableCabins: [...allCabins],
-      },
-    ];
+
+    const generateTimeSlots = (selectedDate: Date): TimeSlot[] => {
+      const slots: TimeSlot[] = [];
+      const startHour = 11;
+      const endHour = 21;
+      const now = new Date();
+      const isToday = format(selectedDate, "yyyy-MM-dd") === format(now, "yyyy-MM-dd");
+      
+      for (let hour = startHour; hour < endHour; hour++) {
+        [0, 30].forEach((minute) => {
+          const slotStart = new Date(selectedDate);
+          slotStart.setHours(hour, minute, 0, 0);
+    
+          // Skip past time slots if the date is today
+          if (isToday && slotStart <= now) return;
+    
+          const slotEnd = new Date(slotStart);
+          slotEnd.setHours(slotEnd.getHours() + 2);
+    
+          if (slotEnd.getHours() > endHour) return;
+    
+          const start = format(slotStart, "HH:mm");
+          const end = format(slotEnd, "HH:mm");
+          const label = `${format(slotStart, "h:mm a")} to ${format(slotEnd, "h:mm a")}`;
+    
+          slots.push({
+            start,
+            end,
+            label,
+            availableCabins: [],
+          });
+        });
+      }
+    
+      return slots;
+    };
+
+    const TIME_SLOTS = generateTimeSlots(parsedDate);
+
     let availableSlots = TIME_SLOTS.map((slot) => {
       const bookedCabins = bookings
         .filter(
@@ -95,7 +102,7 @@ export default async function handler(
             booking.startTime === slot.start && booking.endTime === slot.end
         )
         .map((booking) => booking.cabin);
-      const remainingCabins = slot.availableCabins.filter(
+      const remainingCabins = allCabins.filter(
         (cabin) => !bookedCabins.includes(cabin)
       );
       return {

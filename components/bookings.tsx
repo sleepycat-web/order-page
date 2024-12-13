@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Loader2, UserPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { format, isValid } from "date-fns";
+import { format, isValid, parse } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Popover,
@@ -41,15 +41,6 @@ const formatDateTime = (dateString: string) => {
   date.setMinutes(date.getMinutes() - 30);
   return format(date, "d MMMM yyyy 'at' h:mm a");
 };
-
-// Time slots remain the same
-const TIME_SLOTS: TimeSlot[] = [
-  { start: "11:00", end: "13:00", label: "11 am to 1 pm" },
-  { start: "13:00", end: "15:00", label: "1 pm to 3 pm" },
-  { start: "15:00", end: "17:00", label: "3 pm to 5 pm" },
-  { start: "17:00", end: "19:00", label: "5 pm to 7 pm" },
-  { start: "19:00", end: "21:00", label: "7 pm to 9 pm" },
-];
 
 // Type definitions
 interface TimeSlot {
@@ -116,7 +107,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
     if (isPopoverOpen) {
       const originalDate = new Date(booking.date);
       const originalTimeSlot =
-        TIME_SLOTS.find((slot) => slot.start === booking.startTime) || null;
+        availableSlots.find((slot) => slot.start === booking.startTime) || null;
 
       setSelectedDate(originalDate);
       setSelectedTimeSlot(originalTimeSlot);
@@ -198,7 +189,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
     try {
       const response = await axios.post("/api/checkBookings", {
         date: formattedDate,
-        slug: booking.location.toLowerCase(),
+        slug: booking.location.toLowerCase().split(" ")[0],
       });
       setAvailableSlots(response.data.availableSlots);
 
@@ -329,12 +320,14 @@ const BookingCard: React.FC<BookingCardProps> = ({
                           <Button
                             key={slot.start}
                             variant={
-                              selectedTimeSlot?.start === slot.start
+                              selectedTimeSlot?.start === slot.start &&
+                              selectedTimeSlot?.end === slot.end
                                 ? "secondary"
                                 : "outline"
                             }
                             onClick={() => {
                               setSelectedTimeSlot(slot);
+                              setSelectedCabin(""); // Reset selected cabin when time slot changes
                             }}
                             className="text-sm"
                           >
