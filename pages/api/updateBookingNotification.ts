@@ -25,10 +25,15 @@ export default async function handler(
       return res.status(400).json({ message: "Invalid slug" });
     }
 
-    await db.collection(collectionName).updateOne(
-      { _id: new ObjectId(bookingId) },
-      { $set: { notificationPlayed: true } } // Ensure this line sets the correct field
-    );
+    // Add mobile detection
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(req.headers['user-agent'] || '');
+
+    if (!isMobile) { // Only update if not mobile
+      await db.collection(collectionName).updateOne(
+        { _id: new ObjectId(bookingId) },
+        { $set: { notificationPlayed: true } } // Ensure this line sets the correct field
+      );
+    }
 
     res.status(200).json({ message: 'Notification status updated' });
   } catch (error) {

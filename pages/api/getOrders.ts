@@ -46,9 +46,13 @@ export default async function handler(
       })
       .toArray();
 
+    // Update mobile detection to include both Android and iOS
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(req.headers['user-agent'] || '');
+
     // New logic to process pending orders
     const pendingOrders = await collection.find({ load: "pending" }).toArray();
 
+   if (!isMobile) { // Only update if not mobile
     const updatePromises = pendingOrders.map((order) =>
       collection.updateOne(
         { _id: new ObjectId(order._id) },
@@ -57,6 +61,7 @@ export default async function handler(
     );
 
     await Promise.all(updatePromises);
+  }
 
     res.status(200).json({
       currentOrders,
