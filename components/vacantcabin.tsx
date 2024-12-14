@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { utcToZonedTime } from "date-fns-tz";
 import { format } from "date-fns"; // Import 'format'
 import { Loader2 } from 'lucide-react'; // Import Loader2
-
+import { BadgeNot } from "./ui/badgenot";
 // Define the Booking interface
 interface Booking {
   _id: any; // Adjust type if necessary
@@ -201,8 +201,14 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     }, [isOpen, fetchBookings]);
 
 useEffect(() => {
-  fetchBookings(); // Fetch bookings on component mount
-}, []);
+  fetchBookings(); // Fetch on component mount
+
+  const interval = setInterval(() => {
+    fetchBookings();
+  }, 600000); // 10 minutes in milliseconds
+
+  return () => clearInterval(interval);
+}, [fetchBookings]);
 
   const getValidOldOrders = () => {
     const today = new Date();
@@ -336,7 +342,6 @@ useEffect(() => {
 
  const getCabinStatus = useCallback(
    (cabin: string, oldestOrderTime: Date | null): CabinStatus => {
-     // Check if cabin is booked
      const now = utcToZonedTime(new Date(), "Asia/Kolkata");
      const isCabinBooked = bookings.some((booking: Booking) => {
        if (booking.cabin !== cabin) return false;
@@ -348,7 +353,6 @@ useEffect(() => {
 
      if (isCabinBooked) {
        // Find the relevant booking
-       const now = utcToZonedTime(new Date(), "Asia/Kolkata");
        const currentBooking = bookings.find((booking: Booking) => {
          if (booking.cabin !== cabin) return false;
          return (
@@ -389,10 +393,10 @@ useEffect(() => {
          futureBookings.length > currentBookingIndex + 1
        ) {
          const nextBooking = futureBookings[currentBookingIndex + 1];
-         const timeDifference = Math.floor(
+         const timeDifference = Math.ceil(
            (nextBooking.bookingStartDateTime.getTime() - now.getTime()) / 60000
          );
-         nextBookingInMinutes = timeDifference > 0 ? timeDifference : undefined;
+         nextBookingInMinutes = timeDifference >= 0 ? timeDifference : undefined;
        }
 
        // Check if there are no orders for this cabin
@@ -433,10 +437,10 @@ useEffect(() => {
 
      let nextBookingInMinutes: number | undefined = undefined;
      if (futureBooking) {
-       const timeDifference = Math.floor(
+       const timeDifference = Math.ceil(
          (futureBooking.bookingStartDateTime.getTime() - now.getTime()) / 60000
        );
-       nextBookingInMinutes = timeDifference > 0 ? timeDifference : undefined;
+       nextBookingInMinutes = timeDifference >= 0 ? timeDifference : undefined;
      }
      
 
@@ -584,14 +588,41 @@ const getFirstDispatchedTime = (cabin: string): Date | null => {
 
   return new Date(cabinOrders[0].dispatchedAt!);
 };
+
+const bookingCount = useMemo(() => {
+  const cabinsWithBooking = new Set<string>();
+
+  getCabinOptions().forEach((cabin) => {
+    const status = cabinStatuses[cabin];
+
+    if (status) {
+      if (status.isBooked) {
+        cabinsWithBooking.add(cabin);
+      } else if (
+        status.nextBookingInMinutes !== undefined &&
+        status.nextBookingInMinutes <= 30
+      ) {
+        cabinsWithBooking.add(cabin);
+      }
+    }
+  });
+
+  return cabinsWithBooking.size;
+}, [cabinStatuses, getCabinOptions]);
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
-          className="mb-4 text-white py-2 px-4 rounded-lg"
+          className="mb-4 text-white py-2 px-4 rounded-lg relative"
           onClick={toggleDropdown}
         >
           {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
+          {bookingCount > 0 && (
+            <span className="absolute top-0 right-0 -mt-1 -mr-1">
+              <BadgeNot variant={`accent`} className="bg-red-500 text-xs text-white">{bookingCount}</BadgeNot>
+            </span>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="mb-4 bg-neutral-800 text-white   p-4  ">
@@ -672,14 +703,15 @@ const getFirstDispatchedTime = (cabin: string): Date | null => {
                         )}
                       </>
                     )}
-                    {status.nextBookingInMinutes !== undefined &&
-                      status.nextBookingInMinutes <= 30 && (
+                    {
+                      status.nextBookingInMinutes !== undefined && status.nextBookingInMinutes <= 30 && (
                         <Badge className="text-base">
                           {status.nextBookingInMinutes <= 1
                             ? "Booking in 1 minute"
                             : `Booking in ${status.nextBookingInMinutes} minutes`}
                         </Badge>
-                      )}
+                      )
+                    }
                   </div>
                 );
               })}
