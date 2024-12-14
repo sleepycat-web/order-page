@@ -35,6 +35,7 @@ interface VacantCabinDropdownProps {
   orders: { [key: string]: Order[] };
   slug: string;
   oldOrders: Order[];
+  onNotify: () => void; // Add this line
 }
 
 type BaseStatus = {
@@ -68,6 +69,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
   orders,
   slug,
   oldOrders,
+  onNotify, // Add this line
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -75,7 +77,6 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     [key: string]: CabinStatus;
   }>({});
   const [isLoading, setIsLoading] = useState(false); // Add loading state
-    const audioRef = useRef<HTMLAudioElement>(null);
 
   const isHighChair = (cabin: string): boolean => {
     return cabin.toLowerCase().startsWith("high chair");
@@ -624,7 +625,7 @@ const checkAndNotifyUpcomingBookings = useCallback(() => {
   );
 
   if (upcomingBookings.length > 0) {
-    audioRef.current?.play();
+    onNotify(); // Replace audio playback with callback
 
     upcomingBookings.forEach((booking) => {
       fetch('/api/updateBookingNotification', {
@@ -636,7 +637,7 @@ const checkAndNotifyUpcomingBookings = useCallback(() => {
       });
     });
   }
-}, [bookings, slug]);
+}, [bookings, slug, onNotify]); // Add onNotify to dependencies
 
 useEffect(() => {
   checkAndNotifyUpcomingBookings();
@@ -656,11 +657,6 @@ useEffect(() => {
           onClick={toggleDropdown}
         >
           {" "}
-          <audio
-            ref={audioRef}
-            src="/alarm2.mp3"
-            style={{ display: "none" }}
-          />{" "}
           {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
           {bookingCount > 0 && (
             <span className="absolute top-0 right-0 -mt-1 -mr-1">

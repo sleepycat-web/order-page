@@ -38,6 +38,25 @@ export default function OrderPage() {
     previous: false,
   });
   const [networkError, setNetworkError] = useState(false);
+  const audioBookingsRef = useRef<HTMLAudioElement>(null); // Add this line
+  const audioOrdersRef = useRef<HTMLAudioElement>(null);   // Add this line
+
+  const playBookingsAlarm = () => {                      // Add this function
+    if (audioBookingsRef.current) {
+      audioBookingsRef.current.play().catch((error) => {
+        console.error("Error playing bookings audio:", error);
+      });
+    }
+  };
+
+  const playOrdersAlarm = () => {                        // Add this function
+    if (audioOrdersRef.current) {
+      audioOrdersRef.current.play().catch((error) => {
+        console.error("Error playing orders audio:", error);
+      });
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const pathSegments = window.location.pathname.split("/");
@@ -47,7 +66,6 @@ export default function OrderPage() {
   }, []);
   const [payLaterExpanded, setPayLaterExpanded] = useState(false);
   const [allCabinsOccupied, setAllCabinsOccupied] = useState(false);
-    const audioRef = useRef<HTMLAudioElement>(null);
 
   const handleTabChange = (value: string) => {
     if (value === "new" || value === "active" || value === "previous") {
@@ -241,7 +259,7 @@ useEffect(() => {
         Array.isArray(data.processedOrders) &&
         data.processedOrders.length > 0
       ) {
-        playAlarm();
+        playOrdersAlarm(); // Change to play orders alarm
         data.processedOrders.forEach((order:any) => {
           sendNotification(order);
         });
@@ -270,13 +288,7 @@ useEffect(() => {
   return () => clearInterval(intervalId);
 }, [slug, checkAllCabinsOccupied]); 
 
-const playAlarm = () => {
-  if (audioRef.current) {
-    audioRef.current.play().catch((error) => {
-      console.error("Error playing audio:", error);
-    });
-  }
-};
+ 
 
 const sendNotification = (order: Order) => {
   if ("Notification" in window && Notification.permission === "granted") {
@@ -765,6 +777,7 @@ const calculateTotalSales = (orders: Order[]) => {
             ])}
             oldOrders={groupedOrders.previous}
             slug={slug}
+            onNotify={playBookingsAlarm} // Update to use bookings alarm
           />
         </div>
         <Tabs
@@ -820,7 +833,8 @@ const calculateTotalSales = (orders: Order[]) => {
             )}
           </div>
         )}
-        <audio ref={audioRef} src="/alarm3.mp3" style={{ display: "none" }} />
+        <audio ref={audioBookingsRef} src="/alarm2.mp3" style={{ display: "none" }} /> {/* Add this line */}
+        <audio ref={audioOrdersRef} src="/alarm3.mp3" style={{ display: "none" }} />   {/* Add this line */}
         {counts.new === 0 && counts.active === 0 && counts.previous === 0 && (
           <p className="text-center text-xl">No orders at the moment.</p>
         )}
