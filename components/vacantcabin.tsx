@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Order } from "@/scripts/interface";
 import {
   DropdownMenu,
@@ -29,6 +29,7 @@ interface Booking {
   createdAt: any; // Adjust type if necessary
   bookingStartDateTime: Date;
   bookingEndDateTime: Date;
+  notificationPlayed?: boolean; // Add this line
 }
 interface VacantCabinDropdownProps {
   orders: { [key: string]: Order[] };
@@ -74,6 +75,7 @@ const VacantCabinDropdown: React.FC<VacantCabinDropdownProps> = ({
     [key: string]: CabinStatus;
   }>({});
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+    const audioRef = useRef<HTMLAudioElement>(null);
 
   const isHighChair = (cabin: string): boolean => {
     return cabin.toLowerCase().startsWith("high chair");
@@ -610,6 +612,36 @@ const bookingCount = useMemo(() => {
   return cabinsWithBooking.size;
 }, [cabinStatuses, getCabinOptions]);
 
+const checkAndNotifyUpcomingBookings = useCallback(() => {
+  const now = utcToZonedTime(new Date(), "Asia/Kolkata");
+  const thirtyMinutesLater = new Date(now.getTime() + 30 * 60000);
+
+  const upcomingBookings = bookings.filter(
+    (booking) =>
+      new Date(booking.bookingStartDateTime) >= now &&
+      new Date(booking.bookingStartDateTime) <= thirtyMinutesLater &&
+      !booking.notificationPlayed
+  );
+
+  if (upcomingBookings.length > 0) {
+    audioRef.current?.play();
+
+    upcomingBookings.forEach((booking) => {
+      fetch('/api/updateBookingNotification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookingId: booking._id, slug }),
+      });
+    });
+  }
+}, [bookings, slug]);
+
+useEffect(() => {
+  checkAndNotifyUpcomingBookings();
+}, [bookings, checkAndNotifyUpcomingBookings]);
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -628,7 +660,7 @@ const bookingCount = useMemo(() => {
       <DropdownMenuContent className="mb-4 bg-neutral-800 text-white   p-4  ">
         {isLoading ? (
           <div className="flex items-center justify-center">
-            
+
             <Loader2 className="animate-spin" />
           </div>
         ) : (
@@ -719,6 +751,7 @@ const bookingCount = useMemo(() => {
           </>
         )}
       </DropdownMenuContent>
+      <audio ref={audioRef} src="/alarm2.mp3" style={{ display: "none" }} />{" "}
     </DropdownMenu>
   );
 };
