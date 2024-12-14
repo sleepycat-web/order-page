@@ -266,20 +266,20 @@ const BookingCard: React.FC<BookingCardProps> = ({
   };
 
   const showPhoneNumber = async () => {
-    // Placeholder for future API call
-    // try {
-    //   const response = await axios.post('/api/logPhoneView', {
-    //     bookingId: booking._id,
-    //     // other required data
-    //   });
-    // } catch (error) {
-    //   console.error('Error logging phone view:', error);
-    // }
-
+    try {
+      await axios.post('/api/sendNumberEmail', {
+        customerName: booking.name,
+        phoneNumber: booking.phone,
+        location: booking.location,
+      });
+    } catch (error) {
+      console.error('Error sending number email:', error);
+    }
+  
     setIsPhoneVisible(true);
     setTimeout(() => {
       setIsPhoneVisible(false);
-    }, 5000);
+    }, 10000);
   };
 
   return (
