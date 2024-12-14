@@ -640,7 +640,13 @@ const checkAndNotifyUpcomingBookings = useCallback(() => {
 
 useEffect(() => {
   checkAndNotifyUpcomingBookings();
-}, [bookings, checkAndNotifyUpcomingBookings]);
+  
+  const notificationInterval = setInterval(() => {
+    checkAndNotifyUpcomingBookings();
+  }, 600000); // 10 minutes in milliseconds
+
+  return () => clearInterval(notificationInterval);
+}, [checkAndNotifyUpcomingBookings]);
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -649,10 +655,21 @@ useEffect(() => {
           className="mb-4 text-white py-2 px-4 rounded-lg relative"
           onClick={toggleDropdown}
         >
+          {" "}
+          <audio
+            ref={audioRef}
+            src="/alarm2.mp3"
+            style={{ display: "none" }}
+          />{" "}
           {isOpen ? "Hide Cabin Status" : "Show Cabin Status"}
           {bookingCount > 0 && (
             <span className="absolute top-0 right-0 -mt-1 -mr-1">
-              <BadgeNot variant={`accent`} className="bg-red-500 text-xs text-white">{bookingCount}</BadgeNot>
+              <BadgeNot
+                variant={`accent`}
+                className="bg-red-500 text-xs text-white"
+              >
+                {bookingCount}
+              </BadgeNot>
             </span>
           )}
         </Button>
@@ -660,7 +677,6 @@ useEffect(() => {
       <DropdownMenuContent className="mb-4 bg-neutral-800 text-white   p-4  ">
         {isLoading ? (
           <div className="flex items-center justify-center">
-
             <Loader2 className="animate-spin" />
           </div>
         ) : (
@@ -704,16 +720,16 @@ useEffect(() => {
                         </Badge>
                         {!isHighChairCabin && (
                           <>
-                          {getFirstDispatchedTime(cabin) && ( // Conditionally render the badge
-                            <Badge
-                              variant="accent"
-                              className="bg-orange-500 text-base text-white"
-                            >
-                              {formatElapsedTime(
-                                getFirstDispatchedTime(cabin)!.toISOString()
-                              )}
-                            </Badge>
-                          )}
+                            {getFirstDispatchedTime(cabin) && ( // Conditionally render the badge
+                              <Badge
+                                variant="accent"
+                                className="bg-orange-500 text-base text-white"
+                              >
+                                {formatElapsedTime(
+                                  getFirstDispatchedTime(cabin)!.toISOString()
+                                )}
+                              </Badge>
+                            )}
                             {status.rank && (
                               <Badge
                                 variant="accent"
@@ -735,15 +751,14 @@ useEffect(() => {
                         )}
                       </>
                     )}
-                    {
-                      status.nextBookingInMinutes !== undefined && status.nextBookingInMinutes <= 30 && (
+                    {status.nextBookingInMinutes !== undefined &&
+                      status.nextBookingInMinutes <= 30 && (
                         <Badge className="text-base">
                           {status.nextBookingInMinutes <= 1
                             ? "Booking in 1 minute"
                             : `Booking in ${status.nextBookingInMinutes} minutes`}
                         </Badge>
-                      )
-                    }
+                      )}
                   </div>
                 );
               })}
@@ -751,7 +766,6 @@ useEffect(() => {
           </>
         )}
       </DropdownMenuContent>
-      <audio ref={audioRef} src="/alarm2.mp3" style={{ display: "none" }} />{" "}
     </DropdownMenu>
   );
 };
